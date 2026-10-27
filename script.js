@@ -13,7 +13,7 @@ const PORTFOLIO_CONFIG = {
     folder: "assets/about/",
     profileImage: "profile.jpg",
     resume: {
-      file: "resume.pdf", // Place at assets/about/resume.pdf
+      file: "resume.pdf", // Place at assets/about/resume.pdf (or link your live GitHub PDF URL)
       title: "ALEXANDER_ZHUK_RESUME.PDF",
       subtitle: "Civil Engineering, CAD/CFD Simulation, Metal Fabrication & Leadership Experience"
     },
@@ -54,23 +54,13 @@ const PORTFOLIO_CONFIG = {
     baseFolder: "assets/projects/",
     textFileName: "project.txt",
     foldersToCheck: [
-      "LARP",
-      "project-02",
-      "project-03",
-      "project-04",
-      "project-05",
-      "project-06",
-      "battery-accumulator",
-      "gokart-build",
-      "solar-canopy",
-      "aero-cfd"
+      "LARP"
     ]
   },
 
   // -------------------- TAB 3: PHOTOGRAPHY FOLDER CONFIG --------------------
   photographyConfig: {
     folder: "assets/photography/",
-    // Supports up to 80 numbered files automatically if static server disables directory listing
     maxNumberedProbe: 80
   }
 };
@@ -88,14 +78,11 @@ function isStlFile(path) {
   return /\.stl$/i.test(path);
 }
 
-// Uses a lightweight HTTP HEAD request instead of `new Image()` so checking 50+
-// 100MB photos downloads 0 bytes of actual image payload.
 async function verifyFileExistsFast(url) {
   try {
     const res = await fetch(url, { method: "HEAD", cache: "no-store" });
     if (!res.ok) return false;
     const contentType = res.headers.get("content-type") || "";
-    // Reject fallback HTML 404 pages returned by some static servers
     if (contentType.includes("text/html")) return false;
     return true;
   } catch (e) {
@@ -125,7 +112,6 @@ function loadStlGeometry(url) {
       (geometry) => {
         geometry.computeVertexNormals();
         geometry.computeBoundingBox();
-        // Center geometry at origin (0, 0, 0)
         geometry.center();
         stlGeometryCache.set(url, geometry);
         resolve(geometry);
@@ -136,8 +122,6 @@ function loadStlGeometry(url) {
   });
 }
 
-// Mounts a slowly rotating 3D STL preview inside a project card or gallery item.
-// Automatically pauses rendering when scrolled off-screen to save GPU!
 function mountAutoRotatingStlPreview(container, stlUrl) {
   const badge = document.createElement("div");
   badge.className = "stl-badge-overlay";
@@ -150,7 +134,6 @@ function mountAutoRotatingStlPreview(container, stlUrl) {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   container.appendChild(renderer.domElement);
 
-  // Studio CAD Lighting
   const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
   scene.add(ambientLight);
 
@@ -162,7 +145,6 @@ function mountAutoRotatingStlPreview(container, stlUrl) {
   dirLight2.position.set(-60, -40, -50);
   scene.add(dirLight2);
 
-  // Subtle AutoCAD Ground Grid
   const grid = new THREE.GridHelper(120, 12, 0xd92804, 0x333a40);
   grid.position.y = -28;
   scene.add(grid);
@@ -188,7 +170,6 @@ function mountAutoRotatingStlPreview(container, stlUrl) {
       });
       mesh = new THREE.Mesh(geometry, material);
 
-      // Auto-scale any STL size to fit cleanly inside a 50-unit sphere
       geometry.computeBoundingSphere();
       const radius = geometry.boundingSphere.radius || 1;
       const scale = 38 / radius;
@@ -208,12 +189,11 @@ function mountAutoRotatingStlPreview(container, stlUrl) {
     if (!isVisible) return;
     animFrameId = requestAnimationFrame(animate);
     if (mesh) {
-      mesh.rotation.y += 0.008; // Slow continuous rotation
+      mesh.rotation.y += 0.008;
     }
     renderer.render(scene, camera);
   }
 
-  // Only animate when visible on screen
   const observer = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
@@ -237,7 +217,42 @@ function mountAutoRotatingStlPreview(container, stlUrl) {
 
 /**
  * ============================================================================
- * 4. TAB 1: RENDER ABOUT ME & RESUME
+ * 4. BACKGROUND PRE-CACHING MANAGER (IDLE CHUNKING)
+ * ============================================================================
+ */
+function backgroundPrewarmPhotographyCache(photoUrls) {
+  if (!photoUrls || photoUrls.length === 0) return;
+
+  const runPrewarm = () => {
+    let currentIndex = 0;
+
+    function loadNextChunk() {
+      if (currentIndex >= photoUrls.length) return;
+      const chunkLimit = Math.min(currentIndex + 3, photoUrls.length);
+      for (let i = currentIndex; i < chunkLimit; i++) {
+        const bgImg = new Image();
+        bgImg.crossOrigin = "anonymous";
+        bgImg.src = photoUrls[i];
+      }
+      currentIndex = chunkLimit;
+      if (currentIndex < photoUrls.length) {
+        setTimeout(loadNextChunk, 350);
+      }
+    }
+
+    setTimeout(loadNextChunk, 1000);
+  };
+
+  if ("requestIdleCallback" in window) {
+    requestIdleCallback(runPrewarm, { timeout: 3000 });
+  } else {
+    setTimeout(runPrewarm, 2000);
+  }
+}
+
+/**
+ * ============================================================================
+ * 5. TAB 1: RENDER ABOUT ME & RESUME
  * ============================================================================
  */
 async function renderAboutSection() {
@@ -246,7 +261,6 @@ async function renderAboutSection() {
   document.getElementById("about-headline").textContent = cfg.headline;
   document.getElementById("about-name-caption").textContent = cfg.name;
 
-  // Profile Portrait
   const profileImg = document.getElementById("about-profile-img");
   const fullProfilePath = `${normalizeFolder(cfg.folder)}${cfg.profileImage}`;
   const exists = await verifyFileExistsFast(fullProfilePath);
@@ -269,7 +283,10 @@ async function renderAboutSection() {
   });
 
   // Resume Setup
-  const resumePath = `${normalizeFolder(cfg.folder)}${cfg.resume.file}`;
+  const resumePath = cfg.resume.file.startsWith("http")
+    ? cfg.resume.file
+    : `${normalizeFolder(cfg.folder)}${cfg.resume.file}`;
+  
   document.getElementById("resume-title-display").textContent = cfg.resume.title;
   document.getElementById("resume-subtitle-display").textContent = cfg.resume.subtitle;
   const downloadLink = document.getElementById("download-resume-link");
@@ -280,9 +297,7 @@ async function renderAboutSection() {
   if (resumeExists) {
     statusTag.textContent = "PDF VERIFIED";
   } else {
-    statusTag.textContent = `PLACE AT: ${resumePath}`;
-    statusTag.style.color = "#ff9f0a";
-    statusTag.style.borderColor = "rgba(255, 159, 10, 0.4)";
+    statusTag.textContent = "READY";
   }
 
   document.getElementById("preview-resume-btn").addEventListener("click", () => {
@@ -298,7 +313,6 @@ async function renderAboutSection() {
     );
   });
 
-  // Quick Specs
   document.getElementById("about-specs-list").innerHTML = cfg.quickSpecs
     .map(
       (s) => `
@@ -309,14 +323,12 @@ async function renderAboutSection() {
     )
     .join("");
 
-  // Bio
   const bioContainer = document.getElementById("about-bio-content");
   const savedBio = localStorage.getItem("azcore_custom_bio");
   bioContainer.innerHTML = savedBio
     ? savedBio
     : cfg.bioParagraphs.map((p) => `<p>${p}</p>`).join("");
 
-  // Skills
   document.getElementById("about-skills-grid").innerHTML = cfg.skills
     .map(
       (group) => `
@@ -329,7 +341,6 @@ async function renderAboutSection() {
     )
     .join("");
 
-  // Socials
   document.getElementById("about-socials-grid").innerHTML = cfg.socials
     .map(
       (soc) => `
@@ -343,7 +354,7 @@ async function renderAboutSection() {
 
 /**
  * ============================================================================
- * 5. TAB 2: MODULAR TEXT-FILE & 3D .STL DRIVEN PROJECTS ENGINE
+ * 6. TAB 2: MODULAR TEXT-FILE & 3D .STL DRIVEN PROJECTS ENGINE
  * ============================================================================
  */
 function parseProjectTextFile(rawText, folderPath) {
@@ -451,7 +462,6 @@ async function loadAndRenderProjects() {
       const parsed = parseProjectTextFile(rawText, projFolder);
       if (!parsed.title && parsed.assets.length === 0) continue;
 
-      // Verify linked images or .stl files in parallel
       const checks = await Promise.all(
         parsed.assets.map(async (file) => {
           const fullPath = `${projFolder}${file}`;
@@ -544,7 +554,6 @@ async function loadAndRenderProjects() {
       caption: `${proj.title} (${asset.file}) // [${i + 1}/${proj.verifiedAssets.length}]`
     }));
 
-    // Render Main Hero Slot (Either Auto-Rotating 3D STL or Image)
     const mainWrap = card.querySelector(`#main-wrap-${idx}`);
     if (mainAsset.type === "stl") {
       const stlStage = document.createElement("div");
@@ -563,7 +572,6 @@ async function loadAndRenderProjects() {
 
     mainWrap.addEventListener("click", () => openLightbox(lightboxList, 0));
 
-    // Render Expanded Grid Drawer (Supports both Images and .STL files)
     const galleryGrid = card.querySelector(".project-gallery-grid");
     proj.verifiedAssets.forEach((asset, assetIdx) => {
       const itemWrap = document.createElement("div");
@@ -588,7 +596,6 @@ async function loadAndRenderProjects() {
       galleryGrid.appendChild(itemWrap);
     });
 
-    // Stack Drawer Toggle
     const stackTrigger = card.querySelector(".photo-stack-trigger");
     const drawer = card.querySelector(`#${drawerId}`);
     stackTrigger.addEventListener("click", () => {
@@ -602,7 +609,7 @@ async function loadAndRenderProjects() {
 
 /**
  * ============================================================================
- * 6. TAB 3: HIGH-PERFORMANCE PHOTOGRAPHY ENGINE (50+ IMAGES / 100MB+ ZERO LAG)
+ * 7. TAB 3: HIGH-PERFORMANCE PHOTOGRAPHY ENGINE (SUPPORTS photos.txt)
  * ============================================================================
  */
 async function discoverPhotographyImages() {
@@ -611,51 +618,49 @@ async function discoverPhotographyImages() {
   const discoveredFiles = new Set();
   const imageRegex = /\.(jpe?g|png|webp|avif|gif)$/i;
 
-  // 1. Fast directory listing scan (Live Server / Python http.server / Apache)
+  // 1. Check `photos.txt` manifest first (matches Image (1).jpg, etc.)
   try {
-    const res = await fetch(normFolder, { cache: "no-store" });
-    if (res.ok && (res.headers.get("content-type") || "").includes("text/html")) {
-      const html = await res.text();
-      const doc = new DOMParser().parseFromString(html, "text/html");
-      doc.querySelectorAll("a").forEach((a) => {
-        const href = a.getAttribute("href") || "";
-        const cleanName = decodeURIComponent(href.split("/").pop());
-        if (imageRegex.test(cleanName)) {
-          discoveredFiles.add(`${normFolder}${cleanName}`);
+    const txtRes = await fetch(`${normFolder}photos.txt`, { cache: "no-store" });
+    if (txtRes.ok && !(txtRes.headers.get("content-type") || "").includes("text/html")) {
+      const text = await txtRes.text();
+      const lines = text
+        .split(/\r?\n/)
+        .map((l) => l.trim())
+        .filter(Boolean);
+      for (const file of lines) {
+        const fullUrl = `${normFolder}${file}`;
+        if (await verifyFileExistsFast(fullUrl)) {
+          discoveredFiles.add(fullUrl);
         }
-      });
+      }
     }
   } catch (e) {}
 
-  // 2. Optional `photos.txt` manifest check
+  // 2. Directory listing scan
   if (discoveredFiles.size === 0) {
     try {
-      const txtRes = await fetch(`${normFolder}photos.txt`, { cache: "no-store" });
-      if (txtRes.ok && !(txtRes.headers.get("content-type") || "").includes("text/html")) {
-        const text = await txtRes.text();
-        const lines = text
-          .split(/\r?\n/)
-          .map((l) => l.trim())
-          .filter(Boolean);
-        const checks = await Promise.all(
-          lines.map(async (file) => {
-            const url = `${normFolder}${file}`;
-            return (await verifyFileExistsFast(url)) ? url : null;
-          })
-        );
-        checks.filter(Boolean).forEach((u) => discoveredFiles.add(u));
+      const res = await fetch(normFolder, { cache: "no-store" });
+      if (res.ok && (res.headers.get("content-type") || "").includes("text/html")) {
+        const html = await res.text();
+        const doc = new DOMParser().parseFromString(html, "text/html");
+        doc.querySelectorAll("a").forEach((a) => {
+          const href = a.getAttribute("href") || "";
+          const cleanName = decodeURIComponent(href.split("/").pop());
+          if (imageRegex.test(cleanName)) {
+            discoveredFiles.add(`${normFolder}${cleanName}`);
+          }
+        });
       }
     } catch (e) {}
   }
 
-  // 3. Fast HEAD probing for up to `maxNumberedProbe` (e.g. 80) photos on static hosts
+  // 3. Fast HEAD probing fallback
   if (discoveredFiles.size === 0) {
     const candidates = [];
     for (let i = 1; i <= maxNumberedProbe; i++) {
       const pad = String(i).padStart(2, "0");
-      candidates.push(`${pad}.jpg`, `${i}.jpg`, `photo-${pad}.jpg`);
+      candidates.push(`${pad}.jpg`, `${i}.jpg`, `photo-${pad}.jpg`, `Image (${i}).jpg`);
     }
-    // Batch HEAD requests in chunks of 20 so we don't choke browser sockets
     for (let i = 0; i < candidates.length; i += 24) {
       const batch = candidates.slice(i, i + 24);
       const results = await Promise.all(
@@ -671,8 +676,6 @@ async function discoverPhotographyImages() {
   return Array.from(discoveredFiles);
 }
 
-// Samples an image's average RGB ONCE when it finishes loading and caches it
-// on `card.dataset.r/g/b` so scrolling never touches the canvas or GPU!
 function cacheSingleImageColorOnce(img, card) {
   if (card.dataset.colorCached === "true") return;
   try {
@@ -706,6 +709,9 @@ async function loadAndRenderPhotography() {
   const countBadge = document.getElementById("photo-count-badge");
   const validPhotoUrls = await discoverPhotographyImages();
 
+  // 🚀 Pre-warm cache in the background while reading About Me / Projects!
+  backgroundPrewarmPhotographyCache(validPhotoUrls);
+
   countBadge.textContent = `FOLDER COUNT: ${validPhotoUrls.length} IMAGE${
     validPhotoUrls.length === 1 ? "" : "S"
   }`;
@@ -735,7 +741,6 @@ async function loadAndRenderPhotography() {
     };
   });
 
-  // Lazy-load observer: only loads high-res image bytes when within 350px of viewport
   const lazyObserver = new IntersectionObserver(
     (entries, obs) => {
       entries.forEach((entry) => {
@@ -766,7 +771,6 @@ async function loadAndRenderPhotography() {
 
     img.addEventListener("load", () => {
       img.classList.add("img-loaded");
-      // Compute RGB once in idle/next frame and store in dataset
       requestAnimationFrame(() => {
         cacheSingleImageColorOnce(img, card);
         if (currentTabIndex === 2) scheduleAverageColorUpdate();
@@ -791,7 +795,7 @@ async function loadAndRenderPhotography() {
 
 /**
  * ============================================================================
- * 7. INSTANT CACHED AVERAGE COLOR ENGINE (<0.05ms PER SCROLL FRAME)
+ * 8. INSTANT CACHED AVERAGE COLOR ENGINE
  * ============================================================================
  */
 let colorUpdateRaf = null;
@@ -861,7 +865,7 @@ function updatePhotographyAverageColor() {
 
 /**
  * ============================================================================
- * 8. TAB NAVIGATION & DIRECTIONAL SLIDE ANIMATIONS
+ * 9. TAB NAVIGATION & DIRECTIONAL SLIDE ANIMATIONS
  * ============================================================================
  */
 const TABS = ["about", "projects", "photography"];
@@ -910,13 +914,12 @@ function switchTab(targetIndex) {
 
 /**
  * ============================================================================
- * 9. UNIVERSAL LIGHTBOX (2D IMAGES + INTERACTIVE 3D STL + PDF RESUME)
+ * 10. UNIVERSAL LIGHTBOX
  * ============================================================================
  */
 let currentLightboxList = [];
 let currentLightboxIndex = 0;
 
-// Interactive Full-Screen STL state
 let lbScene = null,
   lbCamera = null,
   lbRenderer = null,
@@ -925,7 +928,6 @@ let lbScene = null,
   lbAnimId = null;
 
 function preventBackgroundScroll(e) {
-  // Allow scroll wheel inside the 3D STL stage so OrbitControls can zoom!
   if (e.target && e.target.closest("#lightbox-stl-stage")) return;
   e.preventDefault();
 }
@@ -1028,7 +1030,6 @@ function openLightbox(items, startIndex = 0) {
   modal.classList.add("open");
   modal.setAttribute("aria-hidden", "false");
 
-  // Lock background scroll
   document.body.classList.add("lightbox-lock");
   window.addEventListener("wheel", preventBackgroundScroll, { passive: false });
   window.addEventListener("touchmove", preventBackgroundScroll, { passive: false });
@@ -1063,7 +1064,6 @@ function updateLightboxSlide() {
   const wireBtn = document.getElementById("stl-wireframe-btn");
   const resetBtn = document.getElementById("stl-reset-btn");
 
-  // Hide all viewers first
   imgEl.style.display = "none";
   stlStage.style.display = "none";
   pdfFrame.style.display = "none";
@@ -1104,7 +1104,7 @@ function stepLightbox(delta) {
 
 /**
  * ============================================================================
- * 10. INITIALIZATION & EVENT LISTENERS
+ * 11. INITIALIZATION & EVENT LISTENERS
  * ============================================================================
  */
 window.addEventListener("DOMContentLoaded", async () => {
@@ -1119,14 +1119,12 @@ window.addEventListener("DOMContentLoaded", async () => {
     document.body.classList.add("page-ready");
   }, 450);
 
-  // Top Tab Buttons
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       switchTab(parseInt(btn.dataset.index, 10));
     });
   });
 
-  // Side Arrow Bars
   document.getElementById("side-nav-prev").addEventListener("click", () => {
     switchTab((currentTabIndex - 1 + TABS.length) % TABS.length);
   });
@@ -1135,7 +1133,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     switchTab((currentTabIndex + 1) % TABS.length);
   });
 
-  // Bio Edit Toggle
   const editBioBtn = document.getElementById("toggle-bio-edit");
   const bioContent = document.getElementById("about-bio-content");
   editBioBtn.addEventListener("click", () => {
@@ -1151,7 +1148,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // Live AutoCAD Cursor Coordinates
   const coordReadout = document.getElementById("coord-readout");
   window.addEventListener(
     "mousemove",
@@ -1163,7 +1159,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     { passive: true }
   );
 
-  // Throttled 60fps Photography Average Color Update on Scroll / Resize
   window.addEventListener(
     "scroll",
     () => {
@@ -1175,7 +1170,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     if (currentTabIndex === 2) scheduleAverageColorUpdate();
   });
 
-  // Lightbox Events
   const lightboxModal = document.getElementById("lightbox-modal");
   lightboxModal.addEventListener("click", (e) => {
     if (e.target === lightboxModal) closeLightbox();
