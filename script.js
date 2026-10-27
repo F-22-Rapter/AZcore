@@ -260,14 +260,14 @@ function mountAutoRotating3DPreview(container, modelUrl, type) {
   renderer.outputEncoding = THREE.sRGBEncoding;
   container.appendChild(renderer.domElement);
 
-  const hemiLight = new THREE.HemisphereLight(0xffffff, 0x222830, 0.95);
+  const hemiLight = new THREE.HemisphereLight(0xffffff, 0x222830, 0.5);
   scene.add(hemiLight);
 
-  const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.9);
+  const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.5);
   dirLight1.position.set(65, 90, 75);
   scene.add(dirLight1);
 
-  const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.45);
+  const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.25);
   dirLight2.position.set(-65, -40, -60);
   scene.add(dirLight2);
 
