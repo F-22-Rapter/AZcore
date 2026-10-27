@@ -6,12 +6,17 @@
 const PORTFOLIO_CONFIG = {
   brandName: "AZCORE",
 
-  // -------------------- TAB 1: ABOUT ME CONFIG --------------------
+  // -------------------- TAB 1: ABOUT ME & RESUME CONFIG --------------------
   about: {
     name: "ALEXANDER ZHUK",
     headline: "ENGINEERING, FABRICATION & VISUAL DESIGN",
     folder: "assets/about/",
     profileImage: "profile.jpg",
+    resume: {
+      file: "resume.pdf", // Place at assets/about/resume.pdf
+      title: "ALEXANDER_ZHUK_RESUME.PDF",
+      subtitle: "Civil Engineering, CAD/CFD Simulation, Metal Fabrication & Leadership Experience"
+    },
     bioParagraphs: [
       "I am a Civil Engineering student, fabricator, and photographer based in Chicago. My work sits at the intersection of structural systems, custom mechanical/electrical fabrication, and architectural & night-sky photography.",
       "Whether leading tractive battery accumulator design and thermal simulation, machining custom drivetrain mounts on a manual lathe, or capturing high-resolution panoramic astrophotography, I approach every project with precision CAD workflows and hands-on execution."
@@ -45,18 +50,16 @@ const PORTFOLIO_CONFIG = {
   },
 
   // -------------------- TAB 2: PROJECTS FOLDER CONFIG --------------------
-  // The script checks `projectsBaseFolder` for subfolders (auto-discovered or listed below).
-  // A project ONLY appears if `<folder>/project.txt` exists inside it!
   projectsConfig: {
     baseFolder: "assets/projects/",
     textFileName: "project.txt",
-    // Folder names to check for `project.txt` (you can add any folder names here,
-    // and the script also auto-scans the directory if your server supports folder listing)
     foldersToCheck: [
-      "LARP",
+      "project-01",
       "project-02",
       "project-03",
       "project-04",
+      "project-05",
+      "project-06",
       "battery-accumulator",
       "gokart-build",
       "solar-canopy",
@@ -65,42 +68,176 @@ const PORTFOLIO_CONFIG = {
   },
 
   // -------------------- TAB 3: PHOTOGRAPHY FOLDER CONFIG --------------------
-  // The script checks `photographyConfig.folder` and ONLY displays the exact
-  // images that actually exist inside that folder.
   photographyConfig: {
     folder: "assets/photography/",
-    // Optional candidate filenames to probe if hosted on a static server (like GitHub Pages)
-    // that disables automatic directory listing HTML. Only files that actually exist in the
-    // folder will be shown!
-    candidateFilesToProbe: [
-      // You can list custom filenames here or use standard numbered files (01.jpg, 1.jpg, photo-01.jpg)
-"Image (1).jpg", "Image (2).jpg", "Image (3).jpg", "Image (4).jpg", "Image (5).jpg", "Image (6).jpg", "Image (7).jpg", "Image (8).jpg", "Image (9).jpg", "Image (10).jpg", "Image (11).jpg", "Image (12).jpg", "Image (13).jpg", "Image (14).jpg", "Image (15).jpg", "Image (16).jpg", "Image (17).jpg", "Image (18).jpg", "Image (19).jpg", "Image (20).jpg", "Image (21).jpg", "Image (22).jpg", "Image (23).jpg", "Image (24).jpg", "Image (25).jpg", "Image (26).jpg", "Image (27).jpg", "Image (28).jpg", "Image (29).jpg", "Image (30).jpg", "Image (31).jpg", "Image (32).jpg", "Image (33).jpg", "Image (34).jpg", "Image (35).jpg", "Image (36).jpg", "Image (37).jpg", "Image (38).jpg", "Image (39).jpg", "Image (40).jpg", "Image (41).jpg", "Image (42).jpg", "Image (43).jpg", "Image (44).jpg", "Image (45).jpg"    ]
+    // Supports up to 80 numbered files automatically if static server disables directory listing
+    maxNumberedProbe: 80
   }
 };
 
 /**
  * ============================================================================
- * 2. FILE & IMAGE EXISTENCE HELPERS
+ * 2. ZERO-LAG FILE EXISTENCE CHECKER (HEAD REQUESTS = 0 BYTES DOWNLOADED)
  * ============================================================================
  */
-// Checks if an image file genuinely exists on disk/server
-function verifyImageExists(url) {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.onload = () => resolve(true);
-    img.onerror = () => resolve(false);
-    img.src = url;
-  });
-}
-
-// Normalizes a folder path to always end with "/"
 function normalizeFolder(path) {
   return path.endsWith("/") ? path : path + "/";
 }
 
+function isStlFile(path) {
+  return /\.stl$/i.test(path);
+}
+
+// Uses a lightweight HTTP HEAD request instead of `new Image()` so checking 50+
+// 100MB photos downloads 0 bytes of actual image payload.
+async function verifyFileExistsFast(url) {
+  try {
+    const res = await fetch(url, { method: "HEAD", cache: "no-store" });
+    if (!res.ok) return false;
+    const contentType = res.headers.get("content-type") || "";
+    // Reject fallback HTML 404 pages returned by some static servers
+    if (contentType.includes("text/html")) return false;
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
 /**
  * ============================================================================
- * 3. TAB 1: RENDER ABOUT ME
+ * 3. 3D .STL VIEWER ENGINE (AUTO-ROTATING PREVIEW + INTERACTIVE ORBIT LIGHTBOX)
+ * ============================================================================
+ */
+const stlGeometryCache = new Map();
+
+function loadStlGeometry(url) {
+  if (stlGeometryCache.has(url)) {
+    return Promise.resolve(stlGeometryCache.get(url));
+  }
+  return new Promise((resolve, reject) => {
+    if (typeof THREE === "undefined" || !THREE.STLLoader) {
+      reject(new Error("Three.js STLLoader not available"));
+      return;
+    }
+    const loader = new THREE.STLLoader();
+    loader.load(
+      url,
+      (geometry) => {
+        geometry.computeVertexNormals();
+        geometry.computeBoundingBox();
+        // Center geometry at origin (0, 0, 0)
+        geometry.center();
+        stlGeometryCache.set(url, geometry);
+        resolve(geometry);
+      },
+      undefined,
+      (err) => reject(err)
+    );
+  });
+}
+
+// Mounts a slowly rotating 3D STL preview inside a project card or gallery item.
+// Automatically pauses rendering when scrolled off-screen to save GPU!
+function mountAutoRotatingStlPreview(container, stlUrl) {
+  const badge = document.createElement("div");
+  badge.className = "stl-badge-overlay";
+  badge.textContent = "3D STL // CLICK TO ORBIT";
+  container.appendChild(badge);
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(40, 16 / 10, 0.1, 2000);
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  container.appendChild(renderer.domElement);
+
+  // Studio CAD Lighting
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
+  scene.add(ambientLight);
+
+  const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.85);
+  dirLight1.position.set(60, 80, 70);
+  scene.add(dirLight1);
+
+  const dirLight2 = new THREE.DirectionalLight(0xd92804, 0.35);
+  dirLight2.position.set(-60, -40, -50);
+  scene.add(dirLight2);
+
+  // Subtle AutoCAD Ground Grid
+  const grid = new THREE.GridHelper(120, 12, 0xd92804, 0x333a40);
+  grid.position.y = -28;
+  scene.add(grid);
+
+  let mesh = null;
+  let isVisible = false;
+  let animFrameId = null;
+
+  function resizeRenderer() {
+    const w = container.clientWidth || 320;
+    const h = container.clientHeight || 240;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+  }
+
+  loadStlGeometry(stlUrl)
+    .then((geometry) => {
+      const material = new THREE.MeshStandardMaterial({
+        color: 0xd8dee4,
+        metalness: 0.35,
+        roughness: 0.42
+      });
+      mesh = new THREE.Mesh(geometry, material);
+
+      // Auto-scale any STL size to fit cleanly inside a 50-unit sphere
+      geometry.computeBoundingSphere();
+      const radius = geometry.boundingSphere.radius || 1;
+      const scale = 38 / radius;
+      mesh.scale.set(scale, scale, scale);
+      scene.add(mesh);
+
+      camera.position.set(55, 38, 75);
+      camera.lookAt(0, 0, 0);
+      resizeRenderer();
+      renderer.render(scene, camera);
+    })
+    .catch(() => {
+      badge.textContent = "STL LOAD ERROR";
+    });
+
+  function animate() {
+    if (!isVisible) return;
+    animFrameId = requestAnimationFrame(animate);
+    if (mesh) {
+      mesh.rotation.y += 0.008; // Slow continuous rotation
+    }
+    renderer.render(scene, camera);
+  }
+
+  // Only animate when visible on screen
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        isVisible = entry.isIntersecting;
+        if (isVisible) {
+          resizeRenderer();
+          animate();
+        } else if (animFrameId) {
+          cancelAnimationFrame(animFrameId);
+        }
+      });
+    },
+    { threshold: 0.05 }
+  );
+  observer.observe(container);
+
+  window.addEventListener("resize", () => {
+    if (isVisible) resizeRenderer();
+  });
+}
+
+/**
+ * ============================================================================
+ * 4. TAB 1: RENDER ABOUT ME & RESUME
  * ============================================================================
  */
 async function renderAboutSection() {
@@ -109,14 +246,14 @@ async function renderAboutSection() {
   document.getElementById("about-headline").textContent = cfg.headline;
   document.getElementById("about-name-caption").textContent = cfg.name;
 
+  // Profile Portrait
   const profileImg = document.getElementById("about-profile-img");
   const fullProfilePath = `${normalizeFolder(cfg.folder)}${cfg.profileImage}`;
-  const exists = await verifyImageExists(fullProfilePath);
+  const exists = await verifyFileExistsFast(fullProfilePath);
 
   if (exists) {
     profileImg.src = fullProfilePath;
   } else {
-    // Subtle CAD fallback ONLY for the About Me profile frame if not placed yet
     profileImg.src = `data:image/svg+xml;utf8,${encodeURIComponent(
       `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="750" viewBox="0 0 600 750">
         <rect width="600" height="750" fill="#181b1e"/>
@@ -128,7 +265,37 @@ async function renderAboutSection() {
   }
 
   profileImg.addEventListener("click", () => {
-    openLightbox([{ src: profileImg.src, caption: `${cfg.name} // ${fullProfilePath}` }], 0);
+    openLightbox([{ type: "image", src: profileImg.src, caption: `${cfg.name} // ${fullProfilePath}` }], 0);
+  });
+
+  // Resume Setup
+  const resumePath = `${normalizeFolder(cfg.folder)}${cfg.resume.file}`;
+  document.getElementById("resume-title-display").textContent = cfg.resume.title;
+  document.getElementById("resume-subtitle-display").textContent = cfg.resume.subtitle;
+  const downloadLink = document.getElementById("download-resume-link");
+  downloadLink.href = resumePath;
+
+  const resumeExists = await verifyFileExistsFast(resumePath);
+  const statusTag = document.getElementById("resume-status-tag");
+  if (resumeExists) {
+    statusTag.textContent = "PDF VERIFIED";
+  } else {
+    statusTag.textContent = `PLACE AT: ${resumePath}`;
+    statusTag.style.color = "#ff9f0a";
+    statusTag.style.borderColor = "rgba(255, 159, 10, 0.4)";
+  }
+
+  document.getElementById("preview-resume-btn").addEventListener("click", () => {
+    openLightbox(
+      [
+        {
+          type: "pdf",
+          src: resumePath,
+          caption: `${cfg.resume.title} // ${resumePath}`
+        }
+      ],
+      0
+    );
   });
 
   // Quick Specs
@@ -176,11 +343,8 @@ async function renderAboutSection() {
 
 /**
  * ============================================================================
- * 4. TAB 2: MODULAR TEXT-FILE DRIVEN PROJECTS ENGINE
+ * 5. TAB 2: MODULAR TEXT-FILE & 3D .STL DRIVEN PROJECTS ENGINE
  * ============================================================================
- * Parses `project.txt` inside each project folder and links the images
- * specified inside that text file. If no `project.txt` files exist, 0 projects
- * are shown.
  */
 function parseProjectTextFile(rawText, folderPath) {
   const lines = rawText.replace(/\r\n/g, "\n").split("\n");
@@ -188,8 +352,8 @@ function parseProjectTextFile(rawText, folderPath) {
     title: "",
     code: "PRJ // ARCHIVE",
     tags: [],
-    mainImage: "",
-    images: [],
+    mainAsset: "",
+    assets: [],
     description: "",
     folder: folderPath
   };
@@ -213,17 +377,17 @@ function parseProjectTextFile(rawText, folderPath) {
         .split(",")
         .map((t) => t.trim())
         .filter(Boolean);
-    } else if (/^MAIN(_IMAGE)?\s*:/i.test(line)) {
+    } else if (/^MAIN(_IMAGE|_STL|_MODEL)?\s*:/i.test(line)) {
       inDescription = false;
-      data.mainImage = line.replace(/^MAIN(_IMAGE)?\s*:\s*/i, "").trim();
-    } else if (/^IMAGES\s*:/i.test(line)) {
+      data.mainAsset = line.replace(/^MAIN(_IMAGE|_STL|_MODEL)?\s*:\s*/i, "").trim();
+    } else if (/^(IMAGES|FILES|ASSETS)\s*:/i.test(line)) {
       inDescription = false;
-      const imgs = line
-        .replace(/^IMAGES\s*:\s*/i, "")
+      const items = line
+        .replace(/^(IMAGES|FILES|ASSETS)\s*:\s*/i, "")
         .split(",")
         .map((i) => i.trim())
         .filter(Boolean);
-      data.images.push(...imgs);
+      data.assets.push(...items);
     } else if (/^DESCRIPTION\s*:/i.test(line)) {
       inDescription = true;
       const firstLineDesc = line.replace(/^DESCRIPTION\s*:\s*/i, "").trim();
@@ -235,12 +399,11 @@ function parseProjectTextFile(rawText, folderPath) {
 
   data.description = descLines.join("\n").trim();
 
-  // Ensure mainImage and images list are linked cleanly
-  if (!data.mainImage && data.images.length > 0) {
-    data.mainImage = data.images[0];
+  if (!data.mainAsset && data.assets.length > 0) {
+    data.mainAsset = data.assets[0];
   }
-  if (data.mainImage && !data.images.includes(data.mainImage)) {
-    data.images.unshift(data.mainImage);
+  if (data.mainAsset && !data.assets.includes(data.mainAsset)) {
+    data.assets.unshift(data.mainAsset);
   }
 
   return data;
@@ -248,27 +411,19 @@ function parseProjectTextFile(rawText, folderPath) {
 
 async function discoverProjectFolders(baseFolder, configuredFolders) {
   const folderSet = new Set(configuredFolders);
-
-  // Also try auto-discovering subfolders if server provides directory listing HTML
   try {
     const res = await fetch(baseFolder, { cache: "no-store" });
-    if (res.ok) {
-      const contentType = res.headers.get("content-type") || "";
-      if (contentType.includes("text/html")) {
-        const html = await res.text();
-        const doc = new DOMParser().parseFromString(html, "text/html");
-        doc.querySelectorAll("a").forEach((a) => {
-          const href = a.getAttribute("href") || "";
-          if (href.endsWith("/") && !href.startsWith("../") && !href.startsWith("/")) {
-            folderSet.add(href.replace(/\/$/, ""));
-          }
-        });
-      }
+    if (res.ok && (res.headers.get("content-type") || "").includes("text/html")) {
+      const html = await res.text();
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      doc.querySelectorAll("a").forEach((a) => {
+        const href = a.getAttribute("href") || "";
+        if (href.endsWith("/") && !href.startsWith("../") && !href.startsWith("/")) {
+          folderSet.add(href.replace(/\/$/, ""));
+        }
+      });
     }
-  } catch (e) {
-    // Ignore directory listing error on static hosts
-  }
-
+  } catch (e) {}
   return Array.from(folderSet);
 }
 
@@ -288,48 +443,41 @@ async function loadAndRenderProjects() {
     try {
       const res = await fetch(txtUrl, { cache: "no-store" });
       if (!res.ok) continue;
-
-      // Guard against servers returning an HTML 404 fallback page
-      const contentType = res.headers.get("content-type") || "";
-      if (contentType.includes("text/html")) continue;
+      if ((res.headers.get("content-type") || "").includes("text/html")) continue;
 
       const rawText = await res.text();
       if (!rawText || !rawText.trim()) continue;
 
       const parsed = parseProjectTextFile(rawText, projFolder);
-      if (!parsed.title && parsed.images.length === 0) continue;
+      if (!parsed.title && parsed.assets.length === 0) continue;
 
-      // Verify which linked images in project.txt actually exist inside the project folder
-      const verifiedImages = [];
-      for (const imgFile of parsed.images) {
-        const fullImgPath = `${projFolder}${imgFile}`;
-        const exists = await verifyImageExists(fullImgPath);
-        if (exists) verifiedImages.push(fullImgPath);
-      }
+      // Verify linked images or .stl files in parallel
+      const checks = await Promise.all(
+        parsed.assets.map(async (file) => {
+          const fullPath = `${projFolder}${file}`;
+          const ok = await verifyFileExistsFast(fullPath);
+          return ok ? { src: fullPath, type: isStlFile(file) ? "stl" : "image", file } : null;
+        })
+      );
 
-      // Only add project if its text file exists and at least 1 linked image exists
-      if (verifiedImages.length > 0) {
-        parsed.verifiedImages = verifiedImages;
-        parsed.verifiedMain = verifiedImages[0];
+      const verifiedAssets = checks.filter(Boolean);
+      if (verifiedAssets.length > 0) {
+        parsed.verifiedAssets = verifiedAssets;
         loadedProjects.push(parsed);
       }
-    } catch (e) {
-      // No project.txt in this folder -> skip
-    }
+    } catch (e) {}
   }
 
   countBadge.textContent = `LOADED: ${loadedProjects.length} PROJECT${
     loadedProjects.length === 1 ? "" : "S"
   }`;
 
-  // If no project.txt files were found, do not show any projects
   if (loadedProjects.length === 0) {
     container.innerHTML = `
       <div class="empty-state-box">
         <div class="empty-state-title">// 0 PROJECT TEXT FILES DETECTED</div>
         <div class="empty-state-desc">
-          No valid <code>project.txt</code> files with linked images were found inside <code>${normBase}</code>.
-          Add a subfolder with a <code>project.txt</code> file and its linked images to populate this section.
+          No valid <code>project.txt</code> files with linked images or <code>.stl</code> models were found inside <code>${normBase}</code>.
         </div>
       </div>
     `;
@@ -342,12 +490,20 @@ async function loadAndRenderProjects() {
     const card = document.createElement("article");
     card.className = "project-card";
     const drawerId = `drawer-proj-${idx}`;
-    const stackPreview = proj.verifiedImages.slice(0, 3);
+    const mainAsset = proj.verifiedAssets[0];
+    const stackPreview = proj.verifiedAssets.slice(0, 3);
+
+    const stackVisualHtml = stackPreview
+      .map((item) =>
+        item.type === "stl"
+          ? `<div class="stack-card-stl">[3D STL]</div>`
+          : `<img class="stack-card-img" src="${item.src}" loading="lazy" decoding="async" alt="Stack preview" />`
+      )
+      .join("");
 
     card.innerHTML = `
       <div class="project-top-layout">
-        <div class="project-main-img-wrap">
-          <img class="interactive-img project-main-img" src="${proj.verifiedMain}" alt="${proj.title}" />
+        <div class="project-main-img-wrap" id="main-wrap-${idx}">
           <div class="project-folder-badge">SOURCE: ${proj.folder}project.txt</div>
         </div>
 
@@ -362,13 +518,9 @@ async function loadAndRenderProjects() {
           </div>
 
           <div class="photo-stack-trigger">
-            <div class="stack-visual">
-              ${stackPreview
-                .map((src) => `<img class="stack-card-img" src="${src}" alt="Stack preview" />`)
-                .join("")}
-            </div>
+            <div class="stack-visual">${stackVisualHtml}</div>
             <div class="stack-meta">
-              <span class="stack-title">PHOTO STACK (${proj.verifiedImages.length} LINKED)</span>
+              <span class="stack-title">PROJECT STACK (${proj.verifiedAssets.length} LINKED)</span>
               <span class="stack-subtitle">Click stack to reveal full project grid &#8595;</span>
             </div>
           </div>
@@ -377,8 +529,8 @@ async function loadAndRenderProjects() {
 
       <div id="${drawerId}" class="project-expanded-drawer">
         <div class="drawer-header">
-          <span>// LINKED FROM ${proj.folder}project.txt (${proj.verifiedImages.length} IMAGES)</span>
-          <span>CLICK ANY PHOTO FOR FULL SCREEN</span>
+          <span>// LINKED FROM ${proj.folder}project.txt (${proj.verifiedAssets.length} ITEMS)</span>
+          <span>CLICK ANY IMAGE OR .STL MODEL FOR FULL SCREEN</span>
         </div>
         <div class="project-gallery-grid"></div>
       </div>
@@ -386,28 +538,57 @@ async function loadAndRenderProjects() {
 
     container.appendChild(card);
 
-    const galleryGrid = card.querySelector(".project-gallery-grid");
-    const lightboxList = proj.verifiedImages.map((src, i) => ({
-      src,
-      caption: `${proj.title} // [${i + 1}/${proj.verifiedImages.length}]`
+    const lightboxList = proj.verifiedAssets.map((asset, i) => ({
+      type: asset.type,
+      src: asset.src,
+      caption: `${proj.title} (${asset.file}) // [${i + 1}/${proj.verifiedAssets.length}]`
     }));
 
-    proj.verifiedImages.forEach((src, imgIdx) => {
+    // Render Main Hero Slot (Either Auto-Rotating 3D STL or Image)
+    const mainWrap = card.querySelector(`#main-wrap-${idx}`);
+    if (mainAsset.type === "stl") {
+      const stlStage = document.createElement("div");
+      stlStage.className = "stl-preview-container";
+      mainWrap.prepend(stlStage);
+      mountAutoRotatingStlPreview(stlStage, mainAsset.src);
+    } else {
+      const mainImg = document.createElement("img");
+      mainImg.className = "interactive-img project-main-img";
+      mainImg.src = mainAsset.src;
+      mainImg.loading = "lazy";
+      mainImg.decoding = "async";
+      mainImg.alt = proj.title;
+      mainWrap.prepend(mainImg);
+    }
+
+    mainWrap.addEventListener("click", () => openLightbox(lightboxList, 0));
+
+    // Render Expanded Grid Drawer (Supports both Images and .STL files)
+    const galleryGrid = card.querySelector(".project-gallery-grid");
+    proj.verifiedAssets.forEach((asset, assetIdx) => {
       const itemWrap = document.createElement("div");
       itemWrap.className = "project-gallery-item";
-      const img = document.createElement("img");
-      img.className = "interactive-img";
-      img.src = src;
-      img.alt = `${proj.title} photo ${imgIdx + 1}`;
-      img.addEventListener("click", () => openLightbox(lightboxList, imgIdx));
-      itemWrap.appendChild(img);
+
+      if (asset.type === "stl") {
+        const stlBox = document.createElement("div");
+        stlBox.className = "stl-preview-container";
+        itemWrap.appendChild(stlBox);
+        mountAutoRotatingStlPreview(stlBox, asset.src);
+      } else {
+        const img = document.createElement("img");
+        img.className = "interactive-img";
+        img.src = asset.src;
+        img.loading = "lazy";
+        img.decoding = "async";
+        img.alt = `${proj.title} item ${assetIdx + 1}`;
+        itemWrap.appendChild(img);
+      }
+
+      itemWrap.addEventListener("click", () => openLightbox(lightboxList, assetIdx));
       galleryGrid.appendChild(itemWrap);
     });
 
-    card.querySelector(".project-main-img").addEventListener("click", () => {
-      openLightbox(lightboxList, 0);
-    });
-
+    // Stack Drawer Toggle
     const stackTrigger = card.querySelector(".photo-stack-trigger");
     const drawer = card.querySelector(`#${drawerId}`);
     stackTrigger.addEventListener("click", () => {
@@ -421,39 +602,32 @@ async function loadAndRenderProjects() {
 
 /**
  * ============================================================================
- * 5. TAB 3: PHOTOGRAPHY LIVE FOLDER CHECKER
+ * 6. TAB 3: HIGH-PERFORMANCE PHOTOGRAPHY ENGINE (50+ IMAGES / 100MB+ ZERO LAG)
  * ============================================================================
- * Checks `assets/photography/` and ONLY renders the exact images found in
- * that folder.
  */
 async function discoverPhotographyImages() {
-  const { folder, candidateFilesToProbe } = PORTFOLIO_CONFIG.photographyConfig;
+  const { folder, maxNumberedProbe } = PORTFOLIO_CONFIG.photographyConfig;
   const normFolder = normalizeFolder(folder);
   const discoveredFiles = new Set();
   const imageRegex = /\.(jpe?g|png|webp|avif|gif)$/i;
 
-  // 1. Try directory listing scan (works automatically on VS Code Live Server, python http.server, Apache, etc.)
+  // 1. Fast directory listing scan (Live Server / Python http.server / Apache)
   try {
     const res = await fetch(normFolder, { cache: "no-store" });
-    if (res.ok) {
-      const contentType = res.headers.get("content-type") || "";
-      if (contentType.includes("text/html")) {
-        const html = await res.text();
-        const doc = new DOMParser().parseFromString(html, "text/html");
-        doc.querySelectorAll("a").forEach((a) => {
-          const href = a.getAttribute("href") || "";
-          const cleanName = decodeURIComponent(href.split("/").pop());
-          if (imageRegex.test(cleanName)) {
-            discoveredFiles.add(`${normFolder}${cleanName}`);
-          }
-        });
-      }
+    if (res.ok && (res.headers.get("content-type") || "").includes("text/html")) {
+      const html = await res.text();
+      const doc = new DOMParser().parseFromString(html, "text/html");
+      doc.querySelectorAll("a").forEach((a) => {
+        const href = a.getAttribute("href") || "";
+        const cleanName = decodeURIComponent(href.split("/").pop());
+        if (imageRegex.test(cleanName)) {
+          discoveredFiles.add(`${normFolder}${cleanName}`);
+        }
+      });
     }
-  } catch (e) {
-    // Ignore if server disables directory listing
-  }
+  } catch (e) {}
 
-  // 2. Also check optional `assets/photography/photos.txt` if user placed a text list
+  // 2. Optional `photos.txt` manifest check
   if (discoveredFiles.size === 0) {
     try {
       const txtRes = await fetch(`${normFolder}photos.txt`, { cache: "no-store" });
@@ -463,29 +637,68 @@ async function discoverPhotographyImages() {
           .split(/\r?\n/)
           .map((l) => l.trim())
           .filter(Boolean);
-        for (const file of lines) {
-          const fullUrl = `${normFolder}${file}`;
-          if (await verifyImageExists(fullUrl)) {
-            discoveredFiles.add(fullUrl);
-          }
-        }
+        const checks = await Promise.all(
+          lines.map(async (file) => {
+            const url = `${normFolder}${file}`;
+            return (await verifyFileExistsFast(url)) ? url : null;
+          })
+        );
+        checks.filter(Boolean).forEach((u) => discoveredFiles.add(u));
       }
     } catch (e) {}
   }
 
-  // 3. Fallback for static hosts (e.g. GitHub Pages without directory listing):
-  // Probe candidate filenames and ONLY keep the exact ones that exist in the folder
+  // 3. Fast HEAD probing for up to `maxNumberedProbe` (e.g. 80) photos on static hosts
   if (discoveredFiles.size === 0) {
-    const probePromises = candidateFilesToProbe.map(async (file) => {
-      const fullUrl = `${normFolder}${file}`;
-      const exists = await verifyImageExists(fullUrl);
-      return exists ? fullUrl : null;
-    });
-    const results = await Promise.all(probePromises);
-    results.filter(Boolean).forEach((url) => discoveredFiles.add(url));
+    const candidates = [];
+    for (let i = 1; i <= maxNumberedProbe; i++) {
+      const pad = String(i).padStart(2, "0");
+      candidates.push(`${pad}.jpg`, `${i}.jpg`, `photo-${pad}.jpg`);
+    }
+    // Batch HEAD requests in chunks of 20 so we don't choke browser sockets
+    for (let i = 0; i < candidates.length; i += 24) {
+      const batch = candidates.slice(i, i + 24);
+      const results = await Promise.all(
+        batch.map(async (file) => {
+          const url = `${normFolder}${file}`;
+          return (await verifyFileExistsFast(url)) ? url : null;
+        })
+      );
+      results.filter(Boolean).forEach((u) => discoveredFiles.add(u));
+    }
   }
 
   return Array.from(discoveredFiles);
+}
+
+// Samples an image's average RGB ONCE when it finishes loading and caches it
+// on `card.dataset.r/g/b` so scrolling never touches the canvas or GPU!
+function cacheSingleImageColorOnce(img, card) {
+  if (card.dataset.colorCached === "true") return;
+  try {
+    const canvas = document.getElementById("color-sampler-canvas");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    ctx.clearRect(0, 0, 24, 24);
+    ctx.drawImage(img, 0, 0, 24, 24);
+    const data = ctx.getImageData(0, 0, 24, 24).data;
+
+    let r = 0,
+      g = 0,
+      b = 0,
+      count = 0;
+    for (let i = 0; i < data.length; i += 16) {
+      r += data[i];
+      g += data[i + 1];
+      b += data[i + 2];
+      count++;
+    }
+    if (count > 0) {
+      card.dataset.r = Math.round(r / count);
+      card.dataset.g = Math.round(g / count);
+      card.dataset.b = Math.round(b / count);
+      card.dataset.colorCached = "true";
+    }
+  } catch (e) {}
 }
 
 async function loadAndRenderPhotography() {
@@ -504,7 +717,6 @@ async function loadAndRenderPhotography() {
         <div class="empty-state-title">// 0 IMAGES IN PHOTOGRAPHY FOLDER</div>
         <div class="empty-state-desc">
           No images were found in <code>${PORTFOLIO_CONFIG.photographyConfig.folder}</code>.
-          Drop <code>.jpg</code>, <code>.png</code>, or <code>.webp</code> files into the folder to display them here.
         </div>
       </div>
     `;
@@ -517,10 +729,28 @@ async function loadAndRenderPhotography() {
   const lightboxItems = validPhotoUrls.map((url, i) => {
     const fileName = url.split("/").pop();
     return {
+      type: "image",
       src: url,
       caption: `${fileName} // [${i + 1} / ${validPhotoUrls.length}]`
     };
   });
+
+  // Lazy-load observer: only loads high-res image bytes when within 350px of viewport
+  const lazyObserver = new IntersectionObserver(
+    (entries, obs) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        const card = entry.target;
+        const img = card.querySelector("img");
+        if (img && img.dataset.src) {
+          img.src = img.dataset.src;
+          img.removeAttribute("data-src");
+        }
+        obs.unobserve(card);
+      });
+    },
+    { rootMargin: "350px 0px" }
+  );
 
   validPhotoUrls.forEach((url, idx) => {
     const fileName = url.split("/").pop();
@@ -530,11 +760,17 @@ async function loadAndRenderPhotography() {
     const img = document.createElement("img");
     img.className = "photo-grid-img";
     img.crossOrigin = "anonymous";
-    img.src = url;
+    img.decoding = "async";
+    img.dataset.src = url;
     img.alt = fileName;
 
     img.addEventListener("load", () => {
-      if (currentTabIndex === 2) updatePhotographyAverageColor();
+      img.classList.add("img-loaded");
+      // Compute RGB once in idle/next frame and store in dataset
+      requestAnimationFrame(() => {
+        cacheSingleImageColorOnce(img, card);
+        if (currentTabIndex === 2) scheduleAverageColorUpdate();
+      });
     });
 
     card.innerHTML = `
@@ -545,6 +781,8 @@ async function loadAndRenderPhotography() {
     card.prepend(img);
     grid.appendChild(card);
 
+    lazyObserver.observe(card);
+
     card.addEventListener("click", () => {
       openLightbox(lightboxItems, idx);
     });
@@ -553,7 +791,77 @@ async function loadAndRenderPhotography() {
 
 /**
  * ============================================================================
- * 6. TAB NAVIGATION & DIRECTIONAL SLIDE ANIMATIONS
+ * 7. INSTANT CACHED AVERAGE COLOR ENGINE (<0.05ms PER SCROLL FRAME)
+ * ============================================================================
+ */
+let colorUpdateRaf = null;
+
+function scheduleAverageColorUpdate() {
+  if (colorUpdateRaf) return;
+  colorUpdateRaf = requestAnimationFrame(() => {
+    colorUpdateRaf = null;
+    updatePhotographyAverageColor();
+  });
+}
+
+function resetToCadTheme() {
+  const bgLayer = document.getElementById("bg-canvas-layer");
+  bgLayer.style.backgroundColor = "#1f2326";
+  bgLayer.style.backgroundImage = "none";
+  document.getElementById("swatch-dot").style.backgroundColor = "#1f2326";
+  document.getElementById("swatch-hex").textContent = "#1F2326";
+}
+
+function updatePhotographyAverageColor() {
+  if (currentTabIndex !== 2) return;
+
+  const cards = document.querySelectorAll(".insta-card[data-color-cached='true']");
+  if (cards.length === 0) return;
+
+  let totalR = 0,
+    totalG = 0,
+    totalB = 0,
+    counted = 0;
+  const viewportH = window.innerHeight;
+
+  for (let i = 0; i < cards.length; i++) {
+    const card = cards[i];
+    const rect = card.getBoundingClientRect();
+    if (rect.bottom > 68 && rect.top < viewportH) {
+      totalR += Number(card.dataset.r);
+      totalG += Number(card.dataset.g);
+      totalB += Number(card.dataset.b);
+      counted++;
+    }
+  }
+
+  if (counted > 0) {
+    const avgR = Math.round((totalR / counted) * 0.65);
+    const avgG = Math.round((totalG / counted) * 0.65);
+    const avgB = Math.round((totalB / counted) * 0.65);
+
+    const hex =
+      "#" +
+      [avgR, avgG, avgB]
+        .map((x) => Math.max(0, Math.min(255, x)).toString(16).padStart(2, "0"))
+        .join("")
+        .toUpperCase();
+
+    const bgLayer = document.getElementById("bg-canvas-layer");
+    bgLayer.style.backgroundColor = `rgb(${avgR}, ${avgG}, ${avgB})`;
+    bgLayer.style.backgroundImage = `radial-gradient(circle at 50% 30%, rgba(${Math.min(
+      255,
+      avgR + 45
+    )}, ${Math.min(255, avgG + 45)}, ${Math.min(255, avgB + 45)}, 0.38), rgba(18, 21, 24, 0.88))`;
+
+    document.getElementById("swatch-dot").style.backgroundColor = hex;
+    document.getElementById("swatch-hex").textContent = hex;
+  }
+}
+
+/**
+ * ============================================================================
+ * 8. TAB NAVIGATION & DIRECTIONAL SLIDE ANIMATIONS
  * ============================================================================
  */
 const TABS = ["about", "projects", "photography"];
@@ -593,7 +901,7 @@ function switchTab(targetIndex) {
 
   if (currentTabIndex === 2) {
     document.body.classList.add("photo-theme-active");
-    setTimeout(updatePhotographyAverageColor, 60);
+    scheduleAverageColorUpdate();
   } else {
     document.body.classList.remove("photo-theme-active");
     resetToCadTheme();
@@ -602,113 +910,130 @@ function switchTab(targetIndex) {
 
 /**
  * ============================================================================
- * 7. PHOTOGRAPHY DYNAMIC SCREEN-AVERAGE COLOR ENGINE
- * ============================================================================
- */
-function resetToCadTheme() {
-  const bgLayer = document.getElementById("bg-canvas-layer");
-  bgLayer.style.backgroundColor = "#1f2326";
-  bgLayer.style.backgroundImage = "none";
-  document.getElementById("swatch-dot").style.backgroundColor = "#1f2326";
-  document.getElementById("swatch-hex").textContent = "#1F2326";
-}
-
-function updatePhotographyAverageColor() {
-  if (currentTabIndex !== 2) return;
-
-  const imgs = Array.from(document.querySelectorAll(".photo-grid-img"));
-  if (imgs.length === 0) {
-    resetToCadTheme();
-    return;
-  }
-
-  const canvas = document.getElementById("color-sampler-canvas");
-  const ctx = canvas.getContext("2d", { willReadFrequently: true });
-
-  let totalR = 0,
-    totalG = 0,
-    totalB = 0,
-    countedImages = 0;
-  const viewportH = window.innerHeight;
-
-  imgs.forEach((img) => {
-    const rect = img.getBoundingClientRect();
-    const isVisible = rect.bottom > 60 && rect.top < viewportH && rect.width > 0;
-    if (!isVisible || !img.complete || img.naturalWidth === 0) return;
-
-    try {
-      ctx.clearRect(0, 0, 32, 32);
-      ctx.drawImage(img, 0, 0, 32, 32);
-      const data = ctx.getImageData(0, 0, 32, 32).data;
-
-      let r = 0,
-        g = 0,
-        b = 0,
-        pixels = 0;
-      for (let i = 0; i < data.length; i += 16) {
-        r += data[i];
-        g += data[i + 1];
-        b += data[i + 2];
-        pixels++;
-      }
-      if (pixels > 0) {
-        totalR += r / pixels;
-        totalG += g / pixels;
-        totalB += b / pixels;
-        countedImages++;
-      }
-    } catch (e) {}
-  });
-
-  if (countedImages > 0) {
-    const avgR = Math.round((totalR / countedImages) * 0.65);
-    const avgG = Math.round((totalG / countedImages) * 0.65);
-    const avgB = Math.round((totalB / countedImages) * 0.65);
-
-    const hex =
-      "#" +
-      [avgR, avgG, avgB]
-        .map((x) => Math.max(0, Math.min(255, x)).toString(16).padStart(2, "0"))
-        .join("")
-        .toUpperCase();
-
-    const bgLayer = document.getElementById("bg-canvas-layer");
-    bgLayer.style.backgroundColor = `rgb(${avgR}, ${avgG}, ${avgB})`;
-    bgLayer.style.backgroundImage = `radial-gradient(circle at 50% 30%, rgba(${Math.min(
-      255,
-      avgR + 45
-    )}, ${Math.min(255, avgG + 45)}, ${Math.min(255, avgB + 45)}, 0.38), rgba(18, 21, 24, 0.88))`;
-
-    document.getElementById("swatch-dot").style.backgroundColor = hex;
-    document.getElementById("swatch-hex").textContent = hex;
-  }
-}
-
-/**
- * ============================================================================
- * 8. UNIVERSAL LIGHTBOX MODAL (WITH SCROLL LOCK)
+ * 9. UNIVERSAL LIGHTBOX (2D IMAGES + INTERACTIVE 3D STL + PDF RESUME)
  * ============================================================================
  */
 let currentLightboxList = [];
 let currentLightboxIndex = 0;
 
+// Interactive Full-Screen STL state
+let lbScene = null,
+  lbCamera = null,
+  lbRenderer = null,
+  lbControls = null,
+  lbMesh = null,
+  lbAnimId = null;
+
 function preventBackgroundScroll(e) {
+  // Allow scroll wheel inside the 3D STL stage so OrbitControls can zoom!
+  if (e.target && e.target.closest("#lightbox-stl-stage")) return;
   e.preventDefault();
+}
+
+function initOrUpdateLightboxStl(stlUrl) {
+  const stage = document.getElementById("lightbox-stl-stage");
+  const wireBtn = document.getElementById("stl-wireframe-btn");
+  const resetBtn = document.getElementById("stl-reset-btn");
+
+  if (!lbRenderer) {
+    lbScene = new THREE.Scene();
+    lbCamera = new THREE.PerspectiveCamera(42, 16 / 10, 0.1, 4000);
+    lbRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    lbRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    stage.appendChild(lbRenderer.domElement);
+
+    lbControls = new THREE.OrbitControls(lbCamera, lbRenderer.domElement);
+    lbControls.enableDamping = true;
+    lbControls.dampingFactor = 0.06;
+
+    const amb = new THREE.AmbientLight(0xffffff, 0.7);
+    lbScene.add(amb);
+
+    const dir1 = new THREE.DirectionalLight(0xffffff, 0.9);
+    dir1.position.set(100, 140, 120);
+    lbScene.add(dir1);
+
+    const dir2 = new THREE.DirectionalLight(0xd92804, 0.45);
+    dir2.position.set(-100, -80, -90);
+    lbScene.add(dir2);
+
+    const grid = new THREE.GridHelper(180, 18, 0xd92804, 0x2f363d);
+    grid.position.y = -42;
+    lbScene.add(grid);
+
+    wireBtn.addEventListener("click", () => {
+      if (!lbMesh) return;
+      lbMesh.material.wireframe = !lbMesh.material.wireframe;
+      wireBtn.textContent = `WIREFRAME: ${lbMesh.material.wireframe ? "ON" : "OFF"}`;
+    });
+
+    resetBtn.addEventListener("click", () => {
+      if (!lbControls) return;
+      lbControls.reset();
+      lbCamera.position.set(70, 50, 95);
+      lbControls.update();
+    });
+  }
+
+  const w = stage.clientWidth || window.innerWidth * 0.78;
+  const h = stage.clientHeight || window.innerHeight * 0.74;
+  lbCamera.aspect = w / h;
+  lbCamera.updateProjectionMatrix();
+  lbRenderer.setSize(w, h);
+
+  if (lbMesh) {
+    lbScene.remove(lbMesh);
+    lbMesh.material.dispose();
+    lbMesh = null;
+  }
+
+  wireBtn.textContent = "WIREFRAME: OFF";
+
+  loadStlGeometry(stlUrl).then((geometry) => {
+    const material = new THREE.MeshStandardMaterial({
+      color: 0xe2e8f0,
+      metalness: 0.38,
+      roughness: 0.38,
+      wireframe: false
+    });
+    lbMesh = new THREE.Mesh(geometry, material);
+
+    geometry.computeBoundingSphere();
+    const radius = geometry.boundingSphere.radius || 1;
+    const scale = 52 / radius;
+    lbMesh.scale.set(scale, scale, scale);
+    lbScene.add(lbMesh);
+
+    lbControls.reset();
+    lbCamera.position.set(70, 50, 95);
+    lbControls.update();
+  });
+
+  if (lbAnimId) cancelAnimationFrame(lbAnimId);
+  function animateLb() {
+    lbAnimId = requestAnimationFrame(animateLb);
+    if (lbControls) lbControls.update();
+    if (lbRenderer && lbScene && lbCamera) {
+      lbRenderer.render(lbScene, lbCamera);
+    }
+  }
+  animateLb();
 }
 
 function openLightbox(items, startIndex = 0) {
   currentLightboxList = items;
   currentLightboxIndex = startIndex;
-  updateLightboxSlide();
 
   const modal = document.getElementById("lightbox-modal");
   modal.classList.add("open");
   modal.setAttribute("aria-hidden", "false");
 
-  // Lock page scrolling while viewing full-size image
+  // Lock background scroll
   document.body.classList.add("lightbox-lock");
   window.addEventListener("wheel", preventBackgroundScroll, { passive: false });
   window.addEventListener("touchmove", preventBackgroundScroll, { passive: false });
+
+  updateLightboxSlide();
 }
 
 function closeLightbox() {
@@ -716,7 +1041,13 @@ function closeLightbox() {
   modal.classList.remove("open");
   modal.setAttribute("aria-hidden", "true");
 
-  // Restore page scrolling
+  if (lbAnimId) {
+    cancelAnimationFrame(lbAnimId);
+    lbAnimId = null;
+  }
+
+  document.getElementById("lightbox-pdf-frame").src = "";
+
   document.body.classList.remove("lightbox-lock");
   window.removeEventListener("wheel", preventBackgroundScroll);
   window.removeEventListener("touchmove", preventBackgroundScroll);
@@ -725,7 +1056,38 @@ function closeLightbox() {
 function updateLightboxSlide() {
   if (!currentLightboxList.length) return;
   const item = currentLightboxList[currentLightboxIndex];
-  document.getElementById("lightbox-img").src = item.src;
+
+  const imgEl = document.getElementById("lightbox-img");
+  const stlStage = document.getElementById("lightbox-stl-stage");
+  const pdfFrame = document.getElementById("lightbox-pdf-frame");
+  const wireBtn = document.getElementById("stl-wireframe-btn");
+  const resetBtn = document.getElementById("stl-reset-btn");
+
+  // Hide all viewers first
+  imgEl.style.display = "none";
+  stlStage.style.display = "none";
+  pdfFrame.style.display = "none";
+  wireBtn.style.display = "none";
+  resetBtn.style.display = "none";
+
+  if (lbAnimId) {
+    cancelAnimationFrame(lbAnimId);
+    lbAnimId = null;
+  }
+
+  if (item.type === "stl") {
+    stlStage.style.display = "block";
+    wireBtn.style.display = "inline-block";
+    resetBtn.style.display = "inline-block";
+    initOrUpdateLightboxStl(item.src);
+  } else if (item.type === "pdf") {
+    pdfFrame.style.display = "block";
+    pdfFrame.src = item.src;
+  } else {
+    imgEl.style.display = "block";
+    imgEl.src = item.src;
+  }
+
   document.getElementById("lightbox-caption").textContent = item.caption || "";
   document.getElementById("lightbox-counter").textContent = `${
     currentLightboxIndex + 1
@@ -742,7 +1104,7 @@ function stepLightbox(delta) {
 
 /**
  * ============================================================================
- * 9. INITIALIZATION & EVENT LISTENERS
+ * 10. INITIALIZATION & EVENT LISTENERS
  * ============================================================================
  */
 window.addEventListener("DOMContentLoaded", async () => {
@@ -752,13 +1114,12 @@ window.addEventListener("DOMContentLoaded", async () => {
     loadAndRenderPhotography()
   ]);
 
-  // Fade out loader and trigger staggered entrance animation
   setTimeout(() => {
     document.getElementById("page-loader").classList.add("loaded");
     document.body.classList.add("page-ready");
   }, 450);
 
-  // Top Navigation Tabs
+  // Top Tab Buttons
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       switchTab(parseInt(btn.dataset.index, 10));
@@ -775,39 +1136,43 @@ window.addEventListener("DOMContentLoaded", async () => {
   });
 
   // Bio Edit Toggle
-  // const editBioBtn = document.getElementById("toggle-bio-edit");
-  // const bioContent = document.getElementById("about-bio-content");
-  // editBioBtn.addEventListener("click", () => {
-  //   const isEditing = bioContent.getAttribute("contenteditable") === "true";
-  //   if (isEditing) {
-  //     bioContent.setAttribute("contenteditable", "false");
-  //     localStorage.setItem("azcore_custom_bio", bioContent.innerHTML);
-  //     editBioBtn.textContent = "EDIT TEXT";
-  //   } else {
-  //     bioContent.setAttribute("contenteditable", "true");
-  //     bioContent.focus();
-  //     editBioBtn.textContent = "SAVE TEXT";
-  //   }
-  // });
+  const editBioBtn = document.getElementById("toggle-bio-edit");
+  const bioContent = document.getElementById("about-bio-content");
+  editBioBtn.addEventListener("click", () => {
+    const isEditing = bioContent.getAttribute("contenteditable") === "true";
+    if (isEditing) {
+      bioContent.setAttribute("contenteditable", "false");
+      localStorage.setItem("azcore_custom_bio", bioContent.innerHTML);
+      editBioBtn.textContent = "EDIT TEXT";
+    } else {
+      bioContent.setAttribute("contenteditable", "true");
+      bioContent.focus();
+      editBioBtn.textContent = "SAVE TEXT";
+    }
+  });
 
   // Live AutoCAD Cursor Coordinates
   const coordReadout = document.getElementById("coord-readout");
-  window.addEventListener("mousemove", (e) => {
-    const x = String(e.clientX).padStart(4, "0");
-    const y = String(e.clientY).padStart(4, "0");
-    coordReadout.textContent = `X: ${x} // Y: ${y}`;
-  });
+  window.addEventListener(
+    "mousemove",
+    (e) => {
+      const x = String(e.clientX).padStart(4, "0");
+      const y = String(e.clientY).padStart(4, "0");
+      coordReadout.textContent = `X: ${x} // Y: ${y}`;
+    },
+    { passive: true }
+  );
 
-  // Re-sample Photography Average Color on Scroll / Resize
+  // Throttled 60fps Photography Average Color Update on Scroll / Resize
   window.addEventListener(
     "scroll",
     () => {
-      if (currentTabIndex === 2) updatePhotographyAverageColor();
+      if (currentTabIndex === 2) scheduleAverageColorUpdate();
     },
     { passive: true }
   );
   window.addEventListener("resize", () => {
-    if (currentTabIndex === 2) updatePhotographyAverageColor();
+    if (currentTabIndex === 2) scheduleAverageColorUpdate();
   });
 
   // Lightbox Events

@@ -3,12 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AZCORE // Portfolio</title>
+  <title>AZCORE // Engineering & Photography Portfolio</title>
   <!-- Google Fonts: Space Grotesk & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
+
+  <!-- Three.js + STLLoader + OrbitControls for 3D .stl CAD support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body class="cad-theme">
 
@@ -19,7 +24,7 @@
       <div class="loader-bar-track">
         <div class="loader-bar-fill"></div>
       </div>
-      <div class="loader-meta">SCANNING FOLDERS // INITIALIZING WORKSPACE</div>
+      <div class="loader-meta">SCANNING FOLDERS // INITIALIZING CAD & 3D ENGINE</div>
     </div>
   </div>
 
@@ -101,15 +106,43 @@
           <div class="quick-specs-card" id="about-specs-list"></div>
         </div>
 
-        <!-- Right Column: Bio, Skills, & Ways to Reach Me -->
+        <!-- Right Column: Bio, Resume, Skills, & Ways to Reach Me -->
         <div class="about-content-col">
           <div class="cad-panel">
             <div class="panel-header">
               <span class="panel-title">// BIO & OVERVIEW</span>
+              <button id="toggle-bio-edit" class="mini-action-btn" title="Click to edit and save locally">
+                EDIT TEXT
+              </button>
             </div>
             <div id="about-bio-content" class="bio-text" contenteditable="false"></div>
           </div>
 
+          <!-- RESUME / CV PANEL -->
+          <div class="cad-panel resume-panel">
+            <div class="panel-header">
+              <span class="panel-title">// CURRICULUM VITAE & TECHNICAL RESUME</span>
+              <span id="resume-status-tag" class="resume-status-tag">DOCUMENT READY</span>
+            </div>
+            <div class="resume-card-body">
+              <div class="resume-info">
+                <div class="resume-doc-title" id="resume-title-display">ALEXANDER_ZHUK_RESUME.PDF</div>
+                <p class="resume-doc-sub" id="resume-subtitle-display">
+                  Civil Engineering, CAD/CFD Simulation, Metal Fabrication & Leadership Experience
+                </p>
+              </div>
+              <div class="resume-actions">
+                <button id="preview-resume-btn" class="cad-btn cad-btn-primary">
+                  PREVIEW RESUME
+                </button>
+                <a id="download-resume-link" href="assets/about/resume.pdf" target="_blank" download class="cad-btn cad-btn-outline">
+                  DOWNLOAD PDF &#8599;
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Technical Arsenal -->
           <div class="cad-panel">
             <div class="panel-header">
               <span class="panel-title">// TECHNICAL ARSENAL & SOFTWARE</span>
@@ -117,6 +150,7 @@
             <div id="about-skills-grid" class="skills-grid"></div>
           </div>
 
+          <!-- Ways to Reach Me -->
           <div class="cad-panel">
             <div class="panel-header">
               <span class="panel-title">// WAYS TO REACH ME & SOCIALS</span>
@@ -130,62 +164,75 @@
     <!-- ==================== TAB 2: PROJECTS ==================== -->
     <section id="tab-projects" class="tab-section" data-tab-index="1">
       <div class="section-header">
-        <div class="section-eyebrow">SECTION 02 // TEXT-LINKED PROJECT ARCHIVE</div>
+        <div class="section-eyebrow">SECTION 02 // TEXT-LINKED PROJECT & 3D STL ARCHIVE</div>
         <div class="photo-header-row">
           <div>
             <h1 class="section-title">PROJECTS</h1>
             <p class="section-subtitle">
-              Each project is dynamically generated from its folder's <code>project.txt</code> file and linked images.
+              Driven by each folder's <code>project.txt</code>. Supports images and auto-rotating <code>.stl</code> 3D models (click any model to orbit/zoom full-screen).
             </p>
           </div>
           <div id="projects-count-badge" class="telemetry-badge">LOADED: 0 PROJECTS</div>
         </div>
       </div>
 
-      <div id="projects-container" class="projects-list">
-        <!-- Populated dynamically ONLY from folders containing a valid project.txt -->
-      </div>
+      <div id="projects-container" class="projects-list"></div>
     </section>
 
     <!-- ==================== TAB 3: PHOTOGRAPHY ==================== -->
     <section id="tab-photography" class="tab-section" data-tab-index="2">
       <div class="section-header">
-        <div class="section-eyebrow">SECTION 03 // LIVE FOLDER SCAN & DYNAMIC COLOR ENGINE</div>
+        <div class="section-eyebrow">SECTION 03 // GPU-CACHED FOLDER SCAN & COLOR ENGINE</div>
         <div class="photo-header-row">
           <div>
             <h1 class="section-title">PHOTOGRAPHY</h1>
             <p class="section-subtitle">
-              Automatically displays the exact images found in your photography folder and blends their average color into the background.
+              Lazy-loaded high-resolution archive with one-time RGB caching for lag-free 50+ image browsing.
             </p>
           </div>
           <div id="photo-count-badge" class="telemetry-badge">FOLDER COUNT: 0 IMAGES</div>
         </div>
       </div>
 
-      <!-- Instagram-style 3-column Square Grid -->
-      <div id="photography-grid" class="insta-grid">
-        <!-- Populated dynamically with the exact images inside the photography folder -->
-      </div>
+      <div id="photography-grid" class="insta-grid"></div>
     </section>
 
   </main>
 
-  <!-- UNIVERSAL FULL-SCREEN LIGHTBOX MODAL -->
+  <!-- UNIVERSAL FULL-SCREEN LIGHTBOX MODAL (SUPPORTS IMAGES, 3D .STL, AND RESUME PDF) -->
   <div id="lightbox-modal" class="lightbox-modal" aria-hidden="true">
-    <div class="lightbox-backdrop-hint">CLICK ANYWHERE OUTSIDE IMAGE TO CLOSE [ESC]</div>
-    <button class="lightbox-nav lightbox-prev" id="lightbox-prev" aria-label="Previous Image">&#8592;</button>
-    <div class="lightbox-content-wrapper">
+    <div class="lightbox-backdrop-hint">CLICK ANYWHERE OUTSIDE VIEWER TO CLOSE [ESC]</div>
+    <button class="lightbox-nav lightbox-prev" id="lightbox-prev" aria-label="Previous Item">&#8592;</button>
+
+    <div class="lightbox-content-wrapper" id="lightbox-content-wrapper">
+      <!-- 1. Standard 2D Image Viewer -->
       <img id="lightbox-img" src="" alt="Full screen preview" />
+
+      <!-- 2. Interactive 3D STL Viewer Stage -->
+      <div id="lightbox-stl-stage" class="lightbox-stl-stage" style="display:none;">
+        <div class="stl-controls-hint">
+          LEFT DRAG: ORBIT // RIGHT DRAG: PAN // SCROLL: ZOOM
+        </div>
+      </div>
+
+      <!-- 3. Embedded Resume PDF Viewer -->
+      <iframe id="lightbox-pdf-frame" class="lightbox-pdf-frame" style="display:none;" title="Resume PDF Preview"></iframe>
+
       <div class="lightbox-caption-bar">
-        <span id="lightbox-caption">IMAGE PREVIEW</span>
-        <span id="lightbox-counter">1 / 1</span>
+        <span id="lightbox-caption">PREVIEW</span>
+        <div class="lightbox-caption-right">
+          <button id="stl-wireframe-btn" class="mini-action-btn" style="display:none;">WIREFRAME: OFF</button>
+          <button id="stl-reset-btn" class="mini-action-btn" style="display:none;">RESET VIEW</button>
+          <span id="lightbox-counter">1 / 1</span>
+        </div>
       </div>
     </div>
-    <button class="lightbox-nav lightbox-next" id="lightbox-next" aria-label="Next Image">&#8594;</button>
+
+    <button class="lightbox-nav lightbox-next" id="lightbox-next" aria-label="Next Item">&#8594;</button>
   </div>
 
-  <!-- Offscreen Canvas for real-time photography average color sampling -->
-  <canvas id="color-sampler-canvas" width="32" height="32" style="display:none;"></canvas>
+  <!-- Offscreen Canvas used ONCE per image load to cache RGB color -->
+  <canvas id="color-sampler-canvas" width="24" height="24" style="display:none;"></canvas>
 
   <script src="script.js"></script>
 </body>
