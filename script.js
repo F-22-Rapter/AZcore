@@ -54,7 +54,7 @@ const PORTFOLIO_CONFIG = {
     baseFolder: "assets/projects/",
     textFileName: "project.txt",
     foldersToCheck: [
-      "project-01",
+      "LARP",
       "project-02",
       "project-03",
       "project-04",
