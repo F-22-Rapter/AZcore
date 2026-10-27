@@ -271,7 +271,7 @@ function mountAutoRotating3DPreview(container, modelUrl, type) {
   dirLight2.position.set(-65, -40, -60);
   scene.add(dirLight2);
 
-  const grid = new THREE.GridHelper(120, 12, 0xd92804, 0x333a40);
+  const grid = new THREE.GridHelper(120, 12, 0xd92804, 0x4b555d);
   grid.position.y = -28;
   scene.add(grid);
 
