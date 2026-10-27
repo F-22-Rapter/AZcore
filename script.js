@@ -1130,18 +1130,18 @@ function initOrUpdateLightbox3D(modelUrl, type) {
     lbControls.enableDamping = true;
     lbControls.dampingFactor = 0.06;
 
-    const hemi = new THREE.HemisphereLight(0xffffff, 0x222830, 1.0);
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x222830, 0.5);
     lbScene.add(hemi);
 
-    const dir1 = new THREE.DirectionalLight(0xffffff, 0.95);
+    const dir1 = new THREE.DirectionalLight(0xffffff, 0.5);
     dir1.position.set(100, 140, 120);
     lbScene.add(dir1);
 
-    const dir2 = new THREE.DirectionalLight(0xffffff, 0.5);
+    const dir2 = new THREE.DirectionalLight(0xffffff, 0.2);
     dir2.position.set(-100, -80, -90);
     lbScene.add(dir2);
 
-    const grid = new THREE.GridHelper(180, 18, 0xd92804, 0x2f363d);
+    const grid = new THREE.GridHelper(180, 18, 0xd92804, 0x4b555d);
     grid.position.y = -42;
     lbScene.add(grid);
 
