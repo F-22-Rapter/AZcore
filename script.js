@@ -53,7 +53,7 @@ const PORTFOLIO_CONFIG = {
     // Folder names to check for `project.txt` (you can add any folder names here,
     // and the script also auto-scans the directory if your server supports folder listing)
     foldersToCheck: [
-      "project-01",
+      "LARP",
       "project-02",
       "project-03",
       "project-04",
