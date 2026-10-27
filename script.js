@@ -118,21 +118,22 @@ async function resolveValidUrlWithCaseFallback(baseFolder, fileName) {
   return null;
 }
 
-// Automatically pairs .webp previews with .jpg/.png full-size images
+// Format-agnostic dual-set resolver: checks exact filename first, then common extensions
 async function resolveDualImageUrls(baseFolder, previewSub, fullSub, fileName) {
   const normBase = normalizeFolder(baseFolder);
   const normPrev = normalizeFolder(previewSub);
   const normFull = normalizeFolder(fullSub);
 
-  // Strip extension so we just have the base name (e.g. "Image (1)")
   const dotIdx = fileName.lastIndexOf(".");
   const baseName = dotIdx !== -1 ? fileName.slice(0, dotIdx) : fileName;
-  const originalExt = dotIdx !== -1 ? fileName.slice(dotIdx) : ".webp";
+  const originalExt = dotIdx !== -1 ? fileName.slice(dotIdx) : "";
 
-  // Check Preview Folder
-  const previewExts = [...new Set([".webp", originalExt, ".jpg", ".JPG", ".png"])];
+  // Build a unique, balanced list of extensions to check (original extension first if present)
+  const candidateExts = [...new Set([originalExt, ".webp", ".jpg", ".jpeg", ".png", ".JPG", ".JPEG"])].filter(Boolean);
+
+  // 1. Resolve Preview URL
   let previewUrl = null;
-  for (const ext of previewExts) {
+  for (const ext of candidateExts) {
     const candidate = `${normBase}${normPrev}${baseName}${ext}`;
     if (await verifyFileExistsFast(candidate)) {
       previewUrl = candidate;
@@ -140,10 +141,9 @@ async function resolveDualImageUrls(baseFolder, previewSub, fullSub, fileName) {
     }
   }
 
-  // Check Full Folder
-  const fullExts = [...new Set([".jpg", ".JPG", ".jpeg", originalExt, ".png", ".webp"])];
+  // 2. Resolve Full-Size URL
   let fullUrl = null;
-  for (const ext of fullExts) {
+  for (const ext of candidateExts) {
     const candidate = `${normBase}${normFull}${baseName}${ext}`;
     if (await verifyFileExistsFast(candidate)) {
       fullUrl = candidate;
@@ -151,7 +151,7 @@ async function resolveDualImageUrls(baseFolder, previewSub, fullSub, fileName) {
     }
   }
 
-  // Fallback direct root
+  // Fallback direct root if subfolders aren't used for this file
   if (!previewUrl && !fullUrl) {
     const directUrl = await resolveValidUrlWithCaseFallback(normBase, fileName);
     if (!directUrl) return null;
