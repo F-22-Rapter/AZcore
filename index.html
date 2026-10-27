@@ -10,10 +10,11 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 
-  <!-- Three.js + STLLoader + GLTFLoader + OrbitControls for 3D .stl & full-color .glb support -->
+  <!-- Three.js + STLLoader + GLTFLoader + DRACOLoader + OrbitControls -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body class="cad-theme">
@@ -29,7 +30,7 @@
     </div>
   </div>
 
-  <!-- DYNAMIC BACKGROUND LAYER (AutoCAD Grid + Photo Average Color) -->
+  <!-- DYNAMIC BACKGROUND LAYER -->
   <div id="bg-canvas-layer" class="bg-canvas-layer">
     <div class="cad-grid-major"></div>
     <div class="cad-grid-minor"></div>
@@ -82,7 +83,7 @@
   <!-- MAIN VIEWPORT STAGE -->
   <main class="stage-container EntranceFade" style="--delay: 0.35s">
 
-    <!-- ==================== TAB 1: ABOUT ME ==================== -->
+    <!-- TAB 1: ABOUT ME -->
     <section id="tab-about" class="tab-section active-section" data-tab-index="0">
       <div class="section-header">
         <div class="section-eyebrow">SECTION 01 // PROFILE & SPECIFICATIONS</div>
@@ -117,7 +118,6 @@
             <div id="about-bio-content" class="bio-text" contenteditable="false"></div>
           </div>
 
-          <!-- RESUME / CV PANEL -->
           <div class="cad-panel resume-panel">
             <div class="panel-header">
               <span class="panel-title">// CURRICULUM VITAE & TECHNICAL RESUME</span>
@@ -158,7 +158,7 @@
       </div>
     </section>
 
-    <!-- ==================== TAB 2: PROJECTS ==================== -->
+    <!-- TAB 2: PROJECTS -->
     <section id="tab-projects" class="tab-section" data-tab-index="1">
       <div class="section-header">
         <div class="section-eyebrow">SECTION 02 // TEXT-LINKED PROJECT, .GLB & .STL ARCHIVE</div>
@@ -166,7 +166,7 @@
           <div>
             <h1 class="section-title">PROJECTS</h1>
             <p class="section-subtitle">
-              Driven by each folder's <code>project.txt</code>. Supports images, full-color <code>.glb</code> models, and <code>.stl</code> meshes (click any model to orbit/zoom full-screen).
+              Driven by each folder's <code>project.txt</code>. Supports images, full-color Draco-compressed <code>.glb</code> models, and <code>.stl</code> meshes.
             </p>
           </div>
           <div id="projects-count-badge" class="telemetry-badge">QUEUED FOR IDLE LOAD...</div>
@@ -176,7 +176,7 @@
       <div id="projects-container" class="projects-list"></div>
     </section>
 
-    <!-- ==================== TAB 3: PHOTOGRAPHY ==================== -->
+    <!-- TAB 3: PHOTOGRAPHY -->
     <section id="tab-photography" class="tab-section" data-tab-index="2">
       <div class="section-header">
         <div class="section-eyebrow">SECTION 03 // DUAL-RESOLUTION PREVIEW & FULL-SIZE ARCHIVE</div>
@@ -196,30 +196,26 @@
 
   </main>
 
-  <!-- UNIVERSAL FULL-SCREEN LIGHTBOX MODAL (FULL-RES IMAGES, 3D GLB/STL, & PDF) -->
+  <!-- UNIVERSAL FULL-SCREEN LIGHTBOX -->
   <div id="lightbox-modal" class="lightbox-modal" aria-hidden="true">
     <div class="lightbox-backdrop-hint">CLICK ANYWHERE OUTSIDE VIEWER TO CLOSE [ESC]</div>
     <button class="lightbox-nav lightbox-prev" id="lightbox-prev" aria-label="Previous Item">&#8592;</button>
 
     <div class="lightbox-content-wrapper" id="lightbox-content-wrapper">
       
-      <!-- Animated CAD Spinner while Full-Resolution Image or 3D Model Loads -->
       <div id="lightbox-loader" class="lightbox-loader" style="display:none;">
         <div class="cad-spinner"></div>
         <div class="cad-loader-text" id="lightbox-loader-text">LOADING FULL-RESOLUTION ASSET...</div>
       </div>
 
-      <!-- 1. Full-Resolution 2D Image Viewer -->
       <img id="lightbox-img" src="" alt="Full screen preview" />
 
-      <!-- 2. Interactive 3D GLB / STL Viewer Stage -->
       <div id="lightbox-3d-stage" class="lightbox-stl-stage" style="display:none;">
         <div class="stl-controls-hint">
           LEFT DRAG: ORBIT // RIGHT DRAG: PAN // SCROLL: ZOOM
         </div>
       </div>
 
-      <!-- 3. Embedded Resume PDF Viewer -->
       <iframe id="lightbox-pdf-frame" class="lightbox-pdf-frame" style="display:none;" title="Resume PDF Preview"></iframe>
 
       <div class="lightbox-caption-bar">
@@ -235,7 +231,6 @@
     <button class="lightbox-nav lightbox-next" id="lightbox-next" aria-label="Next Item">&#8594;</button>
   </div>
 
-  <!-- Offscreen Canvas used ONCE per preview image load to cache RGB color -->
   <canvas id="color-sampler-canvas" width="24" height="24" style="display:none;"></canvas>
 
   <script src="script.js"></script>

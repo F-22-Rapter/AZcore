@@ -53,7 +53,6 @@ const PORTFOLIO_CONFIG = {
   projectsConfig: {
     baseFolder: "assets/projects/",
     textFileName: "project.txt",
-    // Optional dual-resolution subfolders inside a project folder (falls back to root of project folder if not used)
     previewSubfolder: "preview/",
     fullSubfolder: "full/",
     foldersToCheck: [
@@ -63,11 +62,8 @@ const PORTFOLIO_CONFIG = {
 
   // -------------------- TAB 3: PHOTOGRAPHY FOLDER CONFIG --------------------
   photographyConfig: {
-    // Change `gridColumns` anytime to adjust how many photos appear per row (currently 5 wide)
     gridColumns: 5,
     folder: "assets/photography/",
-    // Dual-folder setup: lightweight thumbnails in `preview/`, uncompressed originals in `full/`
-    // (If an image isn't inside `preview/` or `full/`, the script automatically falls back to `assets/photography/<file>`)
     previewSubfolder: "preview/",
     fullSubfolder: "full/",
     maxNumberedProbe: 80
@@ -76,7 +72,7 @@ const PORTFOLIO_CONFIG = {
 
 /**
  * ============================================================================
- * 2. FILE HELPERS & CASE-TOLERANT ASSET VERIFICATION
+ * 2. FILE HELPERS & DUAL-RESOLUTION URL MATCHING
  * ============================================================================
  */
 function normalizeFolder(path) {
@@ -106,7 +102,6 @@ async function verifyFileExistsFast(url) {
   }
 }
 
-// Resolves exact casing (.stl vs .STL, .glb vs .GLB) so Windows/Git case mismatches don't 404
 async function resolveValidUrlWithCaseFallback(baseFolder, fileName) {
   const primary = `${baseFolder}${fileName}`;
   if (await verifyFileExistsFast(primary)) return primary;
@@ -123,18 +118,18 @@ async function resolveValidUrlWithCaseFallback(baseFolder, fileName) {
   return null;
 }
 
-// Automatically pairs .webp previews with .jpg/.png full-size images!
+// Automatically pairs .webp previews with .jpg/.png full-size images
 async function resolveDualImageUrls(baseFolder, previewSub, fullSub, fileName) {
   const normBase = normalizeFolder(baseFolder);
   const normPrev = normalizeFolder(previewSub);
   const normFull = normalizeFolder(fullSub);
 
-  // Strip the extension so we have just the base name (e.g., "Image (1)")
+  // Strip extension so we just have the base name (e.g. "Image (1)")
   const dotIdx = fileName.lastIndexOf(".");
   const baseName = dotIdx !== -1 ? fileName.slice(0, dotIdx) : fileName;
   const originalExt = dotIdx !== -1 ? fileName.slice(dotIdx) : ".webp";
 
-  // 1. Check Preview Folder (Prioritizes .webp first, then original extension, then .jpg)
+  // Check Preview Folder
   const previewExts = [...new Set([".webp", originalExt, ".jpg", ".JPG", ".png"])];
   let previewUrl = null;
   for (const ext of previewExts) {
@@ -145,7 +140,7 @@ async function resolveDualImageUrls(baseFolder, previewSub, fullSub, fileName) {
     }
   }
 
-  // 2. Check Full Folder (Prioritizes .jpg first, then original extension, then .webp/.png)
+  // Check Full Folder
   const fullExts = [...new Set([".jpg", ".JPG", ".jpeg", originalExt, ".png", ".webp"])];
   let fullUrl = null;
   for (const ext of fullExts) {
@@ -156,7 +151,7 @@ async function resolveDualImageUrls(baseFolder, previewSub, fullSub, fileName) {
     }
   }
 
-  // 3. Fallback: Check root folder directly if subfolders aren't used for a specific file
+  // Fallback direct root
   if (!previewUrl && !fullUrl) {
     const directUrl = await resolveValidUrlWithCaseFallback(normBase, fileName);
     if (!directUrl) return null;
@@ -171,7 +166,7 @@ async function resolveDualImageUrls(baseFolder, previewSub, fullSub, fileName) {
 
 /**
  * ============================================================================
- * 3. UNIFIED 3D ENGINE (SUPPORTS FULL-COLOR .GLB/.GLTF & .STL MODELS)
+ * 3. UNIFIED 3D ENGINE (.GLB WITH DRACO COMPRESSION & .STL)
  * ============================================================================
  */
 const modelCache = new Map();
@@ -183,16 +178,21 @@ function load3DModelObject(url, type) {
 
   return new Promise((resolve, reject) => {
     if (type === "glb") {
-      if (typeof THREE === "undefined" || !THREE.GLTFLoader) {
-        reject(new Error("THREE.GLTFLoader not loaded"));
+      if (typeof THREE === "undefined" || !THREE.GLTFLoader || !THREE.DRACOLoader) {
+        reject(new Error("THREE loaders missing"));
         return;
       }
+      
       const loader = new THREE.GLTFLoader();
+      // Setup Draco Compression Decoder
+      const dracoLoader = new THREE.DRACOLoader();
+      dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/libs/draco/');
+      loader.setDRACOLoader(dracoLoader);
+
       loader.load(
         url,
         (gltf) => {
           const root = gltf.scene || gltf.scenes[0];
-          // Center and normalize scale to a consistent bounding radius
           const box = new THREE.Box3().setFromObject(root);
           const center = box.getCenter(new THREE.Vector3());
           const size = box.getSize(new THREE.Vector3());
@@ -247,7 +247,6 @@ function load3DModelObject(url, type) {
   });
 }
 
-// Auto-rotating 3D card preview for both .GLB (with color) and .STL
 function mountAutoRotating3DPreview(container, modelUrl, type) {
   const badge = document.createElement("div");
   badge.className = "stl-badge-overlay";
@@ -261,7 +260,6 @@ function mountAutoRotating3DPreview(container, modelUrl, type) {
   renderer.outputEncoding = THREE.sRGBEncoding;
   container.appendChild(renderer.domElement);
 
-  // Balanced multi-directional lighting so colored .GLB materials look vibrant and accurate
   const hemiLight = new THREE.HemisphereLight(0xffffff, 0x222830, 0.95);
   scene.add(hemiLight);
 
@@ -334,7 +332,7 @@ function mountAutoRotating3DPreview(container, modelUrl, type) {
 
 /**
  * ============================================================================
- * 4. POST-BOOT DEFERRED BACKGROUND PRE-WARM (RUNS WHILE READING ABOUT ME)
+ * 4. POST-BOOT DEFERRED BACKGROUND PRE-WARM
  * ============================================================================
  */
 function backgroundPrewarmPreviewImages(previewUrls) {
@@ -363,7 +361,7 @@ function backgroundPrewarmPreviewImages(previewUrls) {
 
 /**
  * ============================================================================
- * 5. TAB 1: RENDER ABOUT ME & RESUME (LOADS IMMEDIATELY ON STARTUP)
+ * 5. TAB 1: RENDER ABOUT ME (LOADS IMMEDIATELY)
  * ============================================================================
  */
 async function renderAboutSection() {
@@ -372,7 +370,6 @@ async function renderAboutSection() {
   document.getElementById("about-headline").textContent = cfg.headline;
   document.getElementById("about-name-caption").textContent = cfg.name;
 
-  // Set CSS variable for Photography Grid Columns immediately
   document.documentElement.style.setProperty(
     "--photo-grid-cols",
     PORTFOLIO_CONFIG.photographyConfig.gridColumns || 5
@@ -412,7 +409,6 @@ async function renderAboutSection() {
     );
   });
 
-  // Resume Setup
   const resumePath = cfg.resume.file.startsWith("http")
     ? cfg.resume.file
     : `${normAboutFolder}${cfg.resume.file}`;
@@ -479,7 +475,7 @@ async function renderAboutSection() {
 
 /**
  * ============================================================================
- * 6. TAB 2: REWORKED PROJECT SYSTEM (.GLB, .STL, & DUAL-RES IMAGES)
+ * 6. TAB 2: REWORKED PROJECT SYSTEM
  * ============================================================================
  */
 let projectsLoaded = false;
@@ -538,7 +534,6 @@ function parseProjectTextFile(rawText, folderPath) {
 
   data.description = descLines.join("\n").trim();
 
-  // Prioritize MAIN_IMAGE / MAIN_MODEL at index 0 of assets list
   if (data.mainAsset) {
     data.assets = [
       data.mainAsset,
@@ -564,7 +559,6 @@ async function resolveProjectAsset(projFolder, fileName) {
     };
   }
 
-  // Image asset: check preview/ and full/ subfolders or direct folder
   const dual = await resolveDualImageUrls(projFolder, previewSubfolder, fullSubfolder, fileName);
   if (dual) {
     return {
@@ -575,7 +569,6 @@ async function resolveProjectAsset(projFolder, fileName) {
     };
   }
 
-  // Case fallback check on direct image
   const fallbackDirect = await resolveValidUrlWithCaseFallback(projFolder, fileName);
   if (fallbackDirect) {
     return {
@@ -766,20 +759,18 @@ async function loadAndRenderProjects() {
 
 /**
  * ============================================================================
- * 7. TAB 3: DUAL-SET PHOTOGRAPHY ENGINE (PREVIEW GRID -> FULL-RES ON CLICK)
+ * 7. TAB 3: DUAL-SET PHOTOGRAPHY ENGINE
  * ============================================================================
  */
 let photographyLoaded = false;
 let photographyLoadingPromise = null;
 
 async function discoverPhotographyDualAssets() {
-  const { folder, previewSubfolder, fullSubfolder, maxNumberedProbe } =
-    PORTFOLIO_CONFIG.photographyConfig;
+  const { folder, previewSubfolder, fullSubfolder, maxNumberedProbe } = PORTFOLIO_CONFIG.photographyConfig;
   const normFolder = normalizeFolder(folder);
   const discoveredItems = [];
   const seenNames = new Set();
 
-  // 1. Check `photos.txt` manifest first
   try {
     const txtRes = await fetch(`${normFolder}photos.txt`, { cache: "no-store" });
     if (txtRes.ok && !(txtRes.headers.get("content-type") || "").includes("text/html")) {
@@ -810,18 +801,14 @@ async function discoverPhotographyDualAssets() {
     }
   } catch (e) {}
 
-  // 2. Fallback numbered probing (checks `.webp` and `.jpg` in `preview/` and `full/`)
   if (discoveredItems.length === 0) {
     const candidates = [];
     for (let i = 1; i <= maxNumberedProbe; i++) {
       const pad = String(i).padStart(2, "0");
       candidates.push(
-        `Image (${i}).webp`,
-        `Image (${i}).jpg`,
-        `${pad}.webp`,
-        `${pad}.jpg`,
-        `${i}.webp`,
-        `${i}.jpg`
+        `Image (${i}).webp`, `Image (${i}).jpg`,
+        `${pad}.webp`, `${pad}.jpg`,
+        `${i}.webp`, `${i}.jpg`
       );
     }
 
@@ -859,10 +846,7 @@ function cacheSingleImageColorOnce(img, card) {
     ctx.drawImage(img, 0, 0, 24, 24);
     const data = ctx.getImageData(0, 0, 24, 24).data;
 
-    let r = 0,
-      g = 0,
-      b = 0,
-      count = 0;
+    let r = 0, g = 0, b = 0, count = 0;
     for (let i = 0; i < data.length; i += 16) {
       r += data[i];
       g += data[i + 1];
@@ -886,7 +870,6 @@ async function loadAndRenderPhotography() {
     const grid = document.getElementById("photography-grid");
     const countBadge = document.getElementById("photo-count-badge");
 
-    // Apply adjustable column count variable
     document.documentElement.style.setProperty(
       "--photo-grid-cols",
       PORTFOLIO_CONFIG.photographyConfig.gridColumns || 5
@@ -894,7 +877,6 @@ async function loadAndRenderPhotography() {
 
     const photoItems = await discoverPhotographyDualAssets();
 
-    // Silently pre-warm the lightweight preview thumbnails in chunks while user is on About Me
     backgroundPrewarmPreviewImages(photoItems.map((item) => item.previewUrl));
 
     countBadge.textContent = `FOLDER COUNT: ${photoItems.length} IMAGE${
@@ -1010,10 +992,7 @@ function updatePhotographyAverageColor() {
   const cards = document.querySelectorAll(".insta-card[data-color-cached='true']");
   if (cards.length === 0) return;
 
-  let totalR = 0,
-    totalG = 0,
-    totalB = 0,
-    counted = 0;
+  let totalR = 0, totalG = 0, totalB = 0, counted = 0;
   const viewportH = window.innerHeight;
 
   for (let i = 0; i < cards.length; i++) {
@@ -1032,19 +1011,13 @@ function updatePhotographyAverageColor() {
     const avgG = Math.round((totalG / counted) * 0.65);
     const avgB = Math.round((totalB / counted) * 0.65);
 
-    const hex =
-      "#" +
-      [avgR, avgG, avgB]
+    const hex = "#" + [avgR, avgG, avgB]
         .map((x) => Math.max(0, Math.min(255, x)).toString(16).padStart(2, "0"))
-        .join("")
-        .toUpperCase();
+        .join("").toUpperCase();
 
     const bgLayer = document.getElementById("bg-canvas-layer");
     bgLayer.style.backgroundColor = `rgb(${avgR}, ${avgG}, ${avgB})`;
-    bgLayer.style.backgroundImage = `radial-gradient(circle at 50% 30%, rgba(${Math.min(
-      255,
-      avgR + 45
-    )}, ${Math.min(255, avgG + 45)}, ${Math.min(255, avgB + 45)}, 0.38), rgba(18, 21, 24, 0.88))`;
+    bgLayer.style.backgroundImage = `radial-gradient(circle at 50% 30%, rgba(${Math.min(255, avgR + 45)}, ${Math.min(255, avgG + 45)}, ${Math.min(255, avgB + 45)}, 0.38), rgba(18, 21, 24, 0.88))`;
 
     document.getElementById("swatch-dot").style.backgroundColor = hex;
     document.getElementById("swatch-hex").textContent = hex;
@@ -1053,7 +1026,7 @@ function updatePhotographyAverageColor() {
 
 /**
  * ============================================================================
- * 9. TAB NAVIGATION & ON-DEMAND TAB ASSURANCE
+ * 9. TAB NAVIGATION
  * ============================================================================
  */
 const TABS = ["about", "projects", "photography"];
@@ -1063,7 +1036,6 @@ let currentTabIndex = 0;
 function switchTab(targetIndex) {
   if (targetIndex === currentTabIndex) return;
 
-  // Ensure target tab assets are triggered if user clicks tab before idle timer finishes
   if (targetIndex === 1 && !projectsLoaded) loadAndRenderProjects();
   if (targetIndex === 2 && !photographyLoaded) loadAndRenderPhotography();
 
@@ -1106,7 +1078,7 @@ function switchTab(targetIndex) {
 
 /**
  * ============================================================================
- * 10. UNIVERSAL LIGHTBOX (PROGRESSIVE FULL-RES LOADER + 3D GLB/STL ORBIT)
+ * 10. UNIVERSAL LIGHTBOX (PROGRESSIVE IMAGE LOADING & 3D GEOMETRY)
  * ============================================================================
  */
 let currentLightboxList = [];
@@ -1210,7 +1182,6 @@ function initOrUpdateLightbox3D(modelUrl, type) {
       loaderOverlay.style.display = "none";
       lbModelGroup = obj;
       lbScene.add(lbModelGroup);
-
       lbControls.reset();
       lbCamera.position.set(70, 50, 95);
       lbControls.update();
@@ -1299,18 +1270,17 @@ function updateLightboxSlide() {
     pdfFrame.style.display = "block";
     pdfFrame.src = item.fullSrc;
   } else {
-    // Progressive Dual-Set Image Loading:
-    // 1. Show lightweight preview immediately (slightly dimmed) + CAD Loading Spinner
-    // 2. Fetch uncompressed Full-Size image in background and swap smoothly when ready
     imgEl.style.display = "block";
     const previewUrl = item.previewSrc || item.fullSrc;
     const fullUrl = item.fullSrc || item.previewSrc;
 
+    // Show preview and loading spinner immediately
     imgEl.src = previewUrl;
     imgEl.classList.add("loading-blur");
     loaderText.textContent = "LOADING FULL-RESOLUTION IMAGE...";
     loaderOverlay.style.display = "flex";
 
+    // Swap to full resolution when loaded
     const highResLoader = new Image();
     highResLoader.decoding = "async";
     highResLoader.onload = () => {
@@ -1343,20 +1313,16 @@ function stepLightbox(delta) {
 
 /**
  * ============================================================================
- * 11. INITIALIZATION (INSTANT FIRST-PAGE BOOT -> DEFERRED BACKGROUND LOADING)
+ * 11. INITIALIZATION & DEFERRED BACKGROUND LOADING
  * ============================================================================
  */
 window.addEventListener("DOMContentLoaded", async () => {
-  // 1. ONLY load the About Me tab on initial startup so the website opens instantaneously
   await renderAboutSection();
 
-  // 2. Immediately reveal the website so the user can start reading About Me
   setTimeout(() => {
     document.getElementById("page-loader").classList.add("loaded");
     document.body.classList.add("page-ready");
 
-    // 3. AFTER the website has finished loading and user is reading About Me,
-    // quietly initialize Projects and Photography previews in the background!
     const startDeferredBackgroundLoading = async () => {
       await loadAndRenderProjects();
       await loadAndRenderPhotography();
@@ -1369,14 +1335,12 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
   }, 300);
 
-  // Top Tab Navigation
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       switchTab(parseInt(btn.dataset.index, 10));
     });
   });
 
-  // Side Arrow Bars
   document.getElementById("side-nav-prev").addEventListener("click", () => {
     switchTab((currentTabIndex - 1 + TABS.length) % TABS.length);
   });
@@ -1385,7 +1349,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     switchTab((currentTabIndex + 1) % TABS.length);
   });
 
-  // Bio Edit Toggle
   const editBioBtn = document.getElementById("toggle-bio-edit");
   const bioContent = document.getElementById("about-bio-content");
   editBioBtn.addEventListener("click", () => {
@@ -1401,7 +1364,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // Live AutoCAD Cursor Coordinates
   const coordReadout = document.getElementById("coord-readout");
   window.addEventListener(
     "mousemove",
@@ -1413,7 +1375,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     { passive: true }
   );
 
-  // Scroll / Resize Color Sampler
   window.addEventListener(
     "scroll",
     () => {
@@ -1425,7 +1386,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     if (currentTabIndex === 2) scheduleAverageColorUpdate();
   });
 
-  // Lightbox Events
   const lightboxModal = document.getElementById("lightbox-modal");
   lightboxModal.addEventListener("click", (e) => {
     if (e.target === lightboxModal) closeLightbox();

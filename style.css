@@ -1,5 +1,5 @@
 /* ==========================================================================
-   1. VARIABLES & RESET (ADJUSTABLE PHOTO GRID VARIABLE)
+   1. VARIABLES & RESET
    ========================================================================== */
 :root {
   --bg-cad: #1f2326;
@@ -15,7 +15,7 @@
   --font-mono: 'JetBrains Mono', monospace;
   --side-bar-width: 58px;
 
-  /* Adjustable Photography Grid Columns (Default: 5 wide, synced with script.js) */
+  /* Adjustable Photography Grid Columns */
   --photo-grid-cols: 5;
 }
 
@@ -124,7 +124,7 @@ body.page-ready .EntranceFade {
 }
 
 /* ==========================================================================
-   3. AUTOCAD GRID BACKGROUND & DYNAMIC PHOTOGRAPHY AMBIANCE
+   3. AUTOCAD GRID BACKGROUND
    ========================================================================== */
 .bg-canvas-layer {
   position: fixed;
@@ -159,7 +159,7 @@ body.photo-theme-active .cad-grid-major { opacity: 0.32; }
 body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
 
 /* ==========================================================================
-   4. TOP HEADER & NAVIGATION TABS
+   4. TOP HEADER & TABS
    ========================================================================== */
 .site-header {
   position: fixed;
@@ -335,7 +335,7 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
 .side-nav-right:hover .side-arrow { transform: translateX(4px); }
 
 /* ==========================================================================
-   6. STAGE CONTAINER & SLIDE TAB TRANSITIONS
+   6. STAGE CONTAINER & SLIDE TRANSITIONS
    ========================================================================== */
 .stage-container {
   position: relative;
@@ -357,13 +357,8 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   opacity: 1;
 }
 
-.slide-in-right {
-  animation: slideInFromRight 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
-.slide-in-left {
-  animation: slideInFromLeft 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
+.slide-in-right { animation: slideInFromRight 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.slide-in-left { animation: slideInFromLeft 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
 
 @keyframes slideInFromRight {
   0% { opacity: 0; transform: translateX(75px) scale(0.985); }
@@ -436,7 +431,7 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
 }
 
 /* ==========================================================================
-   7. TAB 1: ABOUT ME & RESUME SPOT
+   7. TAB 1: ABOUT ME & RESUME
    ========================================================================== */
 .about-grid {
   display: grid;
@@ -673,7 +668,7 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
 .social-handle { font-weight: 600; font-size: 0.95rem; margin-top: 2px; }
 
 /* ==========================================================================
-   8. TAB 2: PROJECTS & AUTO-ROTATING 3D (.GLB / .STL) VIEWPORTS
+   8. TAB 2: PROJECTS & 3D VIEWS
    ========================================================================== */
 .projects-list {
   display: flex;
@@ -882,7 +877,7 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
 }
 
 /* ==========================================================================
-   9. TAB 3: PHOTOGRAPHY (VARIABLE-CONTROLLED 5-WIDE GRID)
+   9. TAB 3: PHOTOGRAPHY (VARIABLE-CONTROLLED GRID)
    ========================================================================== */
 .photo-header-row {
   display: flex;
@@ -1006,7 +1001,6 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   box-shadow: 0 28px 70px rgba(0, 0, 0, 0.85);
 }
 
-/* CAD Loading Animation for Full-Size Image / 3D Asset */
 .lightbox-loader {
   position: absolute;
   inset: 0;
@@ -1051,9 +1045,11 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* This blurs and dims the low-res preview until the high-res one loads */
 .lightbox-content-wrapper img.loading-blur {
   opacity: 0.25;
   transform: scale(0.985);
+  filter: blur(4px);
 }
 
 .lightbox-stl-stage {
