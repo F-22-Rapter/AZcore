@@ -11,9 +11,9 @@ const PORTFOLIO_CONFIG = {
     name: "ALEXANDER ZHUK",
     headline: "ENGINEERING, FABRICATION & VISUAL DESIGN",
     folder: "assets/about/",
-    profileImage: "profile.jpg",
+    profileImage: "profile.webp",
     resume: {
-      file: "resume.pdf", // Place at assets/about/resume.pdf (or link your live GitHub PDF URL)
+      file: "resume.pdf",
       title: "ALEXANDER_ZHUK_RESUME.PDF",
       subtitle: "Civil Engineering, CAD/CFD Simulation, Metal Fabrication & Leadership Experience"
     },
@@ -53,30 +53,45 @@ const PORTFOLIO_CONFIG = {
   projectsConfig: {
     baseFolder: "assets/projects/",
     textFileName: "project.txt",
+    // Optional dual-resolution subfolders inside a project folder (falls back to root of project folder if not used)
+    previewSubfolder: "preview/",
+    fullSubfolder: "full/",
     foldersToCheck: [
-      "LARP",
-      "second"
+      "LARP"
     ]
   },
 
   // -------------------- TAB 3: PHOTOGRAPHY FOLDER CONFIG --------------------
   photographyConfig: {
+    // Change `gridColumns` anytime to adjust how many photos appear per row (currently 5 wide)
+    gridColumns: 5,
     folder: "assets/photography/",
+    // Dual-folder setup: lightweight thumbnails in `preview/`, uncompressed originals in `full/`
+    // (If an image isn't inside `preview/` or `full/`, the script automatically falls back to `assets/photography/<file>`)
+    previewSubfolder: "preview/",
+    fullSubfolder: "full/",
     maxNumberedProbe: 80
   }
 };
 
 /**
  * ============================================================================
- * 2. ZERO-LAG FILE EXISTENCE CHECKER (HEAD REQUESTS = 0 BYTES DOWNLOADED)
+ * 2. FILE HELPERS & CASE-TOLERANT ASSET VERIFICATION
  * ============================================================================
  */
 function normalizeFolder(path) {
+  if (!path) return "";
   return path.endsWith("/") ? path : path + "/";
 }
 
-function isStlFile(path) {
-  return /\.stl$/i.test(path);
+function getAssetType(filename) {
+  if (/\.glb|\.gltf$/i.test(filename)) return "glb";
+  if (/\.stl$/i.test(filename)) return "stl";
+  return "image";
+}
+
+function is3DAsset(type) {
+  return type === "glb" || type === "stl";
 }
 
 async function verifyFileExistsFast(url) {
@@ -91,66 +106,155 @@ async function verifyFileExistsFast(url) {
   }
 }
 
+// Resolves exact casing (.stl vs .STL, .glb vs .GLB) so Windows/Git case mismatches don't 404
+async function resolveValidUrlWithCaseFallback(baseFolder, fileName) {
+  const primary = `${baseFolder}${fileName}`;
+  if (await verifyFileExistsFast(primary)) return primary;
+
+  const dotIndex = fileName.lastIndexOf(".");
+  if (dotIndex !== -1) {
+    const namePart = fileName.slice(0, dotIndex);
+    const extPart = fileName.slice(dotIndex);
+    const toggledExt =
+      extPart === extPart.toUpperCase() ? extPart.toLowerCase() : extPart.toUpperCase();
+    const altUrl = `${baseFolder}${namePart}${toggledExt}`;
+    if (await verifyFileExistsFast(altUrl)) return altUrl;
+  }
+  return null;
+}
+
+// Resolves both `{ previewUrl, fullUrl }` for dual-set images
+async function resolveDualImageUrls(baseFolder, previewSub, fullSub, fileName) {
+  const normBase = normalizeFolder(baseFolder);
+  const normPrev = normalizeFolder(previewSub);
+  const normFull = normalizeFolder(fullSub);
+
+  const candidatePreview = `${normBase}${normPrev}${fileName}`;
+  const candidateFull = `${normBase}${normFull}${fileName}`;
+  const candidateDirect = `${normBase}${fileName}`;
+
+  const [hasPreview, hasFull, hasDirect] = await Promise.all([
+    verifyFileExistsFast(candidatePreview),
+    verifyFileExistsFast(candidateFull),
+    verifyFileExistsFast(candidateDirect)
+  ]);
+
+  const previewUrl = hasPreview ? candidatePreview : hasDirect ? candidateDirect : hasFull ? candidateFull : null;
+  const fullUrl = hasFull ? candidateFull : hasDirect ? candidateDirect : hasPreview ? candidatePreview : null;
+
+  if (!previewUrl && !fullUrl) return null;
+  return { previewUrl, fullUrl };
+}
+
 /**
  * ============================================================================
- * 3. 3D .STL VIEWER ENGINE (AUTO-ROTATING PREVIEW + INTERACTIVE ORBIT LIGHTBOX)
+ * 3. UNIFIED 3D ENGINE (SUPPORTS FULL-COLOR .GLB/.GLTF & .STL MODELS)
  * ============================================================================
  */
-const stlGeometryCache = new Map();
+const modelCache = new Map();
 
-function loadStlGeometry(url) {
-  if (stlGeometryCache.has(url)) {
-    return Promise.resolve(stlGeometryCache.get(url));
+function load3DModelObject(url, type) {
+  if (modelCache.has(url)) {
+    return Promise.resolve(modelCache.get(url).clone(true));
   }
+
   return new Promise((resolve, reject) => {
-    if (typeof THREE === "undefined" || !THREE.STLLoader) {
-      reject(new Error("Three.js STLLoader not available"));
-      return;
+    if (type === "glb") {
+      if (typeof THREE === "undefined" || !THREE.GLTFLoader) {
+        reject(new Error("THREE.GLTFLoader not loaded"));
+        return;
+      }
+      const loader = new THREE.GLTFLoader();
+      loader.load(
+        url,
+        (gltf) => {
+          const root = gltf.scene || gltf.scenes[0];
+          // Center and normalize scale to a consistent bounding radius
+          const box = new THREE.Box3().setFromObject(root);
+          const center = box.getCenter(new THREE.Vector3());
+          const size = box.getSize(new THREE.Vector3());
+          const maxDim = Math.max(size.x, size.y, size.z) || 1;
+          const scale = 62 / maxDim;
+
+          const wrapper = new THREE.Group();
+          root.position.sub(center);
+          wrapper.add(root);
+          wrapper.scale.set(scale, scale, scale);
+
+          modelCache.set(url, wrapper);
+          resolve(wrapper.clone(true));
+        },
+        undefined,
+        (err) => reject(err)
+      );
+    } else {
+      if (typeof THREE === "undefined" || !THREE.STLLoader) {
+        reject(new Error("THREE.STLLoader not loaded"));
+        return;
+      }
+      const loader = new THREE.STLLoader();
+      loader.load(
+        url,
+        (geometry) => {
+          geometry.computeVertexNormals();
+          geometry.computeBoundingBox();
+          geometry.center();
+          geometry.computeBoundingSphere();
+
+          const material = new THREE.MeshStandardMaterial({
+            color: 0xd8dee4,
+            metalness: 0.35,
+            roughness: 0.42
+          });
+          const mesh = new THREE.Mesh(geometry, material);
+          const radius = geometry.boundingSphere.radius || 1;
+          const scale = 38 / radius;
+          mesh.scale.set(scale, scale, scale);
+
+          const wrapper = new THREE.Group();
+          wrapper.add(mesh);
+
+          modelCache.set(url, wrapper);
+          resolve(wrapper.clone(true));
+        },
+        undefined,
+        (err) => reject(err)
+      );
     }
-    const loader = new THREE.STLLoader();
-    loader.load(
-      url,
-      (geometry) => {
-        geometry.computeVertexNormals();
-        geometry.computeBoundingBox();
-        geometry.center();
-        stlGeometryCache.set(url, geometry);
-        resolve(geometry);
-      },
-      undefined,
-      (err) => reject(err)
-    );
   });
 }
 
-function mountAutoRotatingStlPreview(container, stlUrl) {
+// Auto-rotating 3D card preview for both .GLB (with color) and .STL
+function mountAutoRotating3DPreview(container, modelUrl, type) {
   const badge = document.createElement("div");
   badge.className = "stl-badge-overlay";
-  badge.textContent = "3D STL // CLICK TO ORBIT";
+  badge.textContent = `3D ${type.toUpperCase()} // CLICK TO ORBIT`;
   container.appendChild(badge);
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(40, 16 / 10, 0.1, 2000);
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.outputEncoding = THREE.sRGBEncoding;
   container.appendChild(renderer.domElement);
 
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
-  scene.add(ambientLight);
+  // Balanced multi-directional lighting so colored .GLB materials look vibrant and accurate
+  const hemiLight = new THREE.HemisphereLight(0xffffff, 0x222830, 0.95);
+  scene.add(hemiLight);
 
-  const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.85);
-  dirLight1.position.set(60, 80, 70);
+  const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.9);
+  dirLight1.position.set(65, 90, 75);
   scene.add(dirLight1);
 
-  const dirLight2 = new THREE.DirectionalLight(0xd92804, 0.35);
-  dirLight2.position.set(-60, -40, -50);
+  const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.45);
+  dirLight2.position.set(-65, -40, -60);
   scene.add(dirLight2);
 
   const grid = new THREE.GridHelper(120, 12, 0xd92804, 0x333a40);
   grid.position.y = -28;
   scene.add(grid);
 
-  let mesh = null;
+  let modelGroup = null;
   let isVisible = false;
   let animFrameId = null;
 
@@ -162,35 +266,24 @@ function mountAutoRotatingStlPreview(container, stlUrl) {
     renderer.setSize(w, h);
   }
 
-  loadStlGeometry(stlUrl)
-    .then((geometry) => {
-      const material = new THREE.MeshStandardMaterial({
-        color: 0xd8dee4,
-        metalness: 0.35,
-        roughness: 0.42
-      });
-      mesh = new THREE.Mesh(geometry, material);
-
-      geometry.computeBoundingSphere();
-      const radius = geometry.boundingSphere.radius || 1;
-      const scale = 38 / radius;
-      mesh.scale.set(scale, scale, scale);
-      scene.add(mesh);
-
+  load3DModelObject(modelUrl, type)
+    .then((obj) => {
+      modelGroup = obj;
+      scene.add(modelGroup);
       camera.position.set(55, 38, 75);
       camera.lookAt(0, 0, 0);
       resizeRenderer();
       renderer.render(scene, camera);
     })
     .catch(() => {
-      badge.textContent = "STL LOAD ERROR";
+      badge.textContent = `${type.toUpperCase()} LOAD ERROR`;
     });
 
   function animate() {
     if (!isVisible) return;
     animFrameId = requestAnimationFrame(animate);
-    if (mesh) {
-      mesh.rotation.y += 0.008;
+    if (modelGroup) {
+      modelGroup.rotation.y += 0.008;
     }
     renderer.render(scene, camera);
   }
@@ -218,42 +311,36 @@ function mountAutoRotatingStlPreview(container, stlUrl) {
 
 /**
  * ============================================================================
- * 4. BACKGROUND PRE-CACHING MANAGER (IDLE CHUNKING)
+ * 4. POST-BOOT DEFERRED BACKGROUND PRE-WARM (RUNS WHILE READING ABOUT ME)
  * ============================================================================
  */
-function backgroundPrewarmPhotographyCache(photoUrls) {
-  if (!photoUrls || photoUrls.length === 0) return;
+function backgroundPrewarmPreviewImages(previewUrls) {
+  if (!previewUrls || previewUrls.length === 0) return;
 
-  const runPrewarm = () => {
-    let currentIndex = 0;
+  let currentIndex = 0;
+  function loadNextChunk() {
+    if (currentIndex >= previewUrls.length) return;
+    const chunkLimit = Math.min(currentIndex + 4, previewUrls.length);
 
-    function loadNextChunk() {
-      if (currentIndex >= photoUrls.length) return;
-      const chunkLimit = Math.min(currentIndex + 3, photoUrls.length);
-      for (let i = currentIndex; i < chunkLimit; i++) {
-        const bgImg = new Image();
-        bgImg.crossOrigin = "anonymous";
-        bgImg.src = photoUrls[i];
-      }
-      currentIndex = chunkLimit;
-      if (currentIndex < photoUrls.length) {
-        setTimeout(loadNextChunk, 350);
-      }
+    for (let i = currentIndex; i < chunkLimit; i++) {
+      const bgImg = new Image();
+      bgImg.crossOrigin = "anonymous";
+      bgImg.decoding = "async";
+      bgImg.src = previewUrls[i];
     }
 
-    setTimeout(loadNextChunk, 1000);
-  };
-
-  if ("requestIdleCallback" in window) {
-    requestIdleCallback(runPrewarm, { timeout: 3000 });
-  } else {
-    setTimeout(runPrewarm, 2000);
+    currentIndex = chunkLimit;
+    if (currentIndex < previewUrls.length) {
+      setTimeout(loadNextChunk, 280);
+    }
   }
+
+  loadNextChunk();
 }
 
 /**
  * ============================================================================
- * 5. TAB 1: RENDER ABOUT ME & RESUME
+ * 5. TAB 1: RENDER ABOUT ME & RESUME (LOADS IMMEDIATELY ON STARTUP)
  * ============================================================================
  */
 async function renderAboutSection() {
@@ -262,51 +349,65 @@ async function renderAboutSection() {
   document.getElementById("about-headline").textContent = cfg.headline;
   document.getElementById("about-name-caption").textContent = cfg.name;
 
-  const profileImg = document.getElementById("about-profile-img");
-  const fullProfilePath = `${normalizeFolder(cfg.folder)}${cfg.profileImage}`;
-  const exists = await verifyFileExistsFast(fullProfilePath);
+  // Set CSS variable for Photography Grid Columns immediately
+  document.documentElement.style.setProperty(
+    "--photo-grid-cols",
+    PORTFOLIO_CONFIG.photographyConfig.gridColumns || 5
+  );
 
-  if (exists) {
-    profileImg.src = fullProfilePath;
+  const profileImg = document.getElementById("about-profile-img");
+  const normAboutFolder = normalizeFolder(cfg.folder);
+  const resolvedProfile =
+    (await resolveValidUrlWithCaseFallback(normAboutFolder, cfg.profileImage)) ||
+    (await resolveValidUrlWithCaseFallback(normAboutFolder, "profile.jpg")) ||
+    (await resolveValidUrlWithCaseFallback(normAboutFolder, "profile.png"));
+
+  if (resolvedProfile) {
+    profileImg.src = resolvedProfile;
   } else {
     profileImg.src = `data:image/svg+xml;utf8,${encodeURIComponent(
       `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="750" viewBox="0 0 600 750">
         <rect width="600" height="750" fill="#181b1e"/>
         <line x1="0" y1="375" x2="600" y2="375" stroke="#d92804" stroke-width="1"/>
         <line x1="300" y1="0" x2="300" y2="750" stroke="#d92804" stroke-width="1"/>
-        <text x="40" y="700" fill="#9aa4ae" font-family="monospace" font-size="16">PLACE IMAGE AT: ${fullProfilePath}</text>
+        <text x="40" y="700" fill="#9aa4ae" font-family="monospace" font-size="16">PLACE IMAGE AT: ${normAboutFolder}${cfg.profileImage}</text>
       </svg>`
     )}`;
   }
 
   profileImg.addEventListener("click", () => {
-    openLightbox([{ type: "image", src: profileImg.src, caption: `${cfg.name} // ${fullProfilePath}` }], 0);
+    openLightbox(
+      [
+        {
+          type: "image",
+          previewSrc: profileImg.src,
+          fullSrc: profileImg.src,
+          caption: `${cfg.name}`
+        }
+      ],
+      0
+    );
   });
 
   // Resume Setup
   const resumePath = cfg.resume.file.startsWith("http")
     ? cfg.resume.file
-    : `${normalizeFolder(cfg.folder)}${cfg.resume.file}`;
-  
+    : `${normAboutFolder}${cfg.resume.file}`;
+
   document.getElementById("resume-title-display").textContent = cfg.resume.title;
   document.getElementById("resume-subtitle-display").textContent = cfg.resume.subtitle;
-  const downloadLink = document.getElementById("download-resume-link");
-  downloadLink.href = resumePath;
+  document.getElementById("download-resume-link").href = resumePath;
 
   const resumeExists = await verifyFileExistsFast(resumePath);
   const statusTag = document.getElementById("resume-status-tag");
-  if (resumeExists) {
-    statusTag.textContent = "PDF VERIFIED";
-  } else {
-    statusTag.textContent = "READY";
-  }
+  statusTag.textContent = resumeExists ? "PDF VERIFIED" : "READY";
 
   document.getElementById("preview-resume-btn").addEventListener("click", () => {
     openLightbox(
       [
         {
           type: "pdf",
-          src: resumePath,
+          fullSrc: resumePath,
           caption: `${cfg.resume.title} // ${resumePath}`
         }
       ],
@@ -355,9 +456,12 @@ async function renderAboutSection() {
 
 /**
  * ============================================================================
- * 6. TAB 2: MODULAR TEXT-FILE & 3D .STL DRIVEN PROJECTS ENGINE
+ * 6. TAB 2: REWORKED PROJECT SYSTEM (.GLB, .STL, & DUAL-RES IMAGES)
  * ============================================================================
  */
+let projectsLoaded = false;
+let projectsLoadingPromise = null;
+
 function parseProjectTextFile(rawText, folderPath) {
   const lines = rawText.replace(/\r\n/g, "\n").split("\n");
   const data = {
@@ -389,13 +493,13 @@ function parseProjectTextFile(rawText, folderPath) {
         .split(",")
         .map((t) => t.trim())
         .filter(Boolean);
-    } else if (/^MAIN(_IMAGE|_STL|_MODEL)?\s*:/i.test(line)) {
+    } else if (/^MAIN(_IMAGE|_STL|_MODEL|_GLB)?\s*:/i.test(line)) {
       inDescription = false;
-      data.mainAsset = line.replace(/^MAIN(_IMAGE|_STL|_MODEL)?\s*:\s*/i, "").trim();
-    } else if (/^(IMAGES|FILES|ASSETS)\s*:/i.test(line)) {
+      data.mainAsset = line.replace(/^MAIN(_IMAGE|_STL|_MODEL|_GLB)?\s*:\s*/i, "").trim();
+    } else if (/^(IMAGES|FILES|ASSETS|MODELS)\s*:/i.test(line)) {
       inDescription = false;
       const items = line
-        .replace(/^(IMAGES|FILES|ASSETS)\s*:\s*/i, "")
+        .replace(/^(IMAGES|FILES|ASSETS|MODELS)\s*:\s*/i, "")
         .split(",")
         .map((i) => i.trim())
         .filter(Boolean);
@@ -411,215 +515,248 @@ function parseProjectTextFile(rawText, folderPath) {
 
   data.description = descLines.join("\n").trim();
 
-  if (!data.mainAsset && data.assets.length > 0) {
-    data.mainAsset = data.assets[0];
-  }
-  if (data.mainAsset && !data.assets.includes(data.mainAsset)) {
-    data.assets.unshift(data.mainAsset);
+  // Prioritize MAIN_IMAGE / MAIN_MODEL at index 0 of assets list
+  if (data.mainAsset) {
+    data.assets = [
+      data.mainAsset,
+      ...data.assets.filter((a) => a.toLowerCase() !== data.mainAsset.toLowerCase())
+    ];
   }
 
   return data;
 }
 
-async function discoverProjectFolders(baseFolder, configuredFolders) {
-  const folderSet = new Set(configuredFolders);
-  try {
-    const res = await fetch(baseFolder, { cache: "no-store" });
-    if (res.ok && (res.headers.get("content-type") || "").includes("text/html")) {
-      const html = await res.text();
-      const doc = new DOMParser().parseFromString(html, "text/html");
-      doc.querySelectorAll("a").forEach((a) => {
-        const href = a.getAttribute("href") || "";
-        if (href.endsWith("/") && !href.startsWith("../") && !href.startsWith("/")) {
-          folderSet.add(href.replace(/\/$/, ""));
-        }
-      });
-    }
-  } catch (e) {}
-  return Array.from(folderSet);
+async function resolveProjectAsset(projFolder, fileName) {
+  const { previewSubfolder, fullSubfolder } = PORTFOLIO_CONFIG.projectsConfig;
+  const assetType = getAssetType(fileName);
+
+  if (is3DAsset(assetType)) {
+    const resolved3D = await resolveValidUrlWithCaseFallback(projFolder, fileName);
+    if (!resolved3D) return null;
+    return {
+      type: assetType,
+      previewSrc: resolved3D,
+      fullSrc: resolved3D,
+      file: fileName
+    };
+  }
+
+  // Image asset: check preview/ and full/ subfolders or direct folder
+  const dual = await resolveDualImageUrls(projFolder, previewSubfolder, fullSubfolder, fileName);
+  if (dual) {
+    return {
+      type: "image",
+      previewSrc: dual.previewUrl,
+      fullSrc: dual.fullUrl,
+      file: fileName
+    };
+  }
+
+  // Case fallback check on direct image
+  const fallbackDirect = await resolveValidUrlWithCaseFallback(projFolder, fileName);
+  if (fallbackDirect) {
+    return {
+      type: "image",
+      previewSrc: fallbackDirect,
+      fullSrc: fallbackDirect,
+      file: fileName
+    };
+  }
+
+  return null;
 }
 
 async function loadAndRenderProjects() {
-  const container = document.getElementById("projects-container");
-  const countBadge = document.getElementById("projects-count-badge");
-  const { baseFolder, textFileName, foldersToCheck } = PORTFOLIO_CONFIG.projectsConfig;
-  const normBase = normalizeFolder(baseFolder);
+  if (projectsLoaded) return;
+  if (projectsLoadingPromise) return projectsLoadingPromise;
 
-  const candidateFolders = await discoverProjectFolders(normBase, foldersToCheck);
-  const loadedProjects = [];
+  projectsLoadingPromise = (async () => {
+    const container = document.getElementById("projects-container");
+    const countBadge = document.getElementById("projects-count-badge");
+    const { baseFolder, textFileName, foldersToCheck } = PORTFOLIO_CONFIG.projectsConfig;
+    const normBase = normalizeFolder(baseFolder);
 
-  for (const folderName of candidateFolders) {
-    const projFolder = `${normBase}${folderName}/`;
-    const txtUrl = `${projFolder}${textFileName}`;
+    const loadedProjects = [];
 
-    try {
-      const res = await fetch(txtUrl, { cache: "no-store" });
-      if (!res.ok) continue;
-      if ((res.headers.get("content-type") || "").includes("text/html")) continue;
+    for (const folderName of foldersToCheck) {
+      const projFolder = `${normBase}${folderName}/`;
+      const txtUrl = `${projFolder}${textFileName}`;
 
-      const rawText = await res.text();
-      if (!rawText || !rawText.trim()) continue;
+      try {
+        const res = await fetch(txtUrl, { cache: "no-store" });
+        if (!res.ok) continue;
+        if ((res.headers.get("content-type") || "").includes("text/html")) continue;
 
-      const parsed = parseProjectTextFile(rawText, projFolder);
-      if (!parsed.title && parsed.assets.length === 0) continue;
+        const rawText = await res.text();
+        if (!rawText || !rawText.trim()) continue;
 
-      const checks = await Promise.all(
-        parsed.assets.map(async (file) => {
-          const fullPath = `${projFolder}${file}`;
-          const ok = await verifyFileExistsFast(fullPath);
-          return ok ? { src: fullPath, type: isStlFile(file) ? "stl" : "image", file } : null;
-        })
-      );
+        const parsed = parseProjectTextFile(rawText, projFolder);
+        if (!parsed.title && parsed.assets.length === 0) continue;
 
-      const verifiedAssets = checks.filter(Boolean);
-      if (verifiedAssets.length > 0) {
-        parsed.verifiedAssets = verifiedAssets;
-        loadedProjects.push(parsed);
-      }
-    } catch (e) {}
-  }
+        const resolvedList = await Promise.all(
+          parsed.assets.map((file) => resolveProjectAsset(projFolder, file))
+        );
 
-  countBadge.textContent = `LOADED: ${loadedProjects.length} PROJECT${
-    loadedProjects.length === 1 ? "" : "S"
-  }`;
-
-  if (loadedProjects.length === 0) {
-    container.innerHTML = `
-      <div class="empty-state-box">
-        <div class="empty-state-title">// 0 PROJECT TEXT FILES DETECTED</div>
-        <div class="empty-state-desc">
-          No valid <code>project.txt</code> files with linked images or <code>.stl</code> models were found inside <code>${normBase}</code>.
-        </div>
-      </div>
-    `;
-    return;
-  }
-
-  container.innerHTML = "";
-
-  loadedProjects.forEach((proj, idx) => {
-    const card = document.createElement("article");
-    card.className = "project-card";
-    const drawerId = `drawer-proj-${idx}`;
-    const mainAsset = proj.verifiedAssets[0];
-    const stackPreview = proj.verifiedAssets.slice(0, 3);
-
-    const stackVisualHtml = stackPreview
-      .map((item) =>
-        item.type === "stl"
-          ? `<div class="stack-card-stl">[3D STL]</div>`
-          : `<img class="stack-card-img" src="${item.src}" loading="lazy" decoding="async" alt="Stack preview" />`
-      )
-      .join("");
-
-    card.innerHTML = `
-      <div class="project-top-layout">
-        <div class="project-main-img-wrap" id="main-wrap-${idx}">
-          <div class="project-folder-badge">SOURCE: ${proj.folder}project.txt</div>
-        </div>
-
-        <div class="project-info-col">
-          <div>
-            <div class="project-code">${proj.code}</div>
-            <h2 class="project-title">${proj.title}</h2>
-            <p class="project-desc">${proj.description}</p>
-            <div class="project-tags">
-              ${proj.tags.map((t) => `<span class="skill-tag">${t}</span>`).join("")}
-            </div>
-          </div>
-
-          <div class="photo-stack-trigger">
-            <div class="stack-visual">${stackVisualHtml}</div>
-            <div class="stack-meta">
-              <span class="stack-title">PROJECT STACK (${proj.verifiedAssets.length} LINKED)</span>
-              <span class="stack-subtitle">Click stack to reveal full project grid &#8595;</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div id="${drawerId}" class="project-expanded-drawer">
-        <div class="drawer-header">
-          <span>// LINKED FROM ${proj.folder}project.txt (${proj.verifiedAssets.length} ITEMS)</span>
-          <span>CLICK ANY IMAGE OR .STL MODEL FOR FULL SCREEN</span>
-        </div>
-        <div class="project-gallery-grid"></div>
-      </div>
-    `;
-
-    container.appendChild(card);
-
-    const lightboxList = proj.verifiedAssets.map((asset, i) => ({
-      type: asset.type,
-      src: asset.src,
-      caption: `${proj.title} (${asset.file}) // [${i + 1}/${proj.verifiedAssets.length}]`
-    }));
-
-    const mainWrap = card.querySelector(`#main-wrap-${idx}`);
-    if (mainAsset.type === "stl") {
-      const stlStage = document.createElement("div");
-      stlStage.className = "stl-preview-container";
-      mainWrap.prepend(stlStage);
-      mountAutoRotatingStlPreview(stlStage, mainAsset.src);
-    } else {
-      const mainImg = document.createElement("img");
-      mainImg.className = "interactive-img project-main-img";
-      mainImg.src = mainAsset.src;
-      mainImg.loading = "lazy";
-      mainImg.decoding = "async";
-      mainImg.alt = proj.title;
-      mainWrap.prepend(mainImg);
+        const verifiedAssets = resolvedList.filter(Boolean);
+        if (verifiedAssets.length > 0) {
+          parsed.verifiedAssets = verifiedAssets;
+          loadedProjects.push(parsed);
+        }
+      } catch (e) {}
     }
 
-    mainWrap.addEventListener("click", () => openLightbox(lightboxList, 0));
+    countBadge.textContent = `LOADED: ${loadedProjects.length} PROJECT${
+      loadedProjects.length === 1 ? "" : "S"
+    }`;
 
-    const galleryGrid = card.querySelector(".project-gallery-grid");
-    proj.verifiedAssets.forEach((asset, assetIdx) => {
-      const itemWrap = document.createElement("div");
-      itemWrap.className = "project-gallery-item";
+    if (loadedProjects.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state-box">
+          <div class="empty-state-title">// 0 PROJECT TEXT FILES DETECTED</div>
+          <div class="empty-state-desc">
+            No valid <code>project.txt</code> files with linked images, <code>.glb</code>, or <code>.stl</code> models were found inside <code>${normBase}</code>.
+          </div>
+        </div>
+      `;
+      projectsLoaded = true;
+      return;
+    }
 
-      if (asset.type === "stl") {
-        const stlBox = document.createElement("div");
-        stlBox.className = "stl-preview-container";
-        itemWrap.appendChild(stlBox);
-        mountAutoRotatingStlPreview(stlBox, asset.src);
+    container.innerHTML = "";
+
+    loadedProjects.forEach((proj, idx) => {
+      const card = document.createElement("article");
+      card.className = "project-card";
+      const drawerId = `drawer-proj-${idx}`;
+      const mainAsset = proj.verifiedAssets[0];
+      const stackPreview = proj.verifiedAssets.slice(0, 3);
+
+      const stackVisualHtml = stackPreview
+        .map((item) =>
+          is3DAsset(item.type)
+            ? `<div class="stack-card-3d">[3D ${item.type.toUpperCase()}]</div>`
+            : `<img class="stack-card-img" src="${item.previewSrc}" loading="lazy" decoding="async" alt="Stack preview" />`
+        )
+        .join("");
+
+      card.innerHTML = `
+        <div class="project-top-layout">
+          <div class="project-main-img-wrap" id="main-wrap-${idx}">
+            <div class="project-folder-badge">SOURCE: ${proj.folder}project.txt</div>
+          </div>
+
+          <div class="project-info-col">
+            <div>
+              <div class="project-code">${proj.code}</div>
+              <h2 class="project-title">${proj.title}</h2>
+              <p class="project-desc">${proj.description}</p>
+              <div class="project-tags">
+                ${proj.tags.map((t) => `<span class="skill-tag">${t}</span>`).join("")}
+              </div>
+            </div>
+
+            <div class="photo-stack-trigger">
+              <div class="stack-visual">${stackVisualHtml}</div>
+              <div class="stack-meta">
+                <span class="stack-title">PROJECT STACK (${proj.verifiedAssets.length} LINKED)</span>
+                <span class="stack-subtitle">Click stack to reveal full project grid &#8595;</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="${drawerId}" class="project-expanded-drawer">
+          <div class="drawer-header">
+            <span>// LINKED FROM ${proj.folder}project.txt (${proj.verifiedAssets.length} ITEMS)</span>
+            <span>CLICK ANY IMAGE, .GLB, OR .STL MODEL FOR FULL SCREEN</span>
+          </div>
+          <div class="project-gallery-grid"></div>
+        </div>
+      `;
+
+      container.appendChild(card);
+
+      const lightboxList = proj.verifiedAssets.map((asset, i) => ({
+        type: asset.type,
+        previewSrc: asset.previewSrc,
+        fullSrc: asset.fullSrc,
+        caption: `${proj.title} (${asset.file}) // [${i + 1}/${proj.verifiedAssets.length}]`
+      }));
+
+      const mainWrap = card.querySelector(`#main-wrap-${idx}`);
+      if (is3DAsset(mainAsset.type)) {
+        const stage3d = document.createElement("div");
+        stage3d.className = "stl-preview-container";
+        mainWrap.prepend(stage3d);
+        mountAutoRotating3DPreview(stage3d, mainAsset.fullSrc, mainAsset.type);
       } else {
-        const img = document.createElement("img");
-        img.className = "interactive-img";
-        img.src = asset.src;
-        img.loading = "lazy";
-        img.decoding = "async";
-        img.alt = `${proj.title} item ${assetIdx + 1}`;
-        itemWrap.appendChild(img);
+        const mainImg = document.createElement("img");
+        mainImg.className = "interactive-img project-main-img";
+        mainImg.src = mainAsset.previewSrc;
+        mainImg.loading = "lazy";
+        mainImg.decoding = "async";
+        mainImg.alt = proj.title;
+        mainWrap.prepend(mainImg);
       }
 
-      itemWrap.addEventListener("click", () => openLightbox(lightboxList, assetIdx));
-      galleryGrid.appendChild(itemWrap);
+      mainWrap.addEventListener("click", () => openLightbox(lightboxList, 0));
+
+      const galleryGrid = card.querySelector(".project-gallery-grid");
+      proj.verifiedAssets.forEach((asset, assetIdx) => {
+        const itemWrap = document.createElement("div");
+        itemWrap.className = "project-gallery-item";
+
+        if (is3DAsset(asset.type)) {
+          const box3d = document.createElement("div");
+          box3d.className = "stl-preview-container";
+          itemWrap.appendChild(box3d);
+          mountAutoRotating3DPreview(box3d, asset.fullSrc, asset.type);
+        } else {
+          const img = document.createElement("img");
+          img.className = "interactive-img";
+          img.src = asset.previewSrc;
+          img.loading = "lazy";
+          img.decoding = "async";
+          img.alt = `${proj.title} item ${assetIdx + 1}`;
+          itemWrap.appendChild(img);
+        }
+
+        itemWrap.addEventListener("click", () => openLightbox(lightboxList, assetIdx));
+        galleryGrid.appendChild(itemWrap);
+      });
+
+      const stackTrigger = card.querySelector(".photo-stack-trigger");
+      const drawer = card.querySelector(`#${drawerId}`);
+      stackTrigger.addEventListener("click", () => {
+        const isOpen = drawer.classList.toggle("open");
+        stackTrigger.querySelector(".stack-subtitle").innerHTML = isOpen
+          ? "Click stack to collapse project grid &#8593;"
+          : "Click stack to reveal full project grid &#8595;";
+      });
     });
 
-    const stackTrigger = card.querySelector(".photo-stack-trigger");
-    const drawer = card.querySelector(`#${drawerId}`);
-    stackTrigger.addEventListener("click", () => {
-      const isOpen = drawer.classList.toggle("open");
-      stackTrigger.querySelector(".stack-subtitle").innerHTML = isOpen
-        ? "Click stack to collapse project grid &#8593;"
-        : "Click stack to reveal full project grid &#8595;";
-    });
-  });
+    projectsLoaded = true;
+  })();
+
+  return projectsLoadingPromise;
 }
 
 /**
  * ============================================================================
- * 7. TAB 3: HIGH-PERFORMANCE PHOTOGRAPHY ENGINE (SUPPORTS photos.txt)
+ * 7. TAB 3: DUAL-SET PHOTOGRAPHY ENGINE (PREVIEW GRID -> FULL-RES ON CLICK)
  * ============================================================================
  */
-async function discoverPhotographyImages() {
-  const { folder, maxNumberedProbe } = PORTFOLIO_CONFIG.photographyConfig;
-  const normFolder = normalizeFolder(folder);
-  const discoveredFiles = new Set();
-  const imageRegex = /\.(jpe?g|png|webp|avif|gif)$/i;
+let photographyLoaded = false;
+let photographyLoadingPromise = null;
 
-  // 1. Check `photos.txt` manifest first (matches Image (1).jpg, etc.)
+async function discoverPhotographyDualAssets() {
+  const { folder, previewSubfolder, fullSubfolder, maxNumberedProbe } =
+    PORTFOLIO_CONFIG.photographyConfig;
+  const normFolder = normalizeFolder(folder);
+  const discoveredItems = [];
+  const seenNames = new Set();
+
+  // 1. Check `photos.txt` manifest first
   try {
     const txtRes = await fetch(`${normFolder}photos.txt`, { cache: "no-store" });
     if (txtRes.ok && !(txtRes.headers.get("content-type") || "").includes("text/html")) {
@@ -628,53 +765,66 @@ async function discoverPhotographyImages() {
         .split(/\r?\n/)
         .map((l) => l.trim())
         .filter(Boolean);
-      for (const file of lines) {
-        const fullUrl = `${normFolder}${file}`;
-        if (await verifyFileExistsFast(fullUrl)) {
-          discoveredFiles.add(fullUrl);
+
+      const resolvedBatch = await Promise.all(
+        lines.map(async (fileName) => {
+          const dual = await resolveDualImageUrls(
+            normFolder,
+            previewSubfolder,
+            fullSubfolder,
+            fileName
+          );
+          return dual ? { fileName, ...dual } : null;
+        })
+      );
+
+      resolvedBatch.filter(Boolean).forEach((item) => {
+        if (!seenNames.has(item.fileName)) {
+          seenNames.add(item.fileName);
+          discoveredItems.push(item);
         }
-      }
+      });
     }
   } catch (e) {}
 
-  // 2. Directory listing scan
-  if (discoveredFiles.size === 0) {
-    try {
-      const res = await fetch(normFolder, { cache: "no-store" });
-      if (res.ok && (res.headers.get("content-type") || "").includes("text/html")) {
-        const html = await res.text();
-        const doc = new DOMParser().parseFromString(html, "text/html");
-        doc.querySelectorAll("a").forEach((a) => {
-          const href = a.getAttribute("href") || "";
-          const cleanName = decodeURIComponent(href.split("/").pop());
-          if (imageRegex.test(cleanName)) {
-            discoveredFiles.add(`${normFolder}${cleanName}`);
-          }
-        });
-      }
-    } catch (e) {}
-  }
-
-  // 3. Fast HEAD probing fallback
-  if (discoveredFiles.size === 0) {
+  // 2. Fallback numbered probing (checks `.webp` and `.jpg` in `preview/` and `full/`)
+  if (discoveredItems.length === 0) {
     const candidates = [];
     for (let i = 1; i <= maxNumberedProbe; i++) {
       const pad = String(i).padStart(2, "0");
-      candidates.push(`${pad}.jpg`, `${i}.jpg`, `photo-${pad}.jpg`, `Image (${i}).jpg`);
+      candidates.push(
+        `Image (${i}).webp`,
+        `Image (${i}).jpg`,
+        `${pad}.webp`,
+        `${pad}.jpg`,
+        `${i}.webp`,
+        `${i}.jpg`
+      );
     }
+
     for (let i = 0; i < candidates.length; i += 24) {
       const batch = candidates.slice(i, i + 24);
       const results = await Promise.all(
-        batch.map(async (file) => {
-          const url = `${normFolder}${file}`;
-          return (await verifyFileExistsFast(url)) ? url : null;
+        batch.map(async (fileName) => {
+          const dual = await resolveDualImageUrls(
+            normFolder,
+            previewSubfolder,
+            fullSubfolder,
+            fileName
+          );
+          return dual ? { fileName, ...dual } : null;
         })
       );
-      results.filter(Boolean).forEach((u) => discoveredFiles.add(u));
+      results.filter(Boolean).forEach((item) => {
+        if (!seenNames.has(item.fileName)) {
+          seenNames.add(item.fileName);
+          discoveredItems.push(item);
+        }
+      });
     }
   }
 
-  return Array.from(discoveredFiles);
+  return discoveredItems;
 }
 
 function cacheSingleImageColorOnce(img, card) {
@@ -706,92 +856,106 @@ function cacheSingleImageColorOnce(img, card) {
 }
 
 async function loadAndRenderPhotography() {
-  const grid = document.getElementById("photography-grid");
-  const countBadge = document.getElementById("photo-count-badge");
-  const validPhotoUrls = await discoverPhotographyImages();
+  if (photographyLoaded) return;
+  if (photographyLoadingPromise) return photographyLoadingPromise;
 
-  // 🚀 Pre-warm cache in the background while reading About Me / Projects!
-  backgroundPrewarmPhotographyCache(validPhotoUrls);
+  photographyLoadingPromise = (async () => {
+    const grid = document.getElementById("photography-grid");
+    const countBadge = document.getElementById("photo-count-badge");
 
-  countBadge.textContent = `FOLDER COUNT: ${validPhotoUrls.length} IMAGE${
-    validPhotoUrls.length === 1 ? "" : "S"
-  }`;
+    // Apply adjustable column count variable
+    document.documentElement.style.setProperty(
+      "--photo-grid-cols",
+      PORTFOLIO_CONFIG.photographyConfig.gridColumns || 5
+    );
 
-  if (validPhotoUrls.length === 0) {
-    grid.style.display = "block";
-    grid.innerHTML = `
-      <div class="empty-state-box">
-        <div class="empty-state-title">// 0 IMAGES IN PHOTOGRAPHY FOLDER</div>
-        <div class="empty-state-desc">
-          No images were found in <code>${PORTFOLIO_CONFIG.photographyConfig.folder}</code>.
+    const photoItems = await discoverPhotographyDualAssets();
+
+    // Silently pre-warm the lightweight preview thumbnails in chunks while user is on About Me
+    backgroundPrewarmPreviewImages(photoItems.map((item) => item.previewUrl));
+
+    countBadge.textContent = `FOLDER COUNT: ${photoItems.length} IMAGE${
+      photoItems.length === 1 ? "" : "S"
+    }`;
+
+    if (photoItems.length === 0) {
+      grid.style.display = "block";
+      grid.innerHTML = `
+        <div class="empty-state-box">
+          <div class="empty-state-title">// 0 IMAGES IN PHOTOGRAPHY FOLDER</div>
+          <div class="empty-state-desc">
+            No images were found in <code>${PORTFOLIO_CONFIG.photographyConfig.folder}preview/</code> or <code>${PORTFOLIO_CONFIG.photographyConfig.folder}</code>.
+          </div>
         </div>
-      </div>
-    `;
-    return;
-  }
+      `;
+      photographyLoaded = true;
+      return;
+    }
 
-  grid.style.display = "grid";
-  grid.innerHTML = "";
+    grid.style.display = "grid";
+    grid.innerHTML = "";
 
-  const lightboxItems = validPhotoUrls.map((url, i) => {
-    const fileName = url.split("/").pop();
-    return {
+    const lightboxItems = photoItems.map((item, i) => ({
       type: "image",
-      src: url,
-      caption: `${fileName} // [${i + 1} / ${validPhotoUrls.length}]`
-    };
-  });
+      previewSrc: item.previewUrl,
+      fullSrc: item.fullUrl,
+      caption: `${item.fileName} // [${i + 1} / ${photoItems.length}]`
+    }));
 
-  const lazyObserver = new IntersectionObserver(
-    (entries, obs) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-        const card = entry.target;
-        const img = card.querySelector("img");
-        if (img && img.dataset.src) {
-          img.src = img.dataset.src;
-          img.removeAttribute("data-src");
-        }
-        obs.unobserve(card);
+    const lazyObserver = new IntersectionObserver(
+      (entries, obs) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const card = entry.target;
+          const img = card.querySelector("img");
+          if (img && img.dataset.src) {
+            img.src = img.dataset.src;
+            img.removeAttribute("data-src");
+          }
+          obs.unobserve(card);
+        });
+      },
+      { rootMargin: "400px 0px" }
+    );
+
+    photoItems.forEach((item, idx) => {
+      const card = document.createElement("div");
+      card.className = "insta-card";
+
+      const img = document.createElement("img");
+      img.className = "photo-grid-img";
+      img.crossOrigin = "anonymous";
+      img.decoding = "async";
+      img.dataset.src = item.previewUrl;
+      img.alt = item.fileName;
+
+      img.addEventListener("load", () => {
+        img.classList.add("img-loaded");
+        requestAnimationFrame(() => {
+          cacheSingleImageColorOnce(img, card);
+          if (currentTabIndex === 2) scheduleAverageColorUpdate();
+        });
       });
-    },
-    { rootMargin: "350px 0px" }
-  );
 
-  validPhotoUrls.forEach((url, idx) => {
-    const fileName = url.split("/").pop();
-    const card = document.createElement("div");
-    card.className = "insta-card";
+      card.innerHTML = `
+        <div class="insta-overlay">
+          <span class="insta-title">${item.fileName}</span>
+        </div>
+      `;
+      card.prepend(img);
+      grid.appendChild(card);
 
-    const img = document.createElement("img");
-    img.className = "photo-grid-img";
-    img.crossOrigin = "anonymous";
-    img.decoding = "async";
-    img.dataset.src = url;
-    img.alt = fileName;
+      lazyObserver.observe(card);
 
-    img.addEventListener("load", () => {
-      img.classList.add("img-loaded");
-      requestAnimationFrame(() => {
-        cacheSingleImageColorOnce(img, card);
-        if (currentTabIndex === 2) scheduleAverageColorUpdate();
+      card.addEventListener("click", () => {
+        openLightbox(lightboxItems, idx);
       });
     });
 
-    card.innerHTML = `
-      <div class="insta-overlay">
-        <span class="insta-title">${fileName}</span>
-      </div>
-    `;
-    card.prepend(img);
-    grid.appendChild(card);
+    photographyLoaded = true;
+  })();
 
-    lazyObserver.observe(card);
-
-    card.addEventListener("click", () => {
-      openLightbox(lightboxItems, idx);
-    });
-  });
+  return photographyLoadingPromise;
 }
 
 /**
@@ -866,7 +1030,7 @@ function updatePhotographyAverageColor() {
 
 /**
  * ============================================================================
- * 9. TAB NAVIGATION & DIRECTIONAL SLIDE ANIMATIONS
+ * 9. TAB NAVIGATION & ON-DEMAND TAB ASSURANCE
  * ============================================================================
  */
 const TABS = ["about", "projects", "photography"];
@@ -875,6 +1039,10 @@ let currentTabIndex = 0;
 
 function switchTab(targetIndex) {
   if (targetIndex === currentTabIndex) return;
+
+  // Ensure target tab assets are triggered if user clicks tab before idle timer finishes
+  if (targetIndex === 1 && !projectsLoaded) loadAndRenderProjects();
+  if (targetIndex === 2 && !photographyLoaded) loadAndRenderPhotography();
 
   const direction = targetIndex > currentTabIndex ? "right" : "left";
   const isWrapAroundNext = currentTabIndex === 2 && targetIndex === 0;
@@ -915,48 +1083,66 @@ function switchTab(targetIndex) {
 
 /**
  * ============================================================================
- * 10. UNIVERSAL LIGHTBOX
+ * 10. UNIVERSAL LIGHTBOX (PROGRESSIVE FULL-RES LOADER + 3D GLB/STL ORBIT)
  * ============================================================================
  */
 let currentLightboxList = [];
 let currentLightboxIndex = 0;
+let activeFullImageRequestToken = 0;
 
 let lbScene = null,
   lbCamera = null,
   lbRenderer = null,
   lbControls = null,
-  lbMesh = null,
+  lbModelGroup = null,
+  lbWireframeState = false,
   lbAnimId = null;
 
 function preventBackgroundScroll(e) {
-  if (e.target && e.target.closest("#lightbox-stl-stage")) return;
+  if (e.target && e.target.closest("#lightbox-3d-stage")) return;
   e.preventDefault();
 }
 
-function initOrUpdateLightboxStl(stlUrl) {
-  const stage = document.getElementById("lightbox-stl-stage");
-  const wireBtn = document.getElementById("stl-wireframe-btn");
-  const resetBtn = document.getElementById("stl-reset-btn");
+function setModelWireframe(group, enable) {
+  if (!group) return;
+  group.traverse((child) => {
+    if (child.isMesh && child.material) {
+      if (Array.isArray(child.material)) {
+        child.material.forEach((m) => (m.wireframe = enable));
+      } else {
+        child.material.wireframe = enable;
+      }
+    }
+  });
+}
+
+function initOrUpdateLightbox3D(modelUrl, type) {
+  const stage = document.getElementById("lightbox-3d-stage");
+  const wireBtn = document.getElementById("model-wireframe-btn");
+  const resetBtn = document.getElementById("model-reset-btn");
+  const loaderOverlay = document.getElementById("lightbox-loader");
+  const loaderText = document.getElementById("lightbox-loader-text");
 
   if (!lbRenderer) {
     lbScene = new THREE.Scene();
     lbCamera = new THREE.PerspectiveCamera(42, 16 / 10, 0.1, 4000);
     lbRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     lbRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    lbRenderer.outputEncoding = THREE.sRGBEncoding;
     stage.appendChild(lbRenderer.domElement);
 
     lbControls = new THREE.OrbitControls(lbCamera, lbRenderer.domElement);
     lbControls.enableDamping = true;
     lbControls.dampingFactor = 0.06;
 
-    const amb = new THREE.AmbientLight(0xffffff, 0.7);
-    lbScene.add(amb);
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x222830, 1.0);
+    lbScene.add(hemi);
 
-    const dir1 = new THREE.DirectionalLight(0xffffff, 0.9);
+    const dir1 = new THREE.DirectionalLight(0xffffff, 0.95);
     dir1.position.set(100, 140, 120);
     lbScene.add(dir1);
 
-    const dir2 = new THREE.DirectionalLight(0xd92804, 0.45);
+    const dir2 = new THREE.DirectionalLight(0xffffff, 0.5);
     dir2.position.set(-100, -80, -90);
     lbScene.add(dir2);
 
@@ -965,9 +1151,10 @@ function initOrUpdateLightboxStl(stlUrl) {
     lbScene.add(grid);
 
     wireBtn.addEventListener("click", () => {
-      if (!lbMesh) return;
-      lbMesh.material.wireframe = !lbMesh.material.wireframe;
-      wireBtn.textContent = `WIREFRAME: ${lbMesh.material.wireframe ? "ON" : "OFF"}`;
+      if (!lbModelGroup) return;
+      lbWireframeState = !lbWireframeState;
+      setModelWireframe(lbModelGroup, lbWireframeState);
+      wireBtn.textContent = `WIREFRAME: ${lbWireframeState ? "ON" : "OFF"}`;
     });
 
     resetBtn.addEventListener("click", () => {
@@ -984,33 +1171,30 @@ function initOrUpdateLightboxStl(stlUrl) {
   lbCamera.updateProjectionMatrix();
   lbRenderer.setSize(w, h);
 
-  if (lbMesh) {
-    lbScene.remove(lbMesh);
-    lbMesh.material.dispose();
-    lbMesh = null;
+  if (lbModelGroup) {
+    lbScene.remove(lbModelGroup);
+    lbModelGroup = null;
   }
 
+  lbWireframeState = false;
   wireBtn.textContent = "WIREFRAME: OFF";
 
-  loadStlGeometry(stlUrl).then((geometry) => {
-    const material = new THREE.MeshStandardMaterial({
-      color: 0xe2e8f0,
-      metalness: 0.38,
-      roughness: 0.38,
-      wireframe: false
+  loaderText.textContent = `LOADING 3D ${type.toUpperCase()} GEOMETRY...`;
+  loaderOverlay.style.display = "flex";
+
+  load3DModelObject(modelUrl, type)
+    .then((obj) => {
+      loaderOverlay.style.display = "none";
+      lbModelGroup = obj;
+      lbScene.add(lbModelGroup);
+
+      lbControls.reset();
+      lbCamera.position.set(70, 50, 95);
+      lbControls.update();
+    })
+    .catch(() => {
+      loaderText.textContent = `ERROR LOADING 3D ${type.toUpperCase()} FILE`;
     });
-    lbMesh = new THREE.Mesh(geometry, material);
-
-    geometry.computeBoundingSphere();
-    const radius = geometry.boundingSphere.radius || 1;
-    const scale = 52 / radius;
-    lbMesh.scale.set(scale, scale, scale);
-    lbScene.add(lbMesh);
-
-    lbControls.reset();
-    lbCamera.position.set(70, 50, 95);
-    lbControls.update();
-  });
 
   if (lbAnimId) cancelAnimationFrame(lbAnimId);
   function animateLb() {
@@ -1043,12 +1227,15 @@ function closeLightbox() {
   modal.classList.remove("open");
   modal.setAttribute("aria-hidden", "true");
 
+  activeFullImageRequestToken++;
+
   if (lbAnimId) {
     cancelAnimationFrame(lbAnimId);
     lbAnimId = null;
   }
 
   document.getElementById("lightbox-pdf-frame").src = "";
+  document.getElementById("lightbox-loader").style.display = "none";
 
   document.body.classList.remove("lightbox-lock");
   window.removeEventListener("wheel", preventBackgroundScroll);
@@ -1058,35 +1245,63 @@ function closeLightbox() {
 function updateLightboxSlide() {
   if (!currentLightboxList.length) return;
   const item = currentLightboxList[currentLightboxIndex];
+  const requestToken = ++activeFullImageRequestToken;
 
   const imgEl = document.getElementById("lightbox-img");
-  const stlStage = document.getElementById("lightbox-stl-stage");
+  const stage3d = document.getElementById("lightbox-3d-stage");
   const pdfFrame = document.getElementById("lightbox-pdf-frame");
-  const wireBtn = document.getElementById("stl-wireframe-btn");
-  const resetBtn = document.getElementById("stl-reset-btn");
+  const wireBtn = document.getElementById("model-wireframe-btn");
+  const resetBtn = document.getElementById("model-reset-btn");
+  const loaderOverlay = document.getElementById("lightbox-loader");
+  const loaderText = document.getElementById("lightbox-loader-text");
 
   imgEl.style.display = "none";
-  stlStage.style.display = "none";
+  stage3d.style.display = "none";
   pdfFrame.style.display = "none";
   wireBtn.style.display = "none";
   resetBtn.style.display = "none";
+  loaderOverlay.style.display = "none";
 
   if (lbAnimId) {
     cancelAnimationFrame(lbAnimId);
     lbAnimId = null;
   }
 
-  if (item.type === "stl") {
-    stlStage.style.display = "block";
+  if (is3DAsset(item.type)) {
+    stage3d.style.display = "block";
     wireBtn.style.display = "inline-block";
     resetBtn.style.display = "inline-block";
-    initOrUpdateLightboxStl(item.src);
+    initOrUpdateLightbox3D(item.fullSrc, item.type);
   } else if (item.type === "pdf") {
     pdfFrame.style.display = "block";
-    pdfFrame.src = item.src;
+    pdfFrame.src = item.fullSrc;
   } else {
+    // Progressive Dual-Set Image Loading:
+    // 1. Show lightweight preview immediately (slightly dimmed) + CAD Loading Spinner
+    // 2. Fetch uncompressed Full-Size image in background and swap smoothly when ready
     imgEl.style.display = "block";
-    imgEl.src = item.src;
+    const previewUrl = item.previewSrc || item.fullSrc;
+    const fullUrl = item.fullSrc || item.previewSrc;
+
+    imgEl.src = previewUrl;
+    imgEl.classList.add("loading-blur");
+    loaderText.textContent = "LOADING FULL-RESOLUTION IMAGE...";
+    loaderOverlay.style.display = "flex";
+
+    const highResLoader = new Image();
+    highResLoader.decoding = "async";
+    highResLoader.onload = () => {
+      if (requestToken !== activeFullImageRequestToken) return;
+      imgEl.src = fullUrl;
+      imgEl.classList.remove("loading-blur");
+      loaderOverlay.style.display = "none";
+    };
+    highResLoader.onerror = () => {
+      if (requestToken !== activeFullImageRequestToken) return;
+      imgEl.classList.remove("loading-blur");
+      loaderOverlay.style.display = "none";
+    };
+    highResLoader.src = fullUrl;
   }
 
   document.getElementById("lightbox-caption").textContent = item.caption || "";
@@ -1105,27 +1320,40 @@ function stepLightbox(delta) {
 
 /**
  * ============================================================================
- * 11. INITIALIZATION & EVENT LISTENERS
+ * 11. INITIALIZATION (INSTANT FIRST-PAGE BOOT -> DEFERRED BACKGROUND LOADING)
  * ============================================================================
  */
 window.addEventListener("DOMContentLoaded", async () => {
-  await Promise.all([
-    renderAboutSection(),
-    loadAndRenderProjects(),
-    loadAndRenderPhotography()
-  ]);
+  // 1. ONLY load the About Me tab on initial startup so the website opens instantaneously
+  await renderAboutSection();
 
+  // 2. Immediately reveal the website so the user can start reading About Me
   setTimeout(() => {
     document.getElementById("page-loader").classList.add("loaded");
     document.body.classList.add("page-ready");
-  }, 450);
 
+    // 3. AFTER the website has finished loading and user is reading About Me,
+    // quietly initialize Projects and Photography previews in the background!
+    const startDeferredBackgroundLoading = async () => {
+      await loadAndRenderProjects();
+      await loadAndRenderPhotography();
+    };
+
+    if ("requestIdleCallback" in window) {
+      requestIdleCallback(() => startDeferredBackgroundLoading(), { timeout: 1500 });
+    } else {
+      setTimeout(startDeferredBackgroundLoading, 800);
+    }
+  }, 300);
+
+  // Top Tab Navigation
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       switchTab(parseInt(btn.dataset.index, 10));
     });
   });
 
+  // Side Arrow Bars
   document.getElementById("side-nav-prev").addEventListener("click", () => {
     switchTab((currentTabIndex - 1 + TABS.length) % TABS.length);
   });
@@ -1134,6 +1362,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     switchTab((currentTabIndex + 1) % TABS.length);
   });
 
+  // Bio Edit Toggle
   const editBioBtn = document.getElementById("toggle-bio-edit");
   const bioContent = document.getElementById("about-bio-content");
   editBioBtn.addEventListener("click", () => {
@@ -1149,6 +1378,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
+  // Live AutoCAD Cursor Coordinates
   const coordReadout = document.getElementById("coord-readout");
   window.addEventListener(
     "mousemove",
@@ -1160,6 +1390,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     { passive: true }
   );
 
+  // Scroll / Resize Color Sampler
   window.addEventListener(
     "scroll",
     () => {
@@ -1171,6 +1402,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     if (currentTabIndex === 2) scheduleAverageColorUpdate();
   });
 
+  // Lightbox Events
   const lightboxModal = document.getElementById("lightbox-modal");
   lightboxModal.addEventListener("click", (e) => {
     if (e.target === lightboxModal) closeLightbox();

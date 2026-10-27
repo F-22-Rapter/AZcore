@@ -10,9 +10,10 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 
-  <!-- Three.js + STLLoader + OrbitControls for 3D .stl CAD support -->
+  <!-- Three.js + STLLoader + GLTFLoader + OrbitControls for 3D .stl & full-color .glb support -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 </head>
 <body class="cad-theme">
@@ -24,7 +25,7 @@
       <div class="loader-bar-track">
         <div class="loader-bar-fill"></div>
       </div>
-      <div class="loader-meta">SCANNING FOLDERS // INITIALIZING CAD & 3D ENGINE</div>
+      <div class="loader-meta">INITIALIZING WORKSPACE // READY</div>
     </div>
   </div>
 
@@ -89,7 +90,6 @@
       </div>
 
       <div class="about-grid">
-        <!-- Left Column: Portrait + Quick Specs -->
         <div class="about-portrait-col">
           <div class="portrait-frame">
             <span class="corner-tick tl"></span>
@@ -106,7 +106,6 @@
           <div class="quick-specs-card" id="about-specs-list"></div>
         </div>
 
-        <!-- Right Column: Bio, Resume, Skills, & Ways to Reach Me -->
         <div class="about-content-col">
           <div class="cad-panel">
             <div class="panel-header">
@@ -142,7 +141,6 @@
             </div>
           </div>
 
-          <!-- Technical Arsenal -->
           <div class="cad-panel">
             <div class="panel-header">
               <span class="panel-title">// TECHNICAL ARSENAL & SOFTWARE</span>
@@ -150,7 +148,6 @@
             <div id="about-skills-grid" class="skills-grid"></div>
           </div>
 
-          <!-- Ways to Reach Me -->
           <div class="cad-panel">
             <div class="panel-header">
               <span class="panel-title">// WAYS TO REACH ME & SOCIALS</span>
@@ -164,15 +161,15 @@
     <!-- ==================== TAB 2: PROJECTS ==================== -->
     <section id="tab-projects" class="tab-section" data-tab-index="1">
       <div class="section-header">
-        <div class="section-eyebrow">SECTION 02 // TEXT-LINKED PROJECT & 3D STL ARCHIVE</div>
+        <div class="section-eyebrow">SECTION 02 // TEXT-LINKED PROJECT, .GLB & .STL ARCHIVE</div>
         <div class="photo-header-row">
           <div>
             <h1 class="section-title">PROJECTS</h1>
             <p class="section-subtitle">
-              Driven by each folder's <code>project.txt</code>. Supports images and auto-rotating <code>.stl</code> 3D models (click any model to orbit/zoom full-screen).
+              Driven by each folder's <code>project.txt</code>. Supports images, full-color <code>.glb</code> models, and <code>.stl</code> meshes (click any model to orbit/zoom full-screen).
             </p>
           </div>
-          <div id="projects-count-badge" class="telemetry-badge">LOADED: 0 PROJECTS</div>
+          <div id="projects-count-badge" class="telemetry-badge">QUEUED FOR IDLE LOAD...</div>
         </div>
       </div>
 
@@ -182,15 +179,15 @@
     <!-- ==================== TAB 3: PHOTOGRAPHY ==================== -->
     <section id="tab-photography" class="tab-section" data-tab-index="2">
       <div class="section-header">
-        <div class="section-eyebrow">SECTION 03 // GPU-CACHED FOLDER SCAN & COLOR ENGINE</div>
+        <div class="section-eyebrow">SECTION 03 // DUAL-RESOLUTION PREVIEW & FULL-SIZE ARCHIVE</div>
         <div class="photo-header-row">
           <div>
             <h1 class="section-title">PHOTOGRAPHY</h1>
             <p class="section-subtitle">
-              Lazy-loaded high-resolution archive with one-time RGB caching for lag-free 50+ image browsing.
+              Displays fast lightweight thumbnails from <code>preview/</code> and loads uncompressed <code>full/</code> images on click.
             </p>
           </div>
-          <div id="photo-count-badge" class="telemetry-badge">FOLDER COUNT: 0 IMAGES</div>
+          <div id="photo-count-badge" class="telemetry-badge">QUEUED FOR IDLE LOAD...</div>
         </div>
       </div>
 
@@ -199,17 +196,24 @@
 
   </main>
 
-  <!-- UNIVERSAL FULL-SCREEN LIGHTBOX MODAL (SUPPORTS IMAGES, 3D .STL, AND RESUME PDF) -->
+  <!-- UNIVERSAL FULL-SCREEN LIGHTBOX MODAL (FULL-RES IMAGES, 3D GLB/STL, & PDF) -->
   <div id="lightbox-modal" class="lightbox-modal" aria-hidden="true">
     <div class="lightbox-backdrop-hint">CLICK ANYWHERE OUTSIDE VIEWER TO CLOSE [ESC]</div>
     <button class="lightbox-nav lightbox-prev" id="lightbox-prev" aria-label="Previous Item">&#8592;</button>
 
     <div class="lightbox-content-wrapper" id="lightbox-content-wrapper">
-      <!-- 1. Standard 2D Image Viewer -->
+      
+      <!-- Animated CAD Spinner while Full-Resolution Image or 3D Model Loads -->
+      <div id="lightbox-loader" class="lightbox-loader" style="display:none;">
+        <div class="cad-spinner"></div>
+        <div class="cad-loader-text" id="lightbox-loader-text">LOADING FULL-RESOLUTION ASSET...</div>
+      </div>
+
+      <!-- 1. Full-Resolution 2D Image Viewer -->
       <img id="lightbox-img" src="" alt="Full screen preview" />
 
-      <!-- 2. Interactive 3D STL Viewer Stage -->
-      <div id="lightbox-stl-stage" class="lightbox-stl-stage" style="display:none;">
+      <!-- 2. Interactive 3D GLB / STL Viewer Stage -->
+      <div id="lightbox-3d-stage" class="lightbox-stl-stage" style="display:none;">
         <div class="stl-controls-hint">
           LEFT DRAG: ORBIT // RIGHT DRAG: PAN // SCROLL: ZOOM
         </div>
@@ -221,8 +225,8 @@
       <div class="lightbox-caption-bar">
         <span id="lightbox-caption">PREVIEW</span>
         <div class="lightbox-caption-right">
-          <button id="stl-wireframe-btn" class="mini-action-btn" style="display:none;">WIREFRAME: OFF</button>
-          <button id="stl-reset-btn" class="mini-action-btn" style="display:none;">RESET VIEW</button>
+          <button id="model-wireframe-btn" class="mini-action-btn" style="display:none;">WIREFRAME: OFF</button>
+          <button id="model-reset-btn" class="mini-action-btn" style="display:none;">RESET VIEW</button>
           <span id="lightbox-counter">1 / 1</span>
         </div>
       </div>
@@ -231,7 +235,7 @@
     <button class="lightbox-nav lightbox-next" id="lightbox-next" aria-label="Next Item">&#8594;</button>
   </div>
 
-  <!-- Offscreen Canvas used ONCE per image load to cache RGB color -->
+  <!-- Offscreen Canvas used ONCE per preview image load to cache RGB color -->
   <canvas id="color-sampler-canvas" width="24" height="24" style="display:none;"></canvas>
 
   <script src="script.js"></script>
