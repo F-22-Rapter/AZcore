@@ -123,27 +123,50 @@ async function resolveValidUrlWithCaseFallback(baseFolder, fileName) {
   return null;
 }
 
-// Resolves both `{ previewUrl, fullUrl }` for dual-set images
+// Automatically pairs .webp previews with .jpg/.png full-size images!
 async function resolveDualImageUrls(baseFolder, previewSub, fullSub, fileName) {
   const normBase = normalizeFolder(baseFolder);
   const normPrev = normalizeFolder(previewSub);
   const normFull = normalizeFolder(fullSub);
 
-  const candidatePreview = `${normBase}${normPrev}${fileName}`;
-  const candidateFull = `${normBase}${normFull}${fileName}`;
-  const candidateDirect = `${normBase}${fileName}`;
+  // Strip the extension so we have just the base name (e.g., "Image (1)")
+  const dotIdx = fileName.lastIndexOf(".");
+  const baseName = dotIdx !== -1 ? fileName.slice(0, dotIdx) : fileName;
+  const originalExt = dotIdx !== -1 ? fileName.slice(dotIdx) : ".webp";
 
-  const [hasPreview, hasFull, hasDirect] = await Promise.all([
-    verifyFileExistsFast(candidatePreview),
-    verifyFileExistsFast(candidateFull),
-    verifyFileExistsFast(candidateDirect)
-  ]);
+  // 1. Check Preview Folder (Prioritizes .webp first, then original extension, then .jpg)
+  const previewExts = [...new Set([".webp", originalExt, ".jpg", ".JPG", ".png"])];
+  let previewUrl = null;
+  for (const ext of previewExts) {
+    const candidate = `${normBase}${normPrev}${baseName}${ext}`;
+    if (await verifyFileExistsFast(candidate)) {
+      previewUrl = candidate;
+      break;
+    }
+  }
 
-  const previewUrl = hasPreview ? candidatePreview : hasDirect ? candidateDirect : hasFull ? candidateFull : null;
-  const fullUrl = hasFull ? candidateFull : hasDirect ? candidateDirect : hasPreview ? candidatePreview : null;
+  // 2. Check Full Folder (Prioritizes .jpg first, then original extension, then .webp/.png)
+  const fullExts = [...new Set([".jpg", ".JPG", ".jpeg", originalExt, ".png", ".webp"])];
+  let fullUrl = null;
+  for (const ext of fullExts) {
+    const candidate = `${normBase}${normFull}${baseName}${ext}`;
+    if (await verifyFileExistsFast(candidate)) {
+      fullUrl = candidate;
+      break;
+    }
+  }
 
-  if (!previewUrl && !fullUrl) return null;
-  return { previewUrl, fullUrl };
+  // 3. Fallback: Check root folder directly if subfolders aren't used for a specific file
+  if (!previewUrl && !fullUrl) {
+    const directUrl = await resolveValidUrlWithCaseFallback(normBase, fileName);
+    if (!directUrl) return null;
+    return { previewUrl: directUrl, fullUrl: directUrl };
+  }
+
+  return {
+    previewUrl: previewUrl || fullUrl,
+    fullUrl: fullUrl || previewUrl
+  };
 }
 
 /**
