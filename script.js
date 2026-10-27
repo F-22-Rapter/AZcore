@@ -1130,14 +1130,14 @@ function initOrUpdateLightbox3D(modelUrl, type) {
     lbControls.enableDamping = true;
     lbControls.dampingFactor = 0.06;
 
-    const hemi = new THREE.HemisphereLight(0xffffff, 0x222830, 0.5);
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x222830, 0.3);
     lbScene.add(hemi);
 
-    const dir1 = new THREE.DirectionalLight(0xffffff, 0.5);
+    const dir1 = new THREE.DirectionalLight(0xffffff, 0.3);
     dir1.position.set(100, 140, 120);
     lbScene.add(dir1);
 
-    const dir2 = new THREE.DirectionalLight(0xffffff, 0.2);
+    const dir2 = new THREE.DirectionalLight(0xffffff, 0.05);
     dir2.position.set(-100, -80, -90);
     lbScene.add(dir2);
 
