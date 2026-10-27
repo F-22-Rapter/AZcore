@@ -243,7 +243,7 @@ function load3DModelObject(url, type) {
         undefined,
         (err) => reject(err)
       );
-    }
+    } 
   });
 }
 
