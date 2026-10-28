@@ -53,8 +53,6 @@ const PORTFOLIO_CONFIG = {
   projectsConfig: {
     baseFolder: "assets/projects/",
     textFileName: "project.txt",
-    previewSubfolder: "preview/",
-    fullSubfolder: "full/",
     foldersToCheck: [
       "LARP"
     ]
@@ -545,41 +543,18 @@ function parseProjectTextFile(rawText, folderPath) {
 }
 
 async function resolveProjectAsset(projFolder, fileName) {
-  const { previewSubfolder, fullSubfolder } = PORTFOLIO_CONFIG.projectsConfig;
   const assetType = getAssetType(fileName);
 
-  if (is3DAsset(assetType)) {
-    const resolved3D = await resolveValidUrlWithCaseFallback(projFolder, fileName);
-    if (!resolved3D) return null;
-    return {
-      type: assetType,
-      previewSrc: resolved3D,
-      fullSrc: resolved3D,
-      file: fileName
-    };
-  }
+  // Directly check the root of the project folder (with case-fallback for .stl/.STL)
+  const resolvedUrl = await resolveValidUrlWithCaseFallback(projFolder, fileName);
+  if (!resolvedUrl) return null;
 
-  const dual = await resolveDualImageUrls(projFolder, previewSubfolder, fullSubfolder, fileName);
-  if (dual) {
-    return {
-      type: "image",
-      previewSrc: dual.previewUrl,
-      fullSrc: dual.fullUrl,
-      file: fileName
-    };
-  }
-
-  const fallbackDirect = await resolveValidUrlWithCaseFallback(projFolder, fileName);
-  if (fallbackDirect) {
-    return {
-      type: "image",
-      previewSrc: fallbackDirect,
-      fullSrc: fallbackDirect,
-      file: fileName
-    };
-  }
-
-  return null;
+  return {
+    type: assetType,
+    previewSrc: resolvedUrl,
+    fullSrc: resolvedUrl,
+    file: fileName
+  };
 }
 
 async function loadAndRenderProjects() {
