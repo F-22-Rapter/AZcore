@@ -1,0 +1,6 @@
+TITLE: Suspension
+CODE: PRJ-02 // FSAE ELECTRIC
+TAGS: Mill Machining, Lathe machining, Metal working, Fabrication
+MAIN_IMAGE: Image (8).jpg
+IMAGES: Image (1).jpg, Image (2).jpg, Image (3).jpg, Image (4).jpg, Image (5).jpg, Image (6).jpg, Image (7).jpg, Image (8).jpg
+DESCRIPTION: fabricated stuff for suspension

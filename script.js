@@ -55,7 +55,8 @@ const PORTFOLIO_CONFIG = {
     baseFolder: "assets/projects/",
     textFileName: "project.txt",
     foldersToCheck: [
-      "LARP"
+      "LARP",
+      "fabrication"
     ]
   },
 
@@ -629,11 +630,11 @@ async function loadAndRenderProjects() {
         )
         .join("");
 
-      card.innerHTML = `
-        <div class="project-top-layout">
-          <div class="project-main-img-wrap" id="main-wrap-${idx}">
-            
-          </div>
+        card.innerHTML = `
+          <div class="project-top-layout">
+            <div class="project-main-img-wrap" id="main-wrap-${idx}">
+              
+            </div>
 
           <div class="project-info-col">
             <div>
