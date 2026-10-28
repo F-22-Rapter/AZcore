@@ -46,7 +46,7 @@
       <span class="brand-tag">// STUDIO</span>
     </div>
 
-    <!-- NEW: Hamburger Menu Toggle Button (Only visible below 600px) -->
+    <!-- Hamburger Menu Toggle Button (Only visible below 600px) -->
     <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Toggle Navigation Menu" aria-expanded="false">
       <span class="ham-line"></span>
       <span class="ham-line"></span>
@@ -66,11 +66,7 @@
     </nav>
 
     <div class="header-telemetry">
-      <span id="coord-readout">X: 0000 // Y: 0000</span>
-      <span id="theme-swatch-indicator" class="swatch-pill" title="Current Screen Average Color">
-        <span id="swatch-dot" class="swatch-dot"></span>
-        <span id="swatch-hex">#1F2326</span>
-      </span>
+      <span id="coord-readout"></span>
     </div>
   </header>
 
@@ -95,7 +91,7 @@
     <!-- TAB 1: ABOUT ME -->
     <section id="tab-about" class="tab-section active-section" data-tab-index="0">
       <div class="section-header">
-        <div class="section-eyebrow">SECTION 01 // PROFILE & SPECIFICATIONS</div>
+        <div class="section-eyebrow">SECTION 01 // About Me</div>
         <h1 class="section-title" id="about-headline">ABOUT ME</h1>
       </div>
 
@@ -109,37 +105,23 @@
             <img id="about-profile-img" class="interactive-img" src="" alt="Profile Portrait" />
             <div class="portrait-caption">
               <span id="about-name-caption">ALEXANDER ZHUK</span>
-              <span class="accent-text">// FIG. 1.0</span>
+              <span class="accent-text">// Portrait</span>
             </div>
           </div>
 
           <div class="quick-specs-card" id="about-specs-list"></div>
-        </div>
 
-        <div class="about-content-col">
-          <div class="cad-panel">
+          <!-- RESUME PANEL MOVED TO UNDER ABOUT-SPECS-LIST -->
+          <div class="cad-panel resume-panel" style="margin-top: 20px;">
             <div class="panel-header">
-              <span class="panel-title">// BIO & OVERVIEW</span>
-              <button id="toggle-bio-edit" class="mini-action-btn" title="Click to edit and save locally">
-                EDIT TEXT
-              </button>
-            </div>
-            <div id="about-bio-content" class="bio-text" contenteditable="false"></div>
-          </div>
-
-          <div class="cad-panel resume-panel">
-            <div class="panel-header">
-              <span class="panel-title">// CURRICULUM VITAE & TECHNICAL RESUME</span>
-              <span id="resume-status-tag" class="resume-status-tag">DOCUMENT READY</span>
+              <span class="panel-title">// CURRICULUM & RESUME</span>
             </div>
             <div class="resume-card-body">
               <div class="resume-info">
                 <div class="resume-doc-title" id="resume-title-display">ALEXANDER_ZHUK_RESUME.PDF</div>
-                <p class="resume-doc-sub" id="resume-subtitle-display">
-                  Civil Engineering, CAD/CFD Simulation, Metal Fabrication & Leadership Experience
-                </p>
+                <p class="resume-doc-sub" id="resume-subtitle-display"></p>
               </div>
-              <div class="resume-actions">
+              <div class="resume-actions" style="margin-top: 0px;">
                 <button id="preview-resume-btn" class="cad-btn cad-btn-primary">
                   PREVIEW RESUME
                 </button>
@@ -149,10 +131,19 @@
               </div>
             </div>
           </div>
+        </div>
+
+        <div class="about-content-col">
+          <div class="cad-panel">
+            <div class="panel-header">
+              <span class="panel-title">// BIO & OVERVIEW</span>
+            </div>
+            <div id="about-bio-content" class="bio-text" contenteditable="false"></div>
+          </div>
 
           <div class="cad-panel">
             <div class="panel-header">
-              <span class="panel-title">// TECHNICAL ARSENAL & SOFTWARE</span>
+              <span class="panel-title">// SKILLS</span>
             </div>
             <div id="about-skills-grid" class="skills-grid"></div>
           </div>
@@ -170,13 +161,11 @@
     <!-- TAB 2: PROJECTS -->
     <section id="tab-projects" class="tab-section" data-tab-index="1">
       <div class="section-header">
-        <div class="section-eyebrow">SECTION 02 // TEXT-LINKED PROJECT, .GLB & .STL ARCHIVE</div>
+        <div class="section-eyebrow">SECTION 02 // Project Portfolio</div>
         <div class="photo-header-row">
           <div>
             <h1 class="section-title">PROJECTS</h1>
-            <p class="section-subtitle">
-              Driven by each folder's <code>project.txt</code>. Supports images, full-color Draco-compressed <code>.glb</code> models, and <code>.stl</code> meshes.
-            </p>
+            <p class="section-subtitle"></p>
           </div>
           <div id="projects-count-badge" class="telemetry-badge">QUEUED FOR IDLE LOAD...</div>
         </div>
@@ -188,13 +177,11 @@
     <!-- TAB 3: PHOTOGRAPHY -->
     <section id="tab-photography" class="tab-section" data-tab-index="2">
       <div class="section-header">
-        <div class="section-eyebrow">SECTION 03 // DUAL-RESOLUTION PREVIEW & FULL-SIZE ARCHIVE</div>
+        <div class="section-eyebrow">SECTION 03 // Photography Gallery</div>
         <div class="photo-header-row">
           <div>
             <h1 class="section-title">PHOTOGRAPHY</h1>
-            <p class="section-subtitle">
-              Displays fast lightweight thumbnails from <code>preview/</code> and loads uncompressed <code>full/</code> images on click.
-            </p>
+            <p class="section-subtitle"></p>
           </div>
           <div id="photo-count-badge" class="telemetry-badge">QUEUED FOR IDLE LOAD...</div>
         </div>

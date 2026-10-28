@@ -14,38 +14,39 @@ const PORTFOLIO_CONFIG = {
     profileImage: "profile.webp",
     resume: {
       file: "resume.pdf",
-      title: "ALEXANDER_ZHUK_RESUME.PDF",
-      subtitle: "Civil Engineering, CAD/CFD Simulation, Metal Fabrication & Leadership Experience"
     },
     bioParagraphs: [
       "I am a Civil Engineering student, fabricator, and photographer based in Chicago. My work sits at the intersection of structural systems, custom mechanical/electrical fabrication, and architectural & night-sky photography.",
       "Whether leading tractive battery accumulator design and thermal simulation, machining custom drivetrain mounts on a manual lathe, or capturing high-resolution panoramic astrophotography, I approach every project with precision CAD workflows and hands-on execution."
     ],
     quickSpecs: [
-      { label: "DISCIPLINE", value: "Civil & Structural Engineering" },
-      { label: "LOCATION", value: "Chicago, IL" },
-      { label: "FOCUS", value: "CAD / CFD / Fabrication" },
-      { label: "CAMERA SYSTEM", value: "Canon EOS 90D + Vintage Glass" }
+      { "label": "DISCIPLINE", "value": "Civil & Structural Engineering" },
+      { "label": "LOCATION", "value": "IIT - Chicago, IL" },
+      { "label": "FOCUS", "value": "CAD / CFD / Fabrication" },
+      { "label": "CAMERA SYSTEM", "value": "Canon EOS 90D <br> Canon 17-55mm f/2.8" }
     ],
     skills: [
       {
         category: "CAD & SIMULATION",
-        items: ["SolidWorks", "AutoCAD", "Autodesk Revit", "Ansys Fluent CFD", "Inventor", "Blender"]
+        items: [  "SolidWorks",  "AutoCAD",  "Revit",  "Ansys Fluent CFD",  "Inventor",  "Blender",  "Unity",  "Visual Studio Code",  "MATLAB"]
       },
       {
         category: "FABRICATION & HARDWARE",
-        items: ["Manual Lathe & Mill", "MIG Welding", "Li-Ion Pack Assembly", "Composite Enclosures", "3D Printing"]
+        items: ["Manual Lathe Machining", "Manual Mill Machining","Li-Ion Pack Assembly", "3D Printing", "Metal Working", "Soldering"]
       },
       {
         category: "CODE & MEDIA",
-        items: ["Python / OpenCV", "HTML / CSS / JS", "LaTeX", "Lightroom Classic", "DaVinci Resolve", "Hugin / Sequator"]
+        items: [ "Lightroom Classic", "DaVinci Resolve", "Photoshop", "Microsoft 365"]
+      },
+      {
+        category: "Languages",
+        items: [ "English","Ukranian", "Russian"]
       }
     ],
     socials: [
-      { platform: "EMAIL", handle: "alex@azcore.studio", url: "mailto:alex@azcore.studio" },
-      { platform: "GITHUB", handle: "github.com/azcore", url: "https://github.com" },
-      { platform: "LINKEDIN", handle: "linkedin.com/in/alexander-zhuk", url: "https://linkedin.com" },
-      { platform: "INSTAGRAM", handle: "@azcore.studio", url: "https://instagram.com" }
+      { "platform": "EMAIL", "handle": "contact@azcore.studio", "url": "mailto:contact@azcore.studio" },
+      { "platform": "LINKEDIN", "handle": "linkedin zhuk-alex", "url": "https://www.linkedin.com/in/zhuk-alex" },
+      { "platform": "INSTAGRAM", "handle": "@az.__.gallery", "url": "https://www.instagram.com/az.__.gallery/" }
     ]
   },
 
@@ -416,8 +417,6 @@ async function renderAboutSection() {
   document.getElementById("download-resume-link").href = resumePath;
 
   const resumeExists = await verifyFileExistsFast(resumePath);
-  const statusTag = document.getElementById("resume-status-tag");
-  statusTag.textContent = resumeExists ? "PDF VERIFIED" : "READY";
 
   document.getElementById("preview-resume-btn").addEventListener("click", () => {
     openLightbox(
@@ -1356,32 +1355,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("side-nav-next").addEventListener("click", () => {
     switchTab((currentTabIndex + 1) % TABS.length);
   });
-
-  const editBioBtn = document.getElementById("toggle-bio-edit");
-  const bioContent = document.getElementById("about-bio-content");
-  editBioBtn.addEventListener("click", () => {
-    const isEditing = bioContent.getAttribute("contenteditable") === "true";
-    if (isEditing) {
-      bioContent.setAttribute("contenteditable", "false");
-      localStorage.setItem("azcore_custom_bio", bioContent.innerHTML);
-      editBioBtn.textContent = "EDIT TEXT";
-    } else {
-      bioContent.setAttribute("contenteditable", "true");
-      bioContent.focus();
-      editBioBtn.textContent = "SAVE TEXT";
-    }
-  });
-
-  const coordReadout = document.getElementById("coord-readout");
-  window.addEventListener(
-    "mousemove",
-    (e) => {
-      const x = String(e.clientX).padStart(4, "0");
-      const y = String(e.clientY).padStart(4, "0");
-      coordReadout.textContent = `X: ${x} // Y: ${y}`;
-    },
-    { passive: true }
-  );
 
   window.addEventListener(
     "scroll",
