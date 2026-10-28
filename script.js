@@ -632,7 +632,7 @@ async function loadAndRenderProjects() {
       card.innerHTML = `
         <div class="project-top-layout">
           <div class="project-main-img-wrap" id="main-wrap-${idx}">
-            <div class="project-folder-badge">SOURCE: ${proj.folder}project.txt</div>
+            
           </div>
 
           <div class="project-info-col">
