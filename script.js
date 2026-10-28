@@ -548,7 +548,7 @@ async function resolveProjectAsset(projFolder, fileName) {
   // Directly check the root of the project folder (with case-fallback for .stl/.STL)
   const resolvedUrl = await resolveValidUrlWithCaseFallback(projFolder, fileName);
   if (!resolvedUrl) return null;
-
+ 
   return {
     type: assetType,
     previewSrc: resolvedUrl,
