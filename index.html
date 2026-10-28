@@ -36,7 +36,7 @@
     <div class="cad-grid-minor"></div>
   </div>
 
-  <!-- TOP NAVIGATION BAR -->
+<!-- TOP NAVIGATION BAR -->
   <header class="site-header EntranceFade" style="--delay: 0.1s">
     <div class="brand" id="brand-logo">
       <span class="brand-mark"></span>
@@ -44,7 +44,14 @@
       <span class="brand-tag">// STUDIO</span>
     </div>
 
-    <nav class="tab-nav" aria-label="Main Navigation">
+    <!-- NEW: Hamburger Menu Toggle Button (Only visible below 600px) -->
+    <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Toggle Navigation Menu" aria-expanded="false">
+      <span class="ham-line"></span>
+      <span class="ham-line"></span>
+      <span class="ham-line"></span>
+    </button>
+
+    <nav id="main-tab-nav" class="tab-nav" aria-label="Main Navigation">
       <button class="tab-btn active" data-tab="about" data-index="0">
         <span class="tab-num">01</span> ABOUT ME
       </button>

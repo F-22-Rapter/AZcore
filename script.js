@@ -1340,7 +1340,40 @@ window.addEventListener("DOMContentLoaded", async () => {
       switchTab(parseInt(btn.dataset.index, 10));
     });
   });
+// Hamburger Menu Toggle (<= 600px)
+  const mobileMenuBtn = document.getElementById("mobile-menu-btn");
+  const mainTabNav = document.getElementById("main-tab-nav");
 
+  function closeMobileMenu() {
+    if (!mobileMenuBtn || !mainTabNav) return;
+    mobileMenuBtn.classList.remove("open");
+    mobileMenuBtn.setAttribute("aria-expanded", "false");
+    mainTabNav.classList.remove("mobile-open");
+  }
+
+  if (mobileMenuBtn && mainTabNav) {
+    mobileMenuBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isOpen = mainTabNav.classList.toggle("mobile-open");
+      mobileMenuBtn.classList.toggle("open", isOpen);
+      mobileMenuBtn.setAttribute("aria-expanded", String(isOpen));
+    });
+
+    // Close mobile dropdown if user taps outside the header
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".site-header")) {
+        closeMobileMenu();
+      }
+    });
+  }
+
+  // Top Tab Navigation (Also closes mobile menu on selection)
+  document.querySelectorAll(".tab-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      switchTab(parseInt(btn.dataset.index, 10));
+      closeMobileMenu();
+    });
+  });
   document.getElementById("side-nav-prev").addEventListener("click", () => {
     switchTab((currentTabIndex - 1 + TABS.length) % TABS.length);
   });

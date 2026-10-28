@@ -1145,3 +1145,94 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   .stage-container { padding: 92px calc(var(--side-bar-width) + 14px) 60px; }
   .insta-grid { grid-template-columns: 1fr; }
 }
+/* ==========================================================================
+   HAMBURGER MENU BUTTON & <= 600px MOBILE DROPDOWN
+   ========================================================================== */
+.mobile-menu-btn {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 42px;
+  height: 42px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-cad);
+  cursor: pointer;
+  padding: 0;
+  z-index: 110;
+  transition: border-color 0.25s ease, background 0.25s ease;
+}
+
+.mobile-menu-btn:hover,
+.mobile-menu-btn.open {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.ham-line {
+  width: 20px;
+  height: 2px;
+  background-color: var(--text-main);
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease;
+}
+
+/* Animate 3 lines into an "X" when open */
+.mobile-menu-btn.open .ham-line:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+  background-color: var(--accent);
+}
+.mobile-menu-btn.open .ham-line:nth-child(2) {
+  opacity: 0;
+}
+.mobile-menu-btn.open .ham-line:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+  background-color: var(--accent);
+}
+
+@media (max-width: 600px) {
+  .mobile-menu-btn {
+    display: flex;
+  }
+
+  .tab-nav {
+    position: fixed;
+    top: 68px;
+    left: 0;
+    right: 0;
+    background: rgba(20, 23, 26, 0.98);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--accent);
+    flex-direction: column;
+    gap: 0;
+    padding: 8px 0;
+    box-shadow: 0 18px 36px rgba(0, 0, 0, 0.75);
+    /* Hidden state by default on mobile */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-12px);
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.25s;
+  }
+
+  .tab-nav.mobile-open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+
+  .tab-btn {
+    width: 100%;
+    text-align: left;
+    padding: 14px 24px;
+    font-size: 0.9rem;
+    border: none;
+    border-left: 3px solid transparent;
+  }
+
+  .tab-btn.active {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+  }
+}
