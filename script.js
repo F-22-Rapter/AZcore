@@ -260,14 +260,14 @@ function mountAutoRotating3DPreview(container, modelUrl, type) {
   renderer.outputEncoding = THREE.sRGBEncoding;
   container.appendChild(renderer.domElement);
 
-  const hemiLight = new THREE.HemisphereLight(0xffffff, 0x222830, 0.3);
+  const hemiLight = new THREE.HemisphereLight(0xffffff, 0x222830, 0.35);
   scene.add(hemiLight);
 
-  const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.3);
+  const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.35);
   dirLight1.position.set(65, 90, 75);
   scene.add(dirLight1);
 
-  const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.05);
+  const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.055);
   dirLight2.position.set(-65, -40, -60);
   scene.add(dirLight2);
 
@@ -1130,14 +1130,14 @@ function initOrUpdateLightbox3D(modelUrl, type) {
     lbControls.enableDamping = true;
     lbControls.dampingFactor = 0.06;
 
-    const hemi = new THREE.HemisphereLight(0xffffff, 0x222830, 0.3);
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x222830, 0.4);
     lbScene.add(hemi);
 
-    const dir1 = new THREE.DirectionalLight(0xffffff, 0.3);
+    const dir1 = new THREE.DirectionalLight(0xffffff, 0.4);
     dir1.position.set(100, 140, 120);
     lbScene.add(dir1);
 
-    const dir2 = new THREE.DirectionalLight(0xffffff, 0.05);
+    const dir2 = new THREE.DirectionalLight(0xffffff, 0.1);
     dir2.position.set(-100, -80, -90);
     lbScene.add(dir2);
 
