@@ -349,7 +349,7 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
 .tab-section {
   display: none;
   opacity: 0;
-  will-change: transform, opacity;
+  /* Removed will-change: transform, opacity; — prevents mobile VRAM crash */
 }
 
 .tab-section.active-section {
@@ -907,7 +907,7 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   cursor: zoom-in;
   content-visibility: auto;
   contain-intrinsic-size: 260px 260px;
-  will-change: transform;
+  /* Removed will-change: transform; */
   transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1),
               box-shadow 0.34s cubic-bezier(0.22, 1, 0.36, 1),
               border-color 0.3s ease;
@@ -1149,6 +1149,42 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   .brand-tag { display: none; }
   .stage-container { padding: 92px calc(var(--side-bar-width) + 14px) 60px; }
   .insta-grid { grid-template-columns: 1fr; }
+
+  /* Mobile Lightbox & GPU Optimizations */
+  .lightbox-modal {
+    padding: 2vh 3vw;
+    backdrop-filter: none; /* Saves huge GPU overhead on mobile */
+  }
+  .lightbox-content-wrapper {
+    min-width: unset;
+    width: 94vw;
+    max-width: 94vw;
+    max-height: 86vh;
+  }
+  .lightbox-content-wrapper img {
+    max-width: 94vw;
+    max-height: 70vh;
+  }
+  .lightbox-stl-stage,
+  .lightbox-pdf-frame {
+    width: 94vw;
+    height: 68vh;
+  }
+  .lightbox-caption-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 0.72rem;
+  }
+  .lightbox-nav {
+    width: 38px;
+    height: 48px;
+    top: auto;
+    bottom: 14px;
+    transform: none;
+  }
+  .lightbox-prev { left: 14px; }
+  .lightbox-next { right: 14px; }
 }
 /* ==========================================================================
    HAMBURGER MENU BUTTON & <= 600px MOBILE DROPDOWN

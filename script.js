@@ -1,8 +1,13 @@
 /**
  * ============================================================================
- * 1. MODULAR PORTFOLIO CONFIGURATION
+ * 1. MODULAR PORTFOLIO CONFIGURATION & DEVICE DETECTION
  * ============================================================================
  */
+const IS_MOBILE =
+  window.matchMedia("(max-width: 768px)").matches ||
+  navigator.maxTouchPoints > 0 ||
+  /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
 const PORTFOLIO_CONFIG = {
   brandName: "AZCORE",
 
@@ -14,39 +19,41 @@ const PORTFOLIO_CONFIG = {
     profileImage: "profile.webp",
     resume: {
       file: "resume.pdf",
+      title: "ALEXANDER_ZHUK_RESUME.PDF",
+      subtitle: ""
     },
     bioParagraphs: [
       "I am a Civil Engineering student, fabricator, and photographer based in Chicago. My work sits at the intersection of structural systems, custom mechanical/electrical fabrication, and architectural & night-sky photography.",
       "Whether leading tractive battery accumulator design and thermal simulation, machining custom drivetrain mounts on a manual lathe, or capturing high-resolution panoramic astrophotography, I approach every project with precision CAD workflows and hands-on execution."
     ],
     quickSpecs: [
-      { "label": "DISCIPLINE", "value": "Civil & Structural Engineering" },
-      { "label": "LOCATION", "value": "IIT - Chicago, IL" },
-      { "label": "FOCUS", "value": "CAD / CFD / Fabrication" },
-      { "label": "CAMERA SYSTEM", "value": "Canon EOS 90D <br> Canon 17-55mm f/2.8" }
+      { label: "DISCIPLINE", value: "Civil & Structural Engineering" },
+      { label: "LOCATION", value: "IIT - Chicago, IL" },
+      { label: "FOCUS", value: "CAD / CFD / Fabrication" },
+      { label: "CAMERA SYSTEM", value: "Canon EOS 90D <br> Canon 17-55mm f/2.8" }
     ],
     skills: [
       {
         category: "CAD & SIMULATION",
-        items: [  "SolidWorks",  "AutoCAD",  "Revit",  "Ansys Fluent CFD",  "Inventor",  "Blender",  "Unity",  "Visual Studio Code",  "MATLAB"]
+        items: ["SolidWorks", "AutoCAD", "Revit", "Ansys Fluent CFD", "Inventor", "Blender", "Unity", "Visual Studio Code", "MATLAB"]
       },
       {
         category: "FABRICATION & HARDWARE",
-        items: ["Manual Lathe Machining", "Manual Mill Machining","Li-Ion Pack Assembly", "3D Printing", "Metal Working", "Soldering"]
+        items: ["Manual Lathe Machining", "Manual Mill Machining", "Li-Ion Pack Assembly", "3D Printing", "Metal Working", "Soldering"]
       },
       {
         category: "CODE & MEDIA",
-        items: [ "Lightroom Classic", "DaVinci Resolve", "Photoshop", "Microsoft 365"]
+        items: ["Lightroom Classic", "DaVinci Resolve", "Photoshop", "Microsoft 365"]
       },
       {
         category: "Languages",
-        items: [ "English","Ukranian", "Russian"]
+        items: ["English", "Ukranian", "Russian"]
       }
     ],
     socials: [
-      { "platform": "EMAIL", "handle": "contact@azcore.studio", "url": "mailto:contact@azcore.studio" },
-      { "platform": "LINKEDIN", "handle": "linkedin zhuk-alex", "url": "https://www.linkedin.com/in/zhuk-alex" },
-      { "platform": "INSTAGRAM", "handle": "@az.__.gallery", "url": "https://www.instagram.com/az.__.gallery/" }
+      { platform: "EMAIL", handle: "contact@azcore.studio", url: "mailto:contact@azcore.studio" },
+      { platform: "LINKEDIN", handle: "linkedin zhuk-alex", url: "https://www.linkedin.com/in/zhuk-alex" },
+      { platform: "INSTAGRAM", handle: "@az.__.gallery", url: "https://www.instagram.com/az.__.gallery/" }
     ]
   },
 
@@ -54,10 +61,7 @@ const PORTFOLIO_CONFIG = {
   projectsConfig: {
     baseFolder: "assets/projects/",
     textFileName: "project.txt",
-    foldersToCheck: [
-      "LARP",
-      "fabrication"
-    ]
+    foldersToCheck: ["LARP", "fabrication"]
   },
 
   // -------------------- TAB 3: PHOTOGRAPHY FOLDER CONFIG --------------------
@@ -72,9 +76,11 @@ const PORTFOLIO_CONFIG = {
 
 /**
  * ============================================================================
- * 2. FILE HELPERS & DUAL-RESOLUTION URL MATCHING
+ * 2. FILE HELPERS & BATCHED URL MATCHING
  * ============================================================================
  */
+const verifiedUrlCache = new Map();
+
 function normalizeFolder(path) {
   if (!path) return "";
   return path.endsWith("/") ? path : path + "/";
@@ -90,14 +96,31 @@ function is3DAsset(type) {
   return type === "glb" || type === "stl";
 }
 
+// Helper to run async tasks in small batches to prevent mobile network crashes
+async function runInBatches(items, batchSize, asyncFn) {
+  const results = [];
+  for (let i = 0; i < items.length; i += batchSize) {
+    const batch = items.slice(i, i + batchSize);
+    const batchResults = await Promise.all(batch.map(asyncFn));
+    results.push(...batchResults);
+  }
+  return results;
+}
+
 async function verifyFileExistsFast(url) {
+  if (verifiedUrlCache.has(url)) return verifiedUrlCache.get(url);
   try {
-    const res = await fetch(url, { method: "HEAD", cache: "no-store" });
-    if (!res.ok) return false;
+    const res = await fetch(url, { method: "HEAD", cache: "default" });
+    if (!res.ok) {
+      verifiedUrlCache.set(url, false);
+      return false;
+    }
     const contentType = res.headers.get("content-type") || "";
-    if (contentType.includes("text/html")) return false;
-    return true;
+    const isValid = !contentType.includes("text/html");
+    verifiedUrlCache.set(url, isValid);
+    return isValid;
   } catch (e) {
+    verifiedUrlCache.set(url, false);
     return false;
   }
 }
@@ -118,18 +141,15 @@ async function resolveValidUrlWithCaseFallback(baseFolder, fileName) {
   return null;
 }
 
-// Automatically pairs .webp previews with .jpg/.png full-size images
 async function resolveDualImageUrls(baseFolder, previewSub, fullSub, fileName) {
   const normBase = normalizeFolder(baseFolder);
   const normPrev = normalizeFolder(previewSub);
   const normFull = normalizeFolder(fullSub);
 
-  // Strip extension so we just have the base name (e.g. "Image (1)")
   const dotIdx = fileName.lastIndexOf(".");
   const baseName = dotIdx !== -1 ? fileName.slice(0, dotIdx) : fileName;
   const originalExt = dotIdx !== -1 ? fileName.slice(dotIdx) : ".webp";
 
-  // Check Preview Folder
   const previewExts = [...new Set([".webp", originalExt, ".jpg", ".JPG", ".png"])];
   let previewUrl = null;
   for (const ext of previewExts) {
@@ -140,7 +160,6 @@ async function resolveDualImageUrls(baseFolder, previewSub, fullSub, fileName) {
     }
   }
 
-  // Check Full Folder
   const fullExts = [...new Set([".jpg", ".JPG", ".jpeg", originalExt, ".png", ".webp"])];
   let fullUrl = null;
   for (const ext of fullExts) {
@@ -151,7 +170,6 @@ async function resolveDualImageUrls(baseFolder, previewSub, fullSub, fileName) {
     }
   }
 
-  // Fallback direct root
   if (!previewUrl && !fullUrl) {
     const directUrl = await resolveValidUrlWithCaseFallback(normBase, fileName);
     if (!directUrl) return null;
@@ -166,10 +184,21 @@ async function resolveDualImageUrls(baseFolder, previewSub, fullSub, fileName) {
 
 /**
  * ============================================================================
- * 3. UNIFIED 3D ENGINE (.GLB WITH DRACO COMPRESSION & .STL)
+ * 3. UNIFIED 3D ENGINE (SINGLETON DRACO DECODER & CONTEXT RECYCLING)
  * ============================================================================
  */
 const modelCache = new Map();
+let sharedDracoLoader = null;
+
+function getSharedDracoLoader() {
+  if (!sharedDracoLoader && typeof THREE !== "undefined" && THREE.DRACOLoader) {
+    sharedDracoLoader = new THREE.DRACOLoader();
+    sharedDracoLoader.setDecoderPath(
+      "https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/libs/draco/"
+    );
+  }
+  return sharedDracoLoader;
+}
 
 function load3DModelObject(url, type) {
   if (modelCache.has(url)) {
@@ -178,16 +207,14 @@ function load3DModelObject(url, type) {
 
   return new Promise((resolve, reject) => {
     if (type === "glb") {
-      if (typeof THREE === "undefined" || !THREE.GLTFLoader || !THREE.DRACOLoader) {
+      if (typeof THREE === "undefined" || !THREE.GLTFLoader) {
         reject(new Error("THREE loaders missing"));
         return;
       }
-      
+
       const loader = new THREE.GLTFLoader();
-      // Setup Draco Compression Decoder
-      const dracoLoader = new THREE.DRACOLoader();
-      dracoLoader.setDecoderPath('https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/libs/draco/');
-      loader.setDRACOLoader(dracoLoader);
+      const draco = getSharedDracoLoader();
+      if (draco) loader.setDRACOLoader(draco);
 
       loader.load(
         url,
@@ -204,6 +231,11 @@ function load3DModelObject(url, type) {
           wrapper.add(root);
           wrapper.scale.set(scale, scale, scale);
 
+          // Cap cache size on mobile so RAM doesn't bloat
+          if (IS_MOBILE && modelCache.size >= 2) {
+            const oldestKey = modelCache.keys().next().value;
+            modelCache.delete(oldestKey);
+          }
           modelCache.set(url, wrapper);
           resolve(wrapper.clone(true));
         },
@@ -237,49 +269,37 @@ function load3DModelObject(url, type) {
           const wrapper = new THREE.Group();
           wrapper.add(mesh);
 
+          if (IS_MOBILE && modelCache.size >= 2) {
+            const oldestKey = modelCache.keys().next().value;
+            modelCache.delete(oldestKey);
+          }
           modelCache.set(url, wrapper);
           resolve(wrapper.clone(true));
         },
         undefined,
         (err) => reject(err)
       );
-    } 
+    }
   });
 }
 
+// Mounts WebGL ONLY when visible in viewport and releases GPU context when scrolled away
 function mountAutoRotating3DPreview(container, modelUrl, type) {
   const badge = document.createElement("div");
   badge.className = "stl-badge-overlay";
-  badge.textContent = `3D ${type.toUpperCase()} // CLICK TO ORBIT`;
+  badge.textContent = `3D ${type.toUpperCase()} // TAP TO ORBIT`;
   container.appendChild(badge);
 
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(40, 16 / 10, 0.1, 2000);
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.outputEncoding = THREE.sRGBEncoding;
-  container.appendChild(renderer.domElement);
-
-  const hemiLight = new THREE.HemisphereLight(0xffffff, 0x222830, 0.35);
-  scene.add(hemiLight);
-
-  const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.35);
-  dirLight1.position.set(65, 90, 75);
-  scene.add(dirLight1);
-
-  const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.055);
-  dirLight2.position.set(-65, -40, -60);
-  scene.add(dirLight2);
-
-  const grid = new THREE.GridHelper(120, 12, 0xd92804, 0x4b555d);
-  grid.position.y = -28;
-  scene.add(grid);
-
+  let scene = null;
+  let camera = null;
+  let renderer = null;
   let modelGroup = null;
   let isVisible = false;
   let animFrameId = null;
+  let isLoadingModel = false;
 
   function resizeRenderer() {
+    if (!renderer || !camera) return;
     const w = container.clientWidth || 320;
     const h = container.clientHeight || 240;
     camera.aspect = w / h;
@@ -287,21 +307,8 @@ function mountAutoRotating3DPreview(container, modelUrl, type) {
     renderer.setSize(w, h);
   }
 
-  load3DModelObject(modelUrl, type)
-    .then((obj) => {
-      modelGroup = obj;
-      scene.add(modelGroup);
-      camera.position.set(55, 38, 75);
-      camera.lookAt(0, 0, 0);
-      resizeRenderer();
-      renderer.render(scene, camera);
-    })
-    .catch(() => {
-      badge.textContent = `${type.toUpperCase()} LOAD ERROR`;
-    });
-
   function animate() {
-    if (!isVisible) return;
+    if (!isVisible || !renderer) return;
     animFrameId = requestAnimationFrame(animate);
     if (modelGroup) {
       modelGroup.rotation.y += 0.008;
@@ -309,15 +316,82 @@ function mountAutoRotating3DPreview(container, modelUrl, type) {
     renderer.render(scene, camera);
   }
 
+  function initContext() {
+    if (renderer || isLoadingModel) return;
+    isLoadingModel = true;
+
+    load3DModelObject(modelUrl, type)
+      .then((obj) => {
+        isLoadingModel = false;
+        if (!isVisible) return; // Scrolled past before load finished
+
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(40, 16 / 10, 0.1, 2000);
+        renderer = new THREE.WebGLRenderer({
+          antialias: !IS_MOBILE,
+          alpha: true,
+          powerPreference: "low-power"
+        });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, IS_MOBILE ? 1.25 : 2));
+        renderer.outputEncoding = THREE.sRGBEncoding;
+        container.appendChild(renderer.domElement);
+
+        scene.add(new THREE.HemisphereLight(0xffffff, 0x222830, 0.35));
+
+        const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.35);
+        dirLight1.position.set(65, 90, 75);
+        scene.add(dirLight1);
+
+        const grid = new THREE.GridHelper(120, 12, 0xd92804, 0x4b555d);
+        grid.position.y = -28;
+        scene.add(grid);
+
+        modelGroup = obj;
+        scene.add(modelGroup);
+        camera.position.set(55, 38, 75);
+        camera.lookAt(0, 0, 0);
+
+        resizeRenderer();
+        animate();
+      })
+      .catch(() => {
+        isLoadingModel = false;
+        badge.textContent = `${type.toUpperCase()} LOAD ERROR`;
+      });
+  }
+
+  function destroyContext() {
+    if (animFrameId) {
+      cancelAnimationFrame(animFrameId);
+      animFrameId = null;
+    }
+    if (renderer) {
+      renderer.dispose();
+      if (renderer.forceContextLoss) renderer.forceContextLoss();
+      if (renderer.domElement && renderer.domElement.parentNode) {
+        renderer.domElement.parentNode.removeChild(renderer.domElement);
+      }
+      renderer = null;
+    }
+    scene = null;
+    camera = null;
+    modelGroup = null;
+  }
+
   const observer = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
         isVisible = entry.isIntersecting;
         if (isVisible) {
-          resizeRenderer();
-          animate();
-        } else if (animFrameId) {
-          cancelAnimationFrame(animFrameId);
+          initContext();
+        } else {
+          // On mobile, aggressively free WebGL contexts when offscreen
+          if (IS_MOBILE) {
+            destroyContext();
+          } else if (animFrameId) {
+            cancelAnimationFrame(animFrameId);
+            animFrameId = null;
+          }
         }
       });
     },
@@ -325,23 +399,28 @@ function mountAutoRotating3DPreview(container, modelUrl, type) {
   );
   observer.observe(container);
 
-  window.addEventListener("resize", () => {
-    if (isVisible) resizeRenderer();
-  });
+  window.addEventListener(
+    "resize",
+    () => {
+      if (isVisible) resizeRenderer();
+    },
+    { passive: true }
+  );
 }
 
 /**
  * ============================================================================
- * 4. POST-BOOT DEFERRED BACKGROUND PRE-WARM
+ * 4. POST-BOOT DEFERRED BACKGROUND PRE-WARM (DESKTOP ONLY)
  * ============================================================================
  */
 function backgroundPrewarmPreviewImages(previewUrls) {
-  if (!previewUrls || previewUrls.length === 0) return;
+  // Never pre-warm all images into RAM on mobile devices
+  if (IS_MOBILE || !previewUrls || previewUrls.length === 0) return;
 
   let currentIndex = 0;
   function loadNextChunk() {
     if (currentIndex >= previewUrls.length) return;
-    const chunkLimit = Math.min(currentIndex + 4, previewUrls.length);
+    const chunkLimit = Math.min(currentIndex + 3, previewUrls.length);
 
     for (let i = currentIndex; i < chunkLimit; i++) {
       const bgImg = new Image();
@@ -352,7 +431,7 @@ function backgroundPrewarmPreviewImages(previewUrls) {
 
     currentIndex = chunkLimit;
     if (currentIndex < previewUrls.length) {
-      setTimeout(loadNextChunk, 280);
+      setTimeout(loadNextChunk, 350);
     }
   }
 
@@ -413,19 +492,25 @@ async function renderAboutSection() {
     ? cfg.resume.file
     : `${normAboutFolder}${cfg.resume.file}`;
 
-  document.getElementById("resume-title-display").textContent = cfg.resume.title;
-  document.getElementById("resume-subtitle-display").textContent = cfg.resume.subtitle;
+  const titleEl = document.getElementById("resume-title-display");
+  const subEl = document.getElementById("resume-subtitle-display");
+  if (titleEl && cfg.resume.title) titleEl.textContent = cfg.resume.title;
+  if (subEl && cfg.resume.subtitle !== undefined) subEl.textContent = cfg.resume.subtitle;
+
   document.getElementById("download-resume-link").href = resumePath;
 
-  const resumeExists = await verifyFileExistsFast(resumePath);
-
   document.getElementById("preview-resume-btn").addEventListener("click", () => {
+    // Mobile browsers struggle with embedded PDF iframes; open directly in native PDF viewer on mobile
+    if (IS_MOBILE) {
+      window.open(resumePath, "_blank");
+      return;
+    }
     openLightbox(
       [
         {
           type: "pdf",
           fullSrc: resumePath,
-          caption: `${cfg.resume.title} // ${resumePath}`
+          caption: `${cfg.resume.title || "RESUME.PDF"} // ${resumePath}`
         }
       ],
       0
@@ -544,11 +629,9 @@ function parseProjectTextFile(rawText, folderPath) {
 
 async function resolveProjectAsset(projFolder, fileName) {
   const assetType = getAssetType(fileName);
-
-  // Directly check the root of the project folder (with case-fallback for .stl/.STL)
   const resolvedUrl = await resolveValidUrlWithCaseFallback(projFolder, fileName);
   if (!resolvedUrl) return null;
- 
+
   return {
     type: assetType,
     previewSrc: resolvedUrl,
@@ -574,7 +657,7 @@ async function loadAndRenderProjects() {
       const txtUrl = `${projFolder}${textFileName}`;
 
       try {
-        const res = await fetch(txtUrl, { cache: "no-store" });
+        const res = await fetch(txtUrl, { cache: "default" });
         if (!res.ok) continue;
         if ((res.headers.get("content-type") || "").includes("text/html")) continue;
 
@@ -584,8 +667,8 @@ async function loadAndRenderProjects() {
         const parsed = parseProjectTextFile(rawText, projFolder);
         if (!parsed.title && parsed.assets.length === 0) continue;
 
-        const resolvedList = await Promise.all(
-          parsed.assets.map((file) => resolveProjectAsset(projFolder, file))
+        const resolvedList = await runInBatches(parsed.assets, 6, (file) =>
+          resolveProjectAsset(projFolder, file)
         );
 
         const verifiedAssets = resolvedList.filter(Boolean);
@@ -630,11 +713,9 @@ async function loadAndRenderProjects() {
         )
         .join("");
 
-        card.innerHTML = `
-          <div class="project-top-layout">
-            <div class="project-main-img-wrap" id="main-wrap-${idx}">
-              
-            </div>
+      card.innerHTML = `
+        <div class="project-top-layout">
+          <div class="project-main-img-wrap" id="main-wrap-${idx}"></div>
 
           <div class="project-info-col">
             <div>
@@ -692,33 +773,53 @@ async function loadAndRenderProjects() {
 
       mainWrap.addEventListener("click", () => openLightbox(lightboxList, 0));
 
+      // Populate drawer items ONLY when the user opens the drawer to save memory
       const galleryGrid = card.querySelector(".project-gallery-grid");
-      proj.verifiedAssets.forEach((asset, assetIdx) => {
-        const itemWrap = document.createElement("div");
-        itemWrap.className = "project-gallery-item";
+      let drawerPopulated = false;
 
-        if (is3DAsset(asset.type)) {
-          const box3d = document.createElement("div");
-          box3d.className = "stl-preview-container";
-          itemWrap.appendChild(box3d);
-          mountAutoRotating3DPreview(box3d, asset.fullSrc, asset.type);
-        } else {
-          const img = document.createElement("img");
-          img.className = "interactive-img";
-          img.src = asset.previewSrc;
-          img.loading = "lazy";
-          img.decoding = "async";
-          img.alt = `${proj.title} item ${assetIdx + 1}`;
-          itemWrap.appendChild(img);
-        }
+      function populateDrawerGrid() {
+        if (drawerPopulated) return;
+        drawerPopulated = true;
 
-        itemWrap.addEventListener("click", () => openLightbox(lightboxList, assetIdx));
-        galleryGrid.appendChild(itemWrap);
-      });
+        proj.verifiedAssets.forEach((asset, assetIdx) => {
+          const itemWrap = document.createElement("div");
+          itemWrap.className = "project-gallery-item";
+
+          if (is3DAsset(asset.type)) {
+            if (IS_MOBILE) {
+              // On mobile, use a lightweight placeholder card inside sub-grids to prevent multiple WebGL contexts
+              const box3d = document.createElement("div");
+              box3d.className = "stl-preview-container";
+              box3d.style.display = "flex";
+              box3d.style.alignItems = "center";
+              box3d.style.justifyContent = "center";
+              box3d.innerHTML = `<div class="stl-badge-overlay" style="position:static;">TAP TO OPEN 3D ${asset.type.toUpperCase()}</div>`;
+              itemWrap.appendChild(box3d);
+            } else {
+              const box3d = document.createElement("div");
+              box3d.className = "stl-preview-container";
+              itemWrap.appendChild(box3d);
+              mountAutoRotating3DPreview(box3d, asset.fullSrc, asset.type);
+            }
+          } else {
+            const img = document.createElement("img");
+            img.className = "interactive-img";
+            img.src = asset.previewSrc;
+            img.loading = "lazy";
+            img.decoding = "async";
+            img.alt = `${proj.title} item ${assetIdx + 1}`;
+            itemWrap.appendChild(img);
+          }
+
+          itemWrap.addEventListener("click", () => openLightbox(lightboxList, assetIdx));
+          galleryGrid.appendChild(itemWrap);
+        });
+      }
 
       const stackTrigger = card.querySelector(".photo-stack-trigger");
       const drawer = card.querySelector(`#${drawerId}`);
       stackTrigger.addEventListener("click", () => {
+        populateDrawerGrid();
         const isOpen = drawer.classList.toggle("open");
         stackTrigger.querySelector(".stack-subtitle").innerHTML = isOpen
           ? "Click stack to collapse project grid &#8593;"
@@ -741,13 +842,14 @@ let photographyLoaded = false;
 let photographyLoadingPromise = null;
 
 async function discoverPhotographyDualAssets() {
-  const { folder, previewSubfolder, fullSubfolder, maxNumberedProbe } = PORTFOLIO_CONFIG.photographyConfig;
+  const { folder, previewSubfolder, fullSubfolder, maxNumberedProbe } =
+    PORTFOLIO_CONFIG.photographyConfig;
   const normFolder = normalizeFolder(folder);
   const discoveredItems = [];
   const seenNames = new Set();
 
   try {
-    const txtRes = await fetch(`${normFolder}photos.txt`, { cache: "no-store" });
+    const txtRes = await fetch(`${normFolder}photos.txt`, { cache: "default" });
     if (txtRes.ok && !(txtRes.headers.get("content-type") || "").includes("text/html")) {
       const text = await txtRes.text();
       const lines = text
@@ -755,17 +857,16 @@ async function discoverPhotographyDualAssets() {
         .map((l) => l.trim())
         .filter(Boolean);
 
-      const resolvedBatch = await Promise.all(
-        lines.map(async (fileName) => {
-          const dual = await resolveDualImageUrls(
-            normFolder,
-            previewSubfolder,
-            fullSubfolder,
-            fileName
-          );
-          return dual ? { fileName, ...dual } : null;
-        })
-      );
+      // Resolve in small batches of 6 instead of firing 50+ requests at once
+      const resolvedBatch = await runInBatches(lines, 6, async (fileName) => {
+        const dual = await resolveDualImageUrls(
+          normFolder,
+          previewSubfolder,
+          fullSubfolder,
+          fileName
+        );
+        return dual ? { fileName, ...dual } : null;
+      });
 
       resolvedBatch.filter(Boolean).forEach((item) => {
         if (!seenNames.has(item.fileName)) {
@@ -781,32 +882,31 @@ async function discoverPhotographyDualAssets() {
     for (let i = 1; i <= maxNumberedProbe; i++) {
       const pad = String(i).padStart(2, "0");
       candidates.push(
-        `Image (${i}).webp`, `Image (${i}).jpg`,
-        `${pad}.webp`, `${pad}.jpg`,
-        `${i}.webp`, `${i}.jpg`
+        `Image (${i}).webp`,
+        `Image (${i}).jpg`,
+        `${pad}.webp`,
+        `${pad}.jpg`,
+        `${i}.webp`,
+        `${i}.jpg`
       );
     }
 
-    for (let i = 0; i < candidates.length; i += 24) {
-      const batch = candidates.slice(i, i + 24);
-      const results = await Promise.all(
-        batch.map(async (fileName) => {
-          const dual = await resolveDualImageUrls(
-            normFolder,
-            previewSubfolder,
-            fullSubfolder,
-            fileName
-          );
-          return dual ? { fileName, ...dual } : null;
-        })
+    const results = await runInBatches(candidates, 8, async (fileName) => {
+      const dual = await resolveDualImageUrls(
+        normFolder,
+        previewSubfolder,
+        fullSubfolder,
+        fileName
       );
-      results.filter(Boolean).forEach((item) => {
-        if (!seenNames.has(item.fileName)) {
-          seenNames.add(item.fileName);
-          discoveredItems.push(item);
-        }
-      });
-    }
+      return dual ? { fileName, ...dual } : null;
+    });
+
+    results.filter(Boolean).forEach((item) => {
+      if (!seenNames.has(item.fileName)) {
+        seenNames.add(item.fileName);
+        discoveredItems.push(item);
+      }
+    });
   }
 
   return discoveredItems;
@@ -816,12 +916,16 @@ function cacheSingleImageColorOnce(img, card) {
   if (card.dataset.colorCached === "true") return;
   try {
     const canvas = document.getElementById("color-sampler-canvas");
+    if (!canvas) return;
     const ctx = canvas.getContext("2d", { willReadFrequently: true });
     ctx.clearRect(0, 0, 24, 24);
     ctx.drawImage(img, 0, 0, 24, 24);
     const data = ctx.getImageData(0, 0, 24, 24).data;
 
-    let r = 0, g = 0, b = 0, count = 0;
+    let r = 0,
+      g = 0,
+      b = 0,
+      count = 0;
     for (let i = 0; i < data.length; i += 16) {
       r += data[i];
       g += data[i + 1];
@@ -895,7 +999,7 @@ async function loadAndRenderPhotography() {
           obs.unobserve(card);
         });
       },
-      { rootMargin: "400px 0px" }
+      { rootMargin: IS_MOBILE ? "180px 0px" : "400px 0px" }
     );
 
     photoItems.forEach((item, idx) => {
@@ -906,6 +1010,7 @@ async function loadAndRenderPhotography() {
       img.className = "photo-grid-img";
       img.crossOrigin = "anonymous";
       img.decoding = "async";
+      img.loading = "lazy";
       img.dataset.src = item.previewUrl;
       img.alt = item.fileName;
 
@@ -940,7 +1045,7 @@ async function loadAndRenderPhotography() {
 
 /**
  * ============================================================================
- * 8. INSTANT CACHED AVERAGE COLOR ENGINE
+ * 8. INSTANT CACHED AVERAGE COLOR ENGINE (NULL-SAFE)
  * ============================================================================
  */
 let colorUpdateRaf = null;
@@ -955,10 +1060,14 @@ function scheduleAverageColorUpdate() {
 
 function resetToCadTheme() {
   const bgLayer = document.getElementById("bg-canvas-layer");
-  bgLayer.style.backgroundColor = "#1f2326";
-  bgLayer.style.backgroundImage = "none";
-  document.getElementById("swatch-dot").style.backgroundColor = "#1f2326";
-  document.getElementById("swatch-hex").textContent = "#1F2326";
+  if (bgLayer) {
+    bgLayer.style.backgroundColor = "#1f2326";
+    bgLayer.style.backgroundImage = "none";
+  }
+  const swatchDot = document.getElementById("swatch-dot");
+  const swatchHex = document.getElementById("swatch-hex");
+  if (swatchDot) swatchDot.style.backgroundColor = "#1f2326";
+  if (swatchHex) swatchHex.textContent = "#1F2326";
 }
 
 function updatePhotographyAverageColor() {
@@ -967,7 +1076,10 @@ function updatePhotographyAverageColor() {
   const cards = document.querySelectorAll(".insta-card[data-color-cached='true']");
   if (cards.length === 0) return;
 
-  let totalR = 0, totalG = 0, totalB = 0, counted = 0;
+  let totalR = 0,
+    totalG = 0,
+    totalB = 0,
+    counted = 0;
   const viewportH = window.innerHeight;
 
   for (let i = 0; i < cards.length; i++) {
@@ -986,16 +1098,26 @@ function updatePhotographyAverageColor() {
     const avgG = Math.round((totalG / counted) * 0.65);
     const avgB = Math.round((totalB / counted) * 0.65);
 
-    const hex = "#" + [avgR, avgG, avgB]
+    const hex =
+      "#" +
+      [avgR, avgG, avgB]
         .map((x) => Math.max(0, Math.min(255, x)).toString(16).padStart(2, "0"))
-        .join("").toUpperCase();
+        .join("")
+        .toUpperCase();
 
     const bgLayer = document.getElementById("bg-canvas-layer");
-    bgLayer.style.backgroundColor = `rgb(${avgR}, ${avgG}, ${avgB})`;
-    bgLayer.style.backgroundImage = `radial-gradient(circle at 50% 30%, rgba(${Math.min(255, avgR + 45)}, ${Math.min(255, avgG + 45)}, ${Math.min(255, avgB + 45)}, 0.38), rgba(18, 21, 24, 0.88))`;
+    if (bgLayer) {
+      bgLayer.style.backgroundColor = `rgb(${avgR}, ${avgG}, ${avgB})`;
+      bgLayer.style.backgroundImage = `radial-gradient(circle at 50% 30%, rgba(${Math.min(
+        255,
+        avgR + 45
+      )}, ${Math.min(255, avgG + 45)}, ${Math.min(255, avgB + 45)}, 0.38), rgba(18, 21, 24, 0.88))`;
+    }
 
-    document.getElementById("swatch-dot").style.backgroundColor = hex;
-    document.getElementById("swatch-hex").textContent = hex;
+    const swatchDot = document.getElementById("swatch-dot");
+    const swatchHex = document.getElementById("swatch-hex");
+    if (swatchDot) swatchDot.style.backgroundColor = hex;
+    if (swatchHex) swatchHex.textContent = hex;
   }
 }
 
@@ -1096,8 +1218,12 @@ function initOrUpdateLightbox3D(modelUrl, type) {
   if (!lbRenderer) {
     lbScene = new THREE.Scene();
     lbCamera = new THREE.PerspectiveCamera(42, 16 / 10, 0.1, 4000);
-    lbRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    lbRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    lbRenderer = new THREE.WebGLRenderer({
+      antialias: !IS_MOBILE,
+      alpha: true,
+      powerPreference: "high-performance"
+    });
+    lbRenderer.setPixelRatio(Math.min(window.devicePixelRatio, IS_MOBILE ? 1.5 : 2));
     lbRenderer.outputEncoding = THREE.sRGBEncoding;
     stage.appendChild(lbRenderer.domElement);
 
@@ -1135,8 +1261,8 @@ function initOrUpdateLightbox3D(modelUrl, type) {
     });
   }
 
-  const w = stage.clientWidth || window.innerWidth * 0.78;
-  const h = stage.clientHeight || window.innerHeight * 0.74;
+  const w = stage.clientWidth || window.innerWidth * (IS_MOBILE ? 0.94 : 0.78);
+  const h = stage.clientHeight || window.innerHeight * (IS_MOBILE ? 0.68 : 0.74);
   lbCamera.aspect = w / h;
   lbCamera.updateProjectionMatrix();
   lbRenderer.setSize(w, h);
@@ -1203,6 +1329,24 @@ function closeLightbox() {
     lbAnimId = null;
   }
 
+  // Free lightbox 3D WebGL context on mobile when closed
+  if (IS_MOBILE && lbRenderer) {
+    lbRenderer.dispose();
+    if (lbRenderer.forceContextLoss) lbRenderer.forceContextLoss();
+    if (lbRenderer.domElement && lbRenderer.domElement.parentNode) {
+      lbRenderer.domElement.parentNode.removeChild(lbRenderer.domElement);
+    }
+    lbRenderer = null;
+    lbScene = null;
+    lbCamera = null;
+    lbControls = null;
+    lbModelGroup = null;
+  }
+
+  // Free high-res image memory immediately on close
+  const imgEl = document.getElementById("lightbox-img");
+  if (imgEl) imgEl.src = "";
+
   document.getElementById("lightbox-pdf-frame").src = "";
   document.getElementById("lightbox-loader").style.display = "none";
 
@@ -1249,13 +1393,11 @@ function updateLightboxSlide() {
     const previewUrl = item.previewSrc || item.fullSrc;
     const fullUrl = item.fullSrc || item.previewSrc;
 
-    // Show preview and loading spinner immediately
     imgEl.src = previewUrl;
     imgEl.classList.add("loading-blur");
     loaderText.textContent = "LOADING FULL-RESOLUTION IMAGE...";
     loaderOverlay.style.display = "flex";
 
-    // Swap to full resolution when loaded
     const highResLoader = new Image();
     highResLoader.decoding = "async";
     highResLoader.onload = () => {
@@ -1288,7 +1430,7 @@ function stepLightbox(delta) {
 
 /**
  * ============================================================================
- * 11. INITIALIZATION & DEFERRED BACKGROUND LOADING
+ * 11. INITIALIZATION & MOBILE-AWARE DEFERRED LOADING
  * ============================================================================
  */
 window.addEventListener("DOMContentLoaded", async () => {
@@ -1298,24 +1440,23 @@ window.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("page-loader").classList.add("loaded");
     document.body.classList.add("page-ready");
 
-    const startDeferredBackgroundLoading = async () => {
-      await loadAndRenderProjects();
-      await loadAndRenderPhotography();
-    };
+    // Only pre-load inactive tabs in the background on desktop!
+    // Mobile devices load Projects and Photography on-demand when the user taps the tab.
+    if (!IS_MOBILE) {
+      const startDeferredBackgroundLoading = async () => {
+        await loadAndRenderProjects();
+        await loadAndRenderPhotography();
+      };
 
-    if ("requestIdleCallback" in window) {
-      requestIdleCallback(() => startDeferredBackgroundLoading(), { timeout: 1500 });
-    } else {
-      setTimeout(startDeferredBackgroundLoading, 800);
+      if ("requestIdleCallback" in window) {
+        requestIdleCallback(() => startDeferredBackgroundLoading(), { timeout: 2000 });
+      } else {
+        setTimeout(startDeferredBackgroundLoading, 1200);
+      }
     }
   }, 300);
 
-  document.querySelectorAll(".tab-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      switchTab(parseInt(btn.dataset.index, 10));
-    });
-  });
-// Hamburger Menu Toggle (<= 600px)
+  // Hamburger Menu Toggle (<= 600px)
   const mobileMenuBtn = document.getElementById("mobile-menu-btn");
   const mainTabNav = document.getElementById("main-tab-nav");
 
@@ -1334,7 +1475,6 @@ window.addEventListener("DOMContentLoaded", async () => {
       mobileMenuBtn.setAttribute("aria-expanded", String(isOpen));
     });
 
-    // Close mobile dropdown if user taps outside the header
     document.addEventListener("click", (e) => {
       if (!e.target.closest(".site-header")) {
         closeMobileMenu();
@@ -1342,13 +1482,14 @@ window.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // Top Tab Navigation (Also closes mobile menu on selection)
+  // Top Tab Navigation
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       switchTab(parseInt(btn.dataset.index, 10));
       closeMobileMenu();
     });
   });
+
   document.getElementById("side-nav-prev").addEventListener("click", () => {
     switchTab((currentTabIndex - 1 + TABS.length) % TABS.length);
   });
@@ -1364,9 +1505,13 @@ window.addEventListener("DOMContentLoaded", async () => {
     },
     { passive: true }
   );
-  window.addEventListener("resize", () => {
-    if (currentTabIndex === 2) scheduleAverageColorUpdate();
-  });
+  window.addEventListener(
+    "resize",
+    () => {
+      if (currentTabIndex === 2) scheduleAverageColorUpdate();
+    },
+    { passive: true }
+  );
 
   const lightboxModal = document.getElementById("lightbox-modal");
   lightboxModal.addEventListener("click", (e) => {
