@@ -178,8 +178,17 @@
     <div class="lightbox-backdrop-hint">CLICK ANYWHERE OUTSIDE VIEWER TO CLOSE [ESC]</div>
     <button class="lightbox-nav lightbox-prev" id="lightbox-prev" aria-label="Previous Item">&#8592;</button>
 
-    <div class="lightbox-content-wrapper" id="lightbox-content-wrapper">
+<div class="lightbox-content-wrapper" id="lightbox-content-wrapper">
       
+      <!-- MOVED TO TOP: LIGHTBOX CAPTION / HEADER BAR -->
+      <div class="lightbox-caption-bar">
+        <span id="lightbox-caption">PREVIEW</span>
+        <div class="lightbox-caption-right">
+          <button id="model-reset-btn" class="mini-action-btn" style="display:none;">RESET VIEW</button>
+          <button id="lightbox-close" class="mini-action-btn lightbox-exit-btn" aria-label="Close Viewer">&#10005; EXIT</button>
+        </div>
+      </div>
+
       <div id="lightbox-loader" class="lightbox-loader" style="display:none;">
         <div class="cad-spinner"></div>
         <div class="cad-loader-text" id="lightbox-loader-text">LOADING FULL-RESOLUTION ASSET...</div>
@@ -195,14 +204,6 @@
 
       <iframe id="lightbox-pdf-frame" class="lightbox-pdf-frame" style="display:none;" title="Resume PDF Preview"></iframe>
 
-      <div class="lightbox-caption-bar">
-        <span id="lightbox-caption">PREVIEW</span>
-        <div class="lightbox-caption-right">
-          <button id="model-reset-btn" class="mini-action-btn" style="display:none;">RESET VIEW</button>
-          <span id="lightbox-counter">1 / 1</span>
-          <button id="lightbox-close" class="mini-action-btn lightbox-exit-btn" aria-label="Close Viewer">&#10005; EXIT</button>
-        </div>
-      </div>
     </div>
 
     <button class="lightbox-nav lightbox-next" id="lightbox-next" aria-label="Next Item">&#8594;</button>
