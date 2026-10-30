@@ -1371,9 +1371,6 @@ function updateLightboxSlide() {
   }
 
   document.getElementById("lightbox-caption").textContent = item.caption || "";
-  document.getElementById("lightbox-counter").textContent = `${
-    currentLightboxIndex + 1
-  } / ${currentLightboxList.length}`;
 }
 
 function stepLightbox(delta) {
