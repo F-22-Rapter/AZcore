@@ -492,30 +492,10 @@ async function renderAboutSection() {
     ? cfg.resume.file
     : `${normAboutFolder}${cfg.resume.file}`;
 
-  const titleEl = document.getElementById("resume-title-display");
-  const subEl = document.getElementById("resume-subtitle-display");
-  if (titleEl && cfg.resume.title) titleEl.textContent = cfg.resume.title;
-  if (subEl && cfg.resume.subtitle !== undefined) subEl.textContent = cfg.resume.subtitle;
-
-  document.getElementById("download-resume-link").href = resumePath;
-
-  document.getElementById("preview-resume-btn").addEventListener("click", () => {
-    // Mobile browsers struggle with embedded PDF iframes; open directly in native PDF viewer on mobile
-    if (IS_MOBILE) {
-      window.open(resumePath, "_blank");
-      return;
-    }
-    openLightbox(
-      [
-        {
-          type: "pdf",
-          fullSrc: resumePath,
-          caption: `${cfg.resume.title || "RESUME.PDF"} // ${resumePath}`
-        }
-      ],
-      0
-    );
-  });
+  const navResumeTab = document.getElementById("nav-resume-tab");
+  if (navResumeTab) {
+    navResumeTab.href = resumePath;
+  }
 
   document.getElementById("about-specs-list").innerHTML = cfg.quickSpecs
     .map(
@@ -1146,7 +1126,7 @@ function switchTab(targetIndex) {
 
   currentTabIndex = targetIndex;
 
-  document.querySelectorAll(".tab-btn").forEach((btn, idx) => {
+  document.querySelectorAll(".tab-btn[data-index]").forEach((btn, idx) => {
     btn.classList.toggle("active", idx === currentTabIndex);
   });
 
@@ -1187,7 +1167,6 @@ let lbScene = null,
   lbRenderer = null,
   lbControls = null,
   lbModelGroup = null,
-  lbWireframeState = false,
   lbAnimId = null;
 
 function preventBackgroundScroll(e) {
@@ -1195,22 +1174,8 @@ function preventBackgroundScroll(e) {
   e.preventDefault();
 }
 
-function setModelWireframe(group, enable) {
-  if (!group) return;
-  group.traverse((child) => {
-    if (child.isMesh && child.material) {
-      if (Array.isArray(child.material)) {
-        child.material.forEach((m) => (m.wireframe = enable));
-      } else {
-        child.material.wireframe = enable;
-      }
-    }
-  });
-}
-
 function initOrUpdateLightbox3D(modelUrl, type) {
   const stage = document.getElementById("lightbox-3d-stage");
-  const wireBtn = document.getElementById("model-wireframe-btn");
   const resetBtn = document.getElementById("model-reset-btn");
   const loaderOverlay = document.getElementById("lightbox-loader");
   const loaderText = document.getElementById("lightbox-loader-text");
@@ -1246,13 +1211,6 @@ function initOrUpdateLightbox3D(modelUrl, type) {
     grid.position.y = -42;
     lbScene.add(grid);
 
-    wireBtn.addEventListener("click", () => {
-      if (!lbModelGroup) return;
-      lbWireframeState = !lbWireframeState;
-      setModelWireframe(lbModelGroup, lbWireframeState);
-      wireBtn.textContent = `WIREFRAME: ${lbWireframeState ? "ON" : "OFF"}`;
-    });
-
     resetBtn.addEventListener("click", () => {
       if (!lbControls) return;
       lbControls.reset();
@@ -1271,9 +1229,6 @@ function initOrUpdateLightbox3D(modelUrl, type) {
     lbScene.remove(lbModelGroup);
     lbModelGroup = null;
   }
-
-  lbWireframeState = false;
-  wireBtn.textContent = "WIREFRAME: OFF";
 
   loaderText.textContent = `LOADING 3D ${type.toUpperCase()} GEOMETRY...`;
   loaderOverlay.style.display = "flex";
@@ -1318,10 +1273,14 @@ function openLightbox(items, startIndex = 0) {
 }
 
 function closeLightbox() {
+  if (document.activeElement && typeof document.activeElement.blur === "function") {
+    document.activeElement.blur();
+  }
+
   const modal = document.getElementById("lightbox-modal");
   modal.classList.remove("open");
   modal.setAttribute("aria-hidden", "true");
-
+  
   activeFullImageRequestToken++;
 
   if (lbAnimId) {
@@ -1363,7 +1322,6 @@ function updateLightboxSlide() {
   const imgEl = document.getElementById("lightbox-img");
   const stage3d = document.getElementById("lightbox-3d-stage");
   const pdfFrame = document.getElementById("lightbox-pdf-frame");
-  const wireBtn = document.getElementById("model-wireframe-btn");
   const resetBtn = document.getElementById("model-reset-btn");
   const loaderOverlay = document.getElementById("lightbox-loader");
   const loaderText = document.getElementById("lightbox-loader-text");
@@ -1371,7 +1329,6 @@ function updateLightboxSlide() {
   imgEl.style.display = "none";
   stage3d.style.display = "none";
   pdfFrame.style.display = "none";
-  wireBtn.style.display = "none";
   resetBtn.style.display = "none";
   loaderOverlay.style.display = "none";
 
@@ -1382,7 +1339,6 @@ function updateLightboxSlide() {
 
   if (is3DAsset(item.type)) {
     stage3d.style.display = "block";
-    wireBtn.style.display = "inline-block";
     resetBtn.style.display = "inline-block";
     initOrUpdateLightbox3D(item.fullSrc, item.type);
   } else if (item.type === "pdf") {
@@ -1485,7 +1441,9 @@ window.addEventListener("DOMContentLoaded", async () => {
   // Top Tab Navigation
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
-      switchTab(parseInt(btn.dataset.index, 10));
+      if (btn.dataset.index !== undefined) {
+        switchTab(parseInt(btn.dataset.index, 10));
+      }
       closeMobileMenu();
     });
   });
@@ -1516,6 +1474,10 @@ window.addEventListener("DOMContentLoaded", async () => {
   const lightboxModal = document.getElementById("lightbox-modal");
   lightboxModal.addEventListener("click", (e) => {
     if (e.target === lightboxModal) closeLightbox();
+  });
+  document.getElementById("lightbox-close").addEventListener("click", (e) => {
+    e.stopPropagation();
+    closeLightbox();
   });
   document.getElementById("lightbox-prev").addEventListener("click", (e) => {
     e.stopPropagation();

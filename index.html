@@ -38,12 +38,11 @@
     <div class="cad-grid-minor"></div>
   </div>
 
-<!-- TOP NAVIGATION BAR -->
+  <!-- TOP NAVIGATION BAR -->
   <header class="site-header EntranceFade" style="--delay: 0.1s">
     <div class="brand" id="brand-logo">
       <span class="brand-mark"></span>
       <span class="brand-name" id="nav-brand-name">AZCORE</span>
-      <span class="brand-tag">// STUDIO</span>
     </div>
 
     <!-- Hamburger Menu Toggle Button (Only visible below 600px) -->
@@ -63,6 +62,9 @@
       <button class="tab-btn" data-tab="photography" data-index="2">
         <span class="tab-num">03</span> PHOTOGRAPHY
       </button>
+      <a id="nav-resume-tab" class="tab-btn" href="assets/about/resume.pdf" target="_blank" rel="noopener noreferrer">
+        <span class="tab-num">04</span> RESUME &#8599;
+      </a>
     </nav>
 
     <div class="header-telemetry">
@@ -110,27 +112,6 @@
           </div>
 
           <div class="quick-specs-card" id="about-specs-list"></div>
-
-          <!-- RESUME PANEL MOVED TO UNDER ABOUT-SPECS-LIST -->
-          <div class="cad-panel resume-panel" style="margin-top: 20px;">
-            <div class="panel-header">
-              <span class="panel-title">// CURRICULUM & RESUME</span>
-            </div>
-            <div class="resume-card-body">
-              <div class="resume-info">
-                <div class="resume-doc-title" id="resume-title-display">ALEXANDER_ZHUK_RESUME.PDF</div>
-                <p class="resume-doc-sub" id="resume-subtitle-display"></p>
-              </div>
-              <div class="resume-actions" style="margin-top: 0px;">
-                <button id="preview-resume-btn" class="cad-btn cad-btn-primary">
-                  PREVIEW RESUME
-                </button>
-                <a id="download-resume-link" href="assets/about/resume.pdf" target="_blank" download class="cad-btn cad-btn-outline">
-                  DOWNLOAD PDF &#8599;
-                </a>
-              </div>
-            </div>
-          </div>
         </div>
 
         <div class="about-content-col">
@@ -217,16 +198,15 @@
       <div class="lightbox-caption-bar">
         <span id="lightbox-caption">PREVIEW</span>
         <div class="lightbox-caption-right">
-          <button id="model-wireframe-btn" class="mini-action-btn" style="display:none;">WIREFRAME: OFF</button>
           <button id="model-reset-btn" class="mini-action-btn" style="display:none;">RESET VIEW</button>
           <span id="lightbox-counter">1 / 1</span>
+          <button id="lightbox-close" class="mini-action-btn lightbox-exit-btn" aria-label="Close Viewer">&#10005; EXIT</button>
         </div>
       </div>
     </div>
 
     <button class="lightbox-nav lightbox-next" id="lightbox-next" aria-label="Next Item">&#8594;</button>
   </div>
-
   <canvas id="color-sampler-canvas" width="24" height="24" style="display:none;"></canvas>
 
   <script src="script.js"></script>
