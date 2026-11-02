@@ -8,6 +8,9 @@ const IS_MOBILE =
   navigator.maxTouchPoints > 0 ||
   /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
+const GRID_COLS = 8;
+const GRID_ROWS = 4;
+
 const PORTFOLIO_CONFIG = {
   brandName: "AZCORE",
 
@@ -61,7 +64,7 @@ const PORTFOLIO_CONFIG = {
   projectsConfig: {
     baseFolder: "assets/projects/",
     textFileName: "project.txt",
-    foldersToCheck: ["LARP", "fabrication", "test project 1", "test project 2", "blaw blaw blaw","recursiver"]
+    foldersToCheck: ["LARP", "fabrication", "test project 1", "test project 2", "blaw blaw blaw", ]
   },
 
   // -------------------- TAB 3: PHOTOGRAPHY FOLDER CONFIG --------------------
@@ -76,13 +79,13 @@ const PORTFOLIO_CONFIG = {
 
 /**
  * ============================================================================
- * 2. FILE HELPERS, LOCAL WEB APPS, CONTROLS, VIRTUAL CURSOR & HEIC DECODING
+ * 2. FILE HELPERS, 2D GRID CONTROLS, CROSSHAIR CURSOR & HEIC DECODING
  * ============================================================================
  */
 const verifiedUrlCache = new Map();
 const heicBlobCache = new Map();
 
-// Runtime state for the Lightbox Virtual Cursor overlay
+// Runtime state for the Lightbox Virtual Crosshair Cursor (always starts OFF)
 const lightboxVirtualCursorState = {
   enabled: false,
   controlsActive: false,
@@ -199,38 +202,38 @@ async function loadImageSourceWithHeicSupport(url) {
 }
 
 /**
- * Maps control tokens to key specs or virtual cursor / click actions
+ * Maps control tokens to key specs or virtual crosshair cursor / click actions
  */
 function resolveKeySpec(rawToken) {
   const upper = String(rawToken || "").trim().toUpperCase();
   const map = {
-    CURSOR: { label: "CURSOR", key: "__CURSOR__", code: "VirtualCursor", keyCode: 0, isCursorToggle: true },
-    MOUSE: { label: "CURSOR", key: "__CURSOR__", code: "VirtualCursor", keyCode: 0, isCursorToggle: true },
-    POINTER: { label: "CURSOR", key: "__CURSOR__", code: "VirtualCursor", keyCode: 0, isCursorToggle: true },
-    CLICK: { label: "L-CLICK", key: "__CLICK__", code: "MouseLeft", keyCode: 1, isMouseClick: true },
-    LMB: { label: "L-CLICK", key: "__CLICK__", code: "MouseLeft", keyCode: 1, isMouseClick: true },
-    SPACE: { label: "SPACE", key: " ", code: "Space", keyCode: 32 },
-    SPACEBAR: { label: "SPACE", key: " ", code: "Space", keyCode: 32 },
-    UP: { label: "↑", key: "ArrowUp", code: "ArrowUp", keyCode: 38 },
-    ARROWUP: { label: "↑", key: "ArrowUp", code: "ArrowUp", keyCode: 38 },
-    "↑": { label: "↑", key: "ArrowUp", code: "ArrowUp", keyCode: 38 },
-    DOWN: { label: "↓", key: "ArrowDown", code: "ArrowDown", keyCode: 40 },
-    ARROWDOWN: { label: "↓", key: "ArrowDown", code: "ArrowDown", keyCode: 40 },
-    "↓": { label: "↓", key: "ArrowDown", code: "ArrowDown", keyCode: 40 },
-    LEFT: { label: "←", key: "ArrowLeft", code: "ArrowLeft", keyCode: 37 },
-    ARROWLEFT: { label: "←", key: "ArrowLeft", code: "ArrowLeft", keyCode: 37 },
-    "←": { label: "←", key: "ArrowLeft", code: "ArrowLeft", keyCode: 37 },
-    RIGHT: { label: "→", key: "ArrowRight", code: "ArrowRight", keyCode: 39 },
-    ARROWRIGHT: { label: "→", key: "ArrowRight", code: "ArrowRight", keyCode: 39 },
-    "→": { label: "→", key: "ArrowRight", code: "ArrowRight", keyCode: 39 },
-    SHIFT: { label: "SHIFT", key: "Shift", code: "ShiftLeft", keyCode: 16 },
-    CTRL: { label: "CTRL", key: "Control", code: "ControlLeft", keyCode: 17 },
-    CONTROL: { label: "CTRL", key: "Control", code: "ControlLeft", keyCode: 17 },
-    ALT: { label: "ALT", key: "Alt", code: "AltLeft", keyCode: 18 },
-    ENTER: { label: "ENTER", key: "Enter", code: "Enter", keyCode: 13 },
-    TAB: { label: "TAB", key: "Tab", code: "Tab", keyCode: 9 },
-    ESC: { label: "ESC", key: "Escape", code: "Escape", keyCode: 27 },
-    ESCAPE: { label: "ESC", key: "Escape", code: "Escape", keyCode: 27 }
+    CURSOR: { tokenName: "CURSOR", label: "CURSOR", key: "__CURSOR__", code: "VirtualCursor", keyCode: 0, isCursorToggle: true },
+    MOUSE: { tokenName: "CURSOR", label: "CURSOR", key: "__CURSOR__", code: "VirtualCursor", keyCode: 0, isCursorToggle: true },
+    POINTER: { tokenName: "CURSOR", label: "CURSOR", key: "__CURSOR__", code: "VirtualCursor", keyCode: 0, isCursorToggle: true },
+    CLICK: { tokenName: "CLICK", label: "L-CLICK", key: "__CLICK__", code: "MouseLeft", keyCode: 1, isMouseClick: true },
+    LMB: { tokenName: "CLICK", label: "L-CLICK", key: "__CLICK__", code: "MouseLeft", keyCode: 1, isMouseClick: true },
+    SPACE: { tokenName: "SPACE", label: "SPACE", key: " ", code: "Space", keyCode: 32 },
+    SPACEBAR: { tokenName: "SPACE", label: "SPACE", key: " ", code: "Space", keyCode: 32 },
+    UP: { tokenName: "UP", label: "↑", key: "ArrowUp", code: "ArrowUp", keyCode: 38 },
+    ARROWUP: { tokenName: "UP", label: "↑", key: "ArrowUp", code: "ArrowUp", keyCode: 38 },
+    "↑": { tokenName: "UP", label: "↑", key: "ArrowUp", code: "ArrowUp", keyCode: 38 },
+    DOWN: { tokenName: "DOWN", label: "↓", key: "ArrowDown", code: "ArrowDown", keyCode: 40 },
+    ARROWDOWN: { tokenName: "DOWN", label: "↓", key: "ArrowDown", code: "ArrowDown", keyCode: 40 },
+    "↓": { tokenName: "DOWN", label: "↓", key: "ArrowDown", code: "ArrowDown", keyCode: 40 },
+    LEFT: { tokenName: "LEFT", label: "←", key: "ArrowLeft", code: "ArrowLeft", keyCode: 37 },
+    ARROWLEFT: { tokenName: "LEFT", label: "←", key: "ArrowLeft", code: "ArrowLeft", keyCode: 37 },
+    "←": { tokenName: "LEFT", label: "←", key: "ArrowLeft", code: "ArrowLeft", keyCode: 37 },
+    RIGHT: { tokenName: "RIGHT", label: "→", key: "ArrowRight", code: "ArrowRight", keyCode: 39 },
+    ARROWRIGHT: { tokenName: "RIGHT", label: "→", key: "ArrowRight", code: "ArrowRight", keyCode: 39 },
+    "→": { tokenName: "RIGHT", label: "→", key: "ArrowRight", code: "ArrowRight", keyCode: 39 },
+    SHIFT: { tokenName: "SHIFT", label: "SHIFT", key: "Shift", code: "ShiftLeft", keyCode: 16 },
+    CTRL: { tokenName: "CTRL", label: "CTRL", key: "Control", code: "ControlLeft", keyCode: 17 },
+    CONTROL: { tokenName: "CTRL", label: "CTRL", key: "Control", code: "ControlLeft", keyCode: 17 },
+    ALT: { tokenName: "ALT", label: "ALT", key: "Alt", code: "AltLeft", keyCode: 18 },
+    ENTER: { tokenName: "ENTER", label: "ENTER", key: "Enter", code: "Enter", keyCode: 13 },
+    TAB: { tokenName: "TAB", label: "TAB", key: "Tab", code: "Tab", keyCode: 9 },
+    ESC: { tokenName: "ESC", label: "ESC", key: "Escape", code: "Escape", keyCode: 27 },
+    ESCAPE: { tokenName: "ESC", label: "ESC", key: "Escape", code: "Escape", keyCode: 27 }
   };
 
   if (map[upper]) return map[upper];
@@ -239,6 +242,7 @@ function resolveKeySpec(rawToken) {
     const codeNum = upper.charCodeAt(0);
     const isDigit = /[0-9]/.test(upper);
     return {
+      tokenName: upper,
       label: upper,
       key: upper.toLowerCase(),
       code: isDigit ? `Digit${upper}` : `Key${upper}`,
@@ -247,6 +251,7 @@ function resolveKeySpec(rawToken) {
   }
 
   return {
+    tokenName: upper,
     label: upper,
     key: rawToken.trim(),
     code: upper,
@@ -254,6 +259,9 @@ function resolveKeySpec(rawToken) {
   };
 }
 
+/**
+ * Expands CONTROLS strings including optional @col:row 2D grid coordinates
+ */
 function expandVirtualKeysList(keysString) {
   if (!keysString || !keysString.trim()) return [];
   const entries = keysString
@@ -261,21 +269,54 @@ function expandVirtualKeysList(keysString) {
     .map((s) => s.trim())
     .filter(Boolean);
 
-  const buttons = [];
+  const rawButtons = [];
 
   entries.forEach((entry) => {
-    const parts = entry.split(":");
+    let coordCol = null;
+    let coordRow = null;
+    let cleanEntry = entry;
+
+    const coordMatch = entry.match(/@(\d+)\s*[:x,]\s*(\d+)$/i);
+    if (coordMatch) {
+      coordCol = Math.max(0, Math.min(GRID_COLS - 1, parseInt(coordMatch[1], 10)));
+      coordRow = Math.max(0, Math.min(GRID_ROWS - 1, parseInt(coordMatch[2], 10)));
+      cleanEntry = entry.slice(0, coordMatch.index).trim();
+    }
+
+    const parts = cleanEntry.split(":");
     const rawKeyPart = parts[0].trim();
     const actionDesc = parts.length >= 2 ? parts.slice(1).join(":").trim() : "";
     const upperKey = rawKeyPart.toUpperCase().replace(/\s+/g, "");
 
     if (upperKey === "WASD") {
-      ["W", "A", "S", "D"].forEach((ch) => {
-        buttons.push({ ...resolveKeySpec(ch), desc: actionDesc || "Move" });
+      const wasdDefaults = [
+        { ch: "W", c: 2, r: 0 },
+        { ch: "A", c: 1, r: 1 },
+        { ch: "S", c: 2, r: 1 },
+        { ch: "D", c: 3, r: 1 }
+      ];
+      wasdDefaults.forEach((item) => {
+        rawButtons.push({
+          ...resolveKeySpec(item.ch),
+          desc: actionDesc || "Move",
+          col: item.c,
+          row: item.r
+        });
       });
     } else if (upperKey === "ARROWS" || upperKey === "ARROWKEYS") {
-      ["UP", "LEFT", "DOWN", "RIGHT"].forEach((dir) => {
-        buttons.push({ ...resolveKeySpec(dir), desc: actionDesc || "Move" });
+      const arrowDefaults = [
+        { dir: "UP", c: 2, r: 0 },
+        { dir: "LEFT", c: 1, r: 1 },
+        { dir: "DOWN", c: 2, r: 1 },
+        { dir: "RIGHT", c: 3, r: 1 }
+      ];
+      arrowDefaults.forEach((item) => {
+        rawButtons.push({
+          ...resolveKeySpec(item.dir),
+          desc: actionDesc || "Move",
+          col: item.c,
+          row: item.r
+        });
       });
     } else if (rawKeyPart.includes("/")) {
       rawKeyPart
@@ -283,22 +324,89 @@ function expandVirtualKeysList(keysString) {
         .map((k) => k.trim())
         .filter(Boolean)
         .forEach((k) => {
-          buttons.push({ ...resolveKeySpec(k), desc: actionDesc });
+          rawButtons.push({ ...resolveKeySpec(k), desc: actionDesc, col: null, row: null });
         });
     } else {
-      buttons.push({ ...resolveKeySpec(rawKeyPart), desc: actionDesc });
+      rawButtons.push({
+        ...resolveKeySpec(rawKeyPart),
+        desc: actionDesc,
+        col: coordCol,
+        row: coordRow
+      });
     }
   });
 
-  return buttons;
-}
+  // Assign non-colliding grid slots for any keys without explicit @col:row
+  const occupied = new Set();
+  rawButtons.forEach((b) => {
+    if (b.col !== null && b.row !== null) {
+      occupied.add(`${b.col}:${b.row}`);
+    }
+  });
 
-function hasCursorOptionInControls(keysString) {
-  return expandVirtualKeysList(keysString).some((b) => b.isCursorToggle);
+  let nextCol = 0;
+  let nextRow = 0;
+  rawButtons.forEach((b) => {
+    if (b.col === null || b.row === null) {
+      while (occupied.has(`${nextCol}:${nextRow}`)) {
+        nextCol++;
+        if (nextCol >= GRID_COLS) {
+          nextCol = 0;
+          nextRow = Math.min(GRID_ROWS - 1, nextRow + 1);
+        }
+      }
+      b.col = nextCol;
+      b.row = nextRow;
+      occupied.add(`${b.col}:${b.row}`);
+    }
+  });
+
+  return rawButtons;
 }
 
 /**
- * Dispatches virtual cursor coordinate events directly into iframe games (p5.js, Unity, HTML5)
+ * Dispatches virtual crosshair cursor coordinate events directly into iframe games
+ */
+
+
+function setLightboxIframeVirtualCursorFlag(isActive) {
+  const frame = document.getElementById("lightbox-itch-frame");
+  if (!frame || !frame.contentWindow) return;
+  try {
+    frame.contentWindow.__azcoreVirtualCursorActive = Boolean(isActive);
+  } catch (e) {}
+}
+
+function installRealMouseBlockerInLightboxIframe() {
+  const frame = document.getElementById("lightbox-itch-frame");
+  if (!frame || !frame.contentDocument) return;
+  try {
+    const doc = frame.contentDocument;
+    if (doc.__azcoreMousePrioritizerInstalled) return;
+    doc.__azcoreMousePrioritizerInstalled = true;
+
+    const blockRealPointerIfVirtualActive = (e) => {
+      if (
+        lightboxVirtualCursorState.controlsActive &&
+        lightboxVirtualCursorState.enabled &&
+        !e.__azcoreSynthetic &&
+        e.isTrusted
+      ) {
+        e.stopImmediatePropagation();
+        e.stopPropagation();
+        e.preventDefault();
+      }
+    };
+
+    ["mousemove", "pointermove", "mousedown", "mouseup", "touchstart", "touchmove", "touchend"].forEach(
+      (evtName) => {
+        doc.addEventListener(evtName, blockRealPointerIfVirtualActive, true);
+      }
+    );
+  } catch (e) {}
+}
+/**
+ * Dispatches virtual crosshair cursor coordinate events directly into iframe games
  */
 function dispatchVirtualCursorToLightboxIframe(xRatio, yRatio, eventType = "mousemove", isPressed = false) {
   const frame = document.getElementById("lightbox-itch-frame");
@@ -310,10 +418,14 @@ function dispatchVirtualCursorToLightboxIframe(xRatio, yRatio, eventType = "mous
     if (!target) return;
 
     const rect = target.getBoundingClientRect();
-    const clientX = rect.left + xRatio * (rect.width || frame.clientWidth || 800);
-    const clientY = rect.top + yRatio * (rect.height || frame.clientHeight || 600);
-    const offsetX = xRatio * (rect.width || 800);
-    const offsetY = yRatio * (rect.height || 600);
+    const targetW = rect.width || frame.clientWidth || 800;
+    const targetH = rect.height || frame.clientHeight || 600;
+
+    // Exact pixel inside the canvas/iframe corresponding to the center of the '+'
+    const clientX = rect.left + xRatio * targetW;
+    const clientY = rect.top + yRatio * targetH;
+    const offsetX = xRatio * targetW;
+    const offsetY = yRatio * targetH;
 
     win.__azcoreVirtualCursorActive = true;
     if (typeof win.mouseX === "number") win.mouseX = offsetX;
@@ -361,44 +473,16 @@ function dispatchVirtualCursorToLightboxIframe(xRatio, yRatio, eventType = "mous
   } catch (e) {}
 }
 
-function installRealMouseBlockerInLightboxIframe() {
-  const frame = document.getElementById("lightbox-itch-frame");
-  if (!frame || !frame.contentDocument) return;
-  try {
-    const doc = frame.contentDocument;
-    if (doc.__azcoreMousePrioritizerInstalled) return;
-    doc.__azcoreMousePrioritizerInstalled = true;
-
-    const blockRealPointerIfVirtualActive = (e) => {
-      if (
-        lightboxVirtualCursorState.controlsActive &&
-        lightboxVirtualCursorState.enabled &&
-        !e.__azcoreSynthetic &&
-        e.isTrusted
-      ) {
-        e.stopImmediatePropagation();
-        e.stopPropagation();
-        e.preventDefault();
-      }
-    };
-
-    ["mousemove", "pointermove", "mousedown", "mouseup", "touchstart", "touchmove", "touchend"].forEach(
-      (evtName) => {
-        doc.addEventListener(evtName, blockRealPointerIfVirtualActive, true);
-      }
-    );
-  } catch (e) {}
-}
-
 function updateLightboxVirtualCursorVisibilityAndPosition() {
   const cursorEl = document.getElementById("lightbox-virtual-cursor");
   const stageWrap = document.getElementById("lightbox-content-wrapper");
   const frame = document.getElementById("lightbox-itch-frame");
   if (!cursorEl || !stageWrap) return;
 
-  const active = lightboxVirtualCursorState.controlsActive && lightboxVirtualCursorState.enabled;
-  cursorEl.style.display = active ? "block" : "none";
+  const active = Boolean(lightboxVirtualCursorState.controlsActive && lightboxVirtualCursorState.enabled);
+  cursorEl.style.display = active ? "flex" : "none";
   stageWrap.classList.toggle("virtual-cursor-priority", active);
+  setLightboxIframeVirtualCursorFlag(active);
 
   const pop = document.getElementById("lightbox-keys-popover");
   if (pop) {
@@ -407,14 +491,22 @@ function updateLightboxVirtualCursorVisibilityAndPosition() {
   }
 
   if (active) {
-    const w = stageWrap.clientWidth || 800;
-    const h = stageWrap.clientHeight || 600;
-    const px = Math.round(lightboxVirtualCursorState.xRatio * w);
-    const py = Math.round(lightboxVirtualCursorState.yRatio * h);
+    // Measure directly against the iframe so the top caption bar never offsets the '+'
+    const wrapRect = stageWrap.getBoundingClientRect();
+    const frameRect =
+      frame && frame.style.display !== "none" ? frame.getBoundingClientRect() : wrapRect;
+
+    const frameOffsetLeft = frameRect.left - wrapRect.left;
+    const frameOffsetTop = frameRect.top - wrapRect.top;
+    const w = frameRect.width || stageWrap.clientWidth || 800;
+    const h = frameRect.height || stageWrap.clientHeight || 600;
+
+    const px = frameOffsetLeft + lightboxVirtualCursorState.xRatio * w;
+    const py = frameOffsetTop + lightboxVirtualCursorState.yRatio * h;
+
     cursorEl.style.left = `${px}px`;
     cursorEl.style.top = `${py}px`;
-    const tag = cursorEl.querySelector(".vcursor-coord-tag");
-    if (tag) tag.textContent = `X:${px} Y:${py}`;
+
     installRealMouseBlockerInLightboxIframe();
     dispatchVirtualCursorToLightboxIframe(
       lightboxVirtualCursorState.xRatio,
@@ -428,11 +520,14 @@ function updateLightboxVirtualCursorVisibilityAndPosition() {
 function setupLightboxVirtualCursorDrag() {
   const cursorEl = document.getElementById("lightbox-virtual-cursor");
   const stageWrap = document.getElementById("lightbox-content-wrapper");
+  const frame = document.getElementById("lightbox-itch-frame");
   if (!cursorEl || !stageWrap || cursorEl.dataset.bound === "true") return;
   cursorEl.dataset.bound = "true";
 
   let startX = 0;
   let startY = 0;
+  let grabOffsetX = 0;
+  let grabOffsetY = 0;
   let moved = false;
 
   const onPointerDown = (e) => {
@@ -443,6 +538,14 @@ function setupLightboxVirtualCursorDrag() {
     const pt = e.touches ? e.touches[0] : e;
     startX = pt.clientX;
     startY = pt.clientY;
+
+    // Preserve where on the crosshair you grabbed so the center of '+' never jumps
+    const cursorRect = cursorEl.getBoundingClientRect();
+    const cursorCenterX = cursorRect.left + cursorRect.width / 2;
+    const cursorCenterY = cursorRect.top + cursorRect.height / 2;
+    grabOffsetX = pt.clientX - cursorCenterX;
+    grabOffsetY = pt.clientY - cursorCenterY;
+
     cursorEl.classList.add("dragging");
   };
 
@@ -453,11 +556,18 @@ function setupLightboxVirtualCursorDrag() {
     if (Math.hypot(pt.clientX - startX, pt.clientY - startY) > 5) {
       moved = true;
     }
-    const rect = stageWrap.getBoundingClientRect();
+
+    const rect =
+      frame && frame.style.display !== "none"
+        ? frame.getBoundingClientRect()
+        : stageWrap.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
 
-    lightboxVirtualCursorState.xRatio = Math.max(0, Math.min(1, (pt.clientX - rect.left) / rect.width));
-    lightboxVirtualCursorState.yRatio = Math.max(0, Math.min(1, (pt.clientY - rect.top) / rect.height));
+    const exactCenterX = pt.clientX - grabOffsetX;
+    const exactCenterY = pt.clientY - grabOffsetY;
+
+    lightboxVirtualCursorState.xRatio = Math.max(0, Math.min(1, (exactCenterX - rect.left) / rect.width));
+    lightboxVirtualCursorState.yRatio = Math.max(0, Math.min(1, (exactCenterY - rect.top) / rect.height));
     updateLightboxVirtualCursorVisibilityAndPosition();
   };
 
@@ -469,7 +579,7 @@ function setupLightboxVirtualCursorDrag() {
 
     if (!moved) {
       cursorEl.classList.add("clicking");
-      setTimeout(() => cursorEl.classList.remove("clicking"), 160);
+      setTimeout(() => cursorEl.classList.remove("clicking"), 150);
       dispatchVirtualCursorToLightboxIframe(lightboxVirtualCursorState.xRatio, lightboxVirtualCursorState.yRatio, "mousedown", true);
       dispatchVirtualCursorToLightboxIframe(lightboxVirtualCursorState.xRatio, lightboxVirtualCursorState.yRatio, "mouseup", false);
       dispatchVirtualCursorToLightboxIframe(lightboxVirtualCursorState.xRatio, lightboxVirtualCursorState.yRatio, "click", false);
@@ -482,6 +592,69 @@ function setupLightboxVirtualCursorDrag() {
   window.addEventListener("touchmove", onPointerMove, { passive: false });
   window.addEventListener("mouseup", onPointerUp);
   window.addEventListener("touchend", onPointerUp);
+}
+
+/**
+ * Makes any Controls HUD Popover box freely draggable via its header bar
+ */
+function makeHudPopoverDraggable(popoverEl) {
+  if (!popoverEl || popoverEl.dataset.dragBound === "true") return;
+  popoverEl.dataset.dragBound = "true";
+
+  let isDraggingHud = false;
+  let offsetX = 0;
+  let offsetY = 0;
+
+  const onStart = (e) => {
+    const handle = e.target.closest(".keys-hud-drag-handle");
+    if (!handle) return;
+    e.preventDefault();
+    e.stopPropagation();
+    isDraggingHud = true;
+
+    const rect = popoverEl.getBoundingClientRect();
+    const parentRect = popoverEl.offsetParent
+      ? popoverEl.offsetParent.getBoundingClientRect()
+      : { left: 0, top: 0 };
+    const pt = e.touches ? e.touches[0] : e;
+
+    popoverEl.style.left = `${rect.left - parentRect.left}px`;
+    popoverEl.style.top = `${rect.top - parentRect.top}px`;
+    popoverEl.style.bottom = "auto";
+    popoverEl.style.transform = "none";
+
+    offsetX = pt.clientX - rect.left;
+    offsetY = pt.clientY - rect.top;
+  };
+
+  const onMove = (e) => {
+    if (!isDraggingHud) return;
+    e.preventDefault();
+    const pt = e.touches ? e.touches[0] : e;
+    const parentRect = popoverEl.offsetParent
+      ? popoverEl.offsetParent.getBoundingClientRect()
+      : { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
+
+    let newLeft = pt.clientX - parentRect.left - offsetX;
+    let newTop = pt.clientY - parentRect.top - offsetY;
+
+    newLeft = Math.max(4, Math.min(parentRect.width - popoverEl.offsetWidth - 4, newLeft));
+    newTop = Math.max(4, Math.min(parentRect.height - popoverEl.offsetHeight - 4, newTop));
+
+    popoverEl.style.left = `${Math.round(newLeft)}px`;
+    popoverEl.style.top = `${Math.round(newTop)}px`;
+  };
+
+  const onEnd = () => {
+    isDraggingHud = false;
+  };
+
+  popoverEl.addEventListener("mousedown", onStart);
+  popoverEl.addEventListener("touchstart", onStart, { passive: false });
+  window.addEventListener("mousemove", onMove, { passive: false });
+  window.addEventListener("touchmove", onMove, { passive: false });
+  window.addEventListener("mouseup", onEnd);
+  window.addEventListener("touchend", onEnd);
 }
 
 function triggerSyntheticKeyEvent(eventType, spec) {
@@ -545,9 +718,19 @@ function buildKeysHudContentHtml(keysString) {
   const buttons = expandVirtualKeysList(keysString);
   if (buttons.length === 0) return "";
 
+  const minCol = Math.min(...buttons.map((b) => b.col));
+  const maxCol = Math.max(...buttons.map((b) => b.col));
+  const minRow = Math.min(...buttons.map((b) => b.row));
+  const maxRow = Math.max(...buttons.map((b) => b.row));
+  const colSpan = Math.max(1, maxCol - minCol + 1);
+  const rowSpan = Math.max(1, maxRow - minRow + 1);
+
   return `
-    <div class="keys-hud-title">// INTERACTIVE CONTROLS (TAP / HOLD OR DRAG VIRTUAL CURSOR)</div>
-    <div class="keys-pad-grid">
+    <div class="keys-hud-title keys-hud-drag-handle" title="Drag to reposition controls">
+      <span>&#9783; DRAG PAD</span>
+      <span>TAP / HOLD KEYS</span>
+    </div>
+    <div class="keys-pad-grid" style="grid-template-columns: repeat(${colSpan}, minmax(54px, auto)); grid-template-rows: repeat(${rowSpan}, 50px);">
       ${buttons
         .map(
           (b) => `
@@ -555,13 +738,14 @@ function buildKeysHudContentHtml(keysString) {
           role="button"
           tabindex="-1"
           class="virtual-key-btn ${b.isCursorToggle ? "vkey-cursor-toggle" : ""}"
+          style="grid-column: ${b.col - minCol + 1}; grid-row: ${b.row - minRow + 1};"
           data-key="${b.key}"
           data-code="${b.code}"
           data-keycode="${b.keyCode}"
           data-cursor-toggle="${b.isCursorToggle ? "true" : "false"}"
           data-mouse-click="${b.isMouseClick ? "true" : "false"}"
         >
-          <span class="vkey-main">${b.isCursorToggle ? "&#10148; " + b.label : b.label}</span>
+          <span class="vkey-main">${b.isCursorToggle ? "+ " + b.label : b.label}</span>
           ${b.desc ? `<span class="vkey-sub">${b.desc}</span>` : ""}
         </div>
       `
@@ -573,9 +757,18 @@ function buildKeysHudContentHtml(keysString) {
 
 function bindInteractiveVirtualKeys(containerEl) {
   if (!containerEl) return;
+  makeHudPopoverDraggable(containerEl);
 
-  containerEl.addEventListener("mousedown", (e) => e.preventDefault());
-  containerEl.addEventListener("touchstart", (e) => e.preventDefault(), { passive: false });
+  containerEl.addEventListener("mousedown", (e) => {
+    if (!e.target.closest(".keys-hud-drag-handle")) e.preventDefault();
+  });
+  containerEl.addEventListener(
+    "touchstart",
+    (e) => {
+      if (!e.target.closest(".keys-hud-drag-handle")) e.preventDefault();
+    },
+    { passive: false }
+  );
 
   const btns = containerEl.querySelectorAll(".virtual-key-btn");
 
@@ -713,9 +906,9 @@ function attachKeysOverlayIfPresent(containerEl, keysString) {
   containerEl.appendChild(popover);
 }
 
-function createRunLinkCard(asset, projectKeys = "") {
+function createRunLinkCard(asset, projectKeys = "", isStackItem = false) {
   const outer = document.createElement("div");
-  outer.className = "run-card-outer-wrap";
+  outer.className = "run-card-outer-wrap" + (isStackItem ? " stack-run-only" : "");
 
   const linkEl = document.createElement("a");
   linkEl.className = "run-link-card";
@@ -734,10 +927,6 @@ function createRunLinkCard(asset, projectKeys = "") {
     img.src = url;
   });
 
-  const badge = document.createElement("div");
-  badge.className = "stl-badge-overlay";
-  badge.innerHTML = "WEB APPLICATION // CLICK TO LAUNCH &#8599;";
-
   const overlay = document.createElement("div");
   overlay.className = "run-overlay";
   overlay.innerHTML = `
@@ -748,7 +937,12 @@ function createRunLinkCard(asset, projectKeys = "") {
   `;
 
   linkEl.appendChild(img);
-  linkEl.appendChild(badge);
+  if (!isStackItem) {
+    const badge = document.createElement("div");
+    badge.className = "stl-badge-overlay";
+    badge.innerHTML = "WEB APPLICATION // CLICK TO LAUNCH &#8599;";
+    linkEl.appendChild(badge);
+  }
   linkEl.appendChild(overlay);
 
   linkEl.addEventListener("click", (e) => {
@@ -756,13 +950,15 @@ function createRunLinkCard(asset, projectKeys = "") {
   });
 
   outer.appendChild(linkEl);
-  attachKeysOverlayIfPresent(outer, projectKeys);
+  if (!isStackItem) {
+    attachKeysOverlayIfPresent(outer, projectKeys);
+  }
   return outer;
 }
 
-function createItchEmbedCard(asset, onOpenLightboxModal, projectKeys = "") {
+function createItchEmbedCard(asset, onOpenLightboxModal, projectKeys = "", isStackItem = false) {
   const outer = document.createElement("div");
-  outer.className = "run-card-outer-wrap";
+  outer.className = "run-card-outer-wrap" + (isStackItem ? " stack-run-only" : "");
 
   const card = document.createElement("div");
   card.className = "run-link-card";
@@ -779,10 +975,6 @@ function createItchEmbedCard(asset, onOpenLightboxModal, projectKeys = "") {
     bgImg.src = url;
   });
 
-  const badge = document.createElement("div");
-  badge.className = "stl-badge-overlay";
-  badge.textContent = "INTERACTIVE APPLICATION // CLICK RUN TO LAUNCH";
-
   const overlay = document.createElement("div");
   overlay.className = "run-overlay";
   overlay.innerHTML = `
@@ -793,7 +985,12 @@ function createItchEmbedCard(asset, onOpenLightboxModal, projectKeys = "") {
   `;
 
   card.appendChild(bgImg);
-  card.appendChild(badge);
+  if (!isStackItem) {
+    const badge = document.createElement("div");
+    badge.className = "stl-badge-overlay";
+    badge.textContent = "INTERACTIVE APPLICATION // CLICK RUN TO LAUNCH";
+    card.appendChild(badge);
+  }
   card.appendChild(overlay);
 
   card.addEventListener("click", (e) => {
@@ -802,7 +999,9 @@ function createItchEmbedCard(asset, onOpenLightboxModal, projectKeys = "") {
   });
 
   outer.appendChild(card);
-  attachKeysOverlayIfPresent(outer, projectKeys);
+  if (!isStackItem) {
+    attachKeysOverlayIfPresent(outer, projectKeys);
+  }
   return outer;
 }
 
@@ -1637,11 +1836,11 @@ async function loadAndRenderProjects() {
         mainWrap.addEventListener("click", () => openLightbox(lightboxList, 0));
       } else if (mainAsset.type === "link") {
         mainWrap.style.cursor = "pointer";
-        mainWrap.prepend(createRunLinkCard(mainAsset, proj.keys));
+        mainWrap.prepend(createRunLinkCard(mainAsset, proj.keys, false));
       } else if (mainAsset.type === "itch") {
         mainWrap.style.cursor = "pointer";
         mainWrap.prepend(
-          createItchEmbedCard(mainAsset, () => openLightbox(lightboxList, 0), proj.keys)
+          createItchEmbedCard(mainAsset, () => openLightbox(lightboxList, 0), proj.keys, false)
         );
       } else if (isImageAsset(mainAsset.type)) {
         const mainImg = document.createElement("img");
@@ -1687,13 +1886,16 @@ async function loadAndRenderProjects() {
             }
             itemWrap.addEventListener("click", () => openLightbox(lightboxList, assetIdx));
           } else if (asset.type === "link") {
-            itemWrap.appendChild(createRunLinkCard(asset, proj.keys));
+            // Project Stack item: shows ONLY the Run button
+            itemWrap.appendChild(createRunLinkCard(asset, proj.keys, true));
           } else if (asset.type === "itch") {
+            // Project Stack item: shows ONLY the Run button
             itemWrap.appendChild(
               createItchEmbedCard(
                 asset,
                 () => openLightbox(lightboxList, assetIdx),
-                proj.keys
+                proj.keys,
+                true
               )
             );
           } else if (isImageAsset(asset.type)) {
@@ -2078,7 +2280,7 @@ function switchTab(targetIndex) {
 
 /**
  * ============================================================================
- * 10. UNIVERSAL LIGHTBOX & VIRTUAL CURSOR SYSTEM
+ * 10. UNIVERSAL LIGHTBOX & VIRTUAL CROSSHAIR CURSOR SYSTEM
  * ============================================================================
  */
 let currentLightboxList = [];
@@ -2211,6 +2413,7 @@ function closeLightbox() {
 
   activeFullImageRequestToken++;
   lightboxVirtualCursorState.controlsActive = false;
+  lightboxVirtualCursorState.enabled = false;
   updateLightboxVirtualCursorVisibilityAndPosition();
 
   if (lbAnimId) {
@@ -2324,18 +2527,17 @@ function updateLightboxSlide() {
   if (keysPopover) keysPopover.style.display = "none";
   loaderOverlay.style.display = "none";
 
+  // Controls & Virtual Cursor ALWAYS start turned OFF when opening a slide
   lightboxVirtualCursorState.xRatio = 0.5;
   lightboxVirtualCursorState.yRatio = 0.5;
-  lightboxVirtualCursorState.enabled = hasCursorOptionInControls(item.keys);
+  lightboxVirtualCursorState.controlsActive = false;
+  lightboxVirtualCursorState.enabled = false;
 
   if (item.keys && item.keys.trim() && keysBtn && keysPopover) {
     keysBtn.style.display = "inline-block";
     keysPopover.innerHTML = buildKeysHudContentHtml(item.keys);
     bindInteractiveVirtualKeys(keysPopover);
-    keysPopover.style.display = "block";
-    lightboxVirtualCursorState.controlsActive = true;
-  } else {
-    lightboxVirtualCursorState.controlsActive = false;
+    keysPopover.style.display = "none";
   }
   updateLightboxVirtualCursorVisibilityAndPosition();
   setupLightboxVirtualCursorDrag();
@@ -2376,7 +2578,7 @@ function updateLightboxSlide() {
     }
   } else if (item.type === "link") {
     linkStage.style.display = "flex";
-    linkStage.appendChild(createRunLinkCard(item, item.keys));
+    linkStage.appendChild(createRunLinkCard(item, item.keys, false));
     if (externalBtn) {
       externalBtn.href = item.targetUrl;
       externalBtn.style.display = "inline-block";
@@ -2567,13 +2769,19 @@ window.addEventListener("DOMContentLoaded", async () => {
     stepLightbox(1);
   });
 
+  // Lightbox Controls Toggle: turns OFF the virtual cursor whenever controls are closed
   const lbKeysBtn = document.getElementById("lightbox-keys-btn");
   const lbKeysPopover = document.getElementById("lightbox-keys-popover");
   if (lbKeysBtn && lbKeysPopover) {
     lbKeysBtn.addEventListener("click", (e) => {
       e.stopPropagation();
-      const isVisible = lbKeysPopover.style.display === "block";
-      lbKeysPopover.style.display = isVisible ? "none" : "block";
+      const nowOpen = lbKeysPopover.style.display !== "block";
+      lbKeysPopover.style.display = nowOpen ? "block" : "none";
+      lightboxVirtualCursorState.controlsActive = nowOpen;
+      if (!nowOpen) {
+        lightboxVirtualCursorState.enabled = false;
+      }
+      updateLightboxVirtualCursorVisibilityAndPosition();
     });
     lbKeysPopover.addEventListener("click", (e) => e.stopPropagation());
   }
