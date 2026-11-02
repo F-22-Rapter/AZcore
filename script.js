@@ -64,7 +64,7 @@ const PORTFOLIO_CONFIG = {
   projectsConfig: {
     baseFolder: "assets/projects/",
     textFileName: "project.txt",
-    foldersToCheck: ["LARP", "fabrication", "test project 1", "test project 2", "blaw blaw blaw", ]
+    foldersToCheck: ["LARP", "fabrication", "test project 1", "test project 2", "blaw blaw blaw", "recursiver"]
   },
 
   // -------------------- TAB 3: PHOTOGRAPHY FOLDER CONFIG --------------------
