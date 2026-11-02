@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alexander Zhuk</title>
+  <link rel="icon" type="image/png" href="azcore-favicon.png">
+  <meta name="description" content="Portfolio of Alexander Zhuk, Civil Engineering student at Illinois Institute of Technology specializing in structural design, 3D modeling, and photography.">
+  <!-- Google Fonts: Space Grotesk & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+
+  <!-- Three.js + STLLoader + GLTFLoader + DRACOLoader + OrbitControls -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <!-- HEIC/HEIF Phone Photo Decoder -->
+  <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+</head>
+<body class="cad-theme">
+
+  <!-- INITIAL PAGE LOAD OVERLAY -->
+  <div id="page-loader" class="page-loader">
+    <div class="loader-inner">
+      <div class="loader-logo">AZ<span>CORE</span></div>
+      <div class="loader-bar-track">
+        <div class="loader-bar-fill"></div>
+      </div>
+      <div class="loader-meta">INITIALIZING WORKSPACE // READY</div>
+    </div>
+  </div>
+
+  <!-- DYNAMIC BACKGROUND LAYER -->
+  <div id="bg-canvas-layer" class="bg-canvas-layer">
+    <div class="cad-grid-major"></div>
+    <div class="cad-grid-minor"></div>
+  </div>
+
+  <!-- TOP NAVIGATION BAR -->
+  <header class="site-header EntranceFade" style="--delay: 0.1s">
+    <div class="brand" id="brand-logo">
+      <span class="brand-mark"></span>
+      <span class="brand-name" id="nav-brand-name">AZCORE</span>
+    </div>
+
+    <!-- Hamburger Menu Toggle Button (Only visible below 860px) -->
+    <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Toggle Navigation Menu" aria-expanded="false">
+      <span class="ham-line"></span>
+      <span class="ham-line"></span>
+      <span class="ham-line"></span>
+    </button>
+
+    <nav id="main-tab-nav" class="tab-nav" aria-label="Main Navigation">
+      <button class="tab-btn active" data-tab="about" data-index="0">
+        <span class="tab-num">01</span> ABOUT ME
+      </button>
+      <button class="tab-btn" data-tab="projects" data-index="1">
+        <span class="tab-num">02</span> PROJECTS
+      </button>
+      <button class="tab-btn" data-tab="photography" data-index="2">
+        <span class="tab-num">03</span> PHOTOGRAPHY
+      </button>
+      <a id="nav-resume-tab" class="tab-btn" href="assets/about/resume.pdf" target="_blank" rel="noopener noreferrer">
+        <span class="tab-num">04</span> RESUME &#8599;
+      </a>
+    </nav>
+
+    <div class="header-telemetry">
+      <span id="coord-readout"></span>
+    </div>
+  </header>
+
+  <!-- FADED SIDE NAVIGATION BARS -->
+  <button id="side-nav-prev" class="side-nav-bar side-nav-left EntranceFade" style="--delay: 0.25s" aria-label="Previous Section">
+    <div class="side-nav-inner">
+      <span class="side-arrow">&#8592;</span>
+      <span class="side-label" id="prev-tab-label">PHOTOGRAPHY</span>
+    </div>
+  </button>
+
+  <button id="side-nav-next" class="side-nav-bar side-nav-right EntranceFade" style="--delay: 0.25s" aria-label="Next Section">
+    <div class="side-nav-inner">
+      <span class="side-label" id="next-tab-label">PROJECTS</span>
+      <span class="side-arrow">&#8594;</span>
+    </div>
+  </button>
+
+  <!-- MAIN VIEWPORT STAGE -->
+  <main class="stage-container EntranceFade" style="--delay: 0.35s">
+
+    <!-- TAB 1: ABOUT ME -->
+    <section id="tab-about" class="tab-section active-section" data-tab-index="0">
+      <div class="section-header">
+        <div class="section-eyebrow">SECTION 01 // About Me</div>
+        <h1 class="section-title" id="about-headline">ABOUT ME</h1>
+      </div>
+
+      <div class="about-grid">
+        <div class="about-portrait-col">
+          <div class="portrait-frame">
+            <span class="corner-tick tl"></span>
+            <span class="corner-tick tr"></span>
+            <span class="corner-tick bl"></span>
+            <span class="corner-tick br"></span>
+            <img id="about-profile-img" class="interactive-img" src="" alt="Profile Portrait" />
+            <div class="portrait-caption">
+              <span id="about-name-caption">ALEXANDER ZHUK</span>
+              <span class="accent-text">// Portrait</span>
+            </div>
+          </div>
+
+          <div class="quick-specs-card" id="about-specs-list"></div>
+        </div>
+
+        <div class="about-content-col">
+          <div class="cad-panel">
+            <div class="panel-header">
+              <span class="panel-title">// BIO & OVERVIEW</span>
+            </div>
+            <div id="about-bio-content" class="bio-text" contenteditable="false"></div>
+          </div>
+
+          <div class="cad-panel">
+            <div class="panel-header">
+              <span class="panel-title">// SKILLS</span>
+            </div>
+            <div id="about-skills-grid" class="skills-grid"></div>
+          </div>
+
+          <div class="cad-panel">
+            <div class="panel-header">
+              <span class="panel-title">// WAYS TO REACH ME & SOCIALS</span>
+            </div>
+            <div id="about-socials-grid" class="socials-grid"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: PROJECTS -->
+    <section id="tab-projects" class="tab-section" data-tab-index="1">
+      <div class="section-header">
+        <div class="section-eyebrow">SECTION 02 // Project Portfolio</div>
+        <div class="photo-header-row">
+          <div>
+            <h1 class="section-title">PROJECTS</h1>
+            <p class="section-subtitle"></p>
+          </div>
+          <div id="projects-count-badge" class="telemetry-badge">QUEUED FOR IDLE LOAD...</div>
+        </div>
+      </div>
+
+      <div id="projects-container" class="projects-list"></div>
+    </section>
+
+    <!-- TAB 3: PHOTOGRAPHY -->
+    <section id="tab-photography" class="tab-section" data-tab-index="2">
+      <div class="section-header">
+        <div class="section-eyebrow">SECTION 03 // Photography Gallery</div>
+        <div class="photo-header-row">
+          <div>
+            <h1 class="section-title">PHOTOGRAPHY</h1>
+            <p class="section-subtitle"></p>
+          </div>
+          <div id="photo-count-badge" class="telemetry-badge">QUEUED FOR IDLE LOAD...</div>
+        </div>
+      </div>
+
+      <div id="photography-grid" class="insta-grid"></div>
+    </section>
+
+  </main>
+
+  <!-- UNIVERSAL FULL-SCREEN LIGHTBOX -->
+  <div id="lightbox-modal" class="lightbox-modal" aria-hidden="true">
+    <div class="lightbox-backdrop-hint">CLICK ANYWHERE OUTSIDE VIEWER TO CLOSE [ESC]</div>
+    <button class="lightbox-nav lightbox-prev" id="lightbox-prev" aria-label="Previous Item">&#8592;</button>
+
+    <div class="lightbox-content-wrapper" id="lightbox-content-wrapper">
+      
+      <!-- LIGHTBOX CAPTION / HEADER BAR -->
+      <div class="lightbox-caption-bar">
+        <span id="lightbox-caption">PREVIEW</span>
+        <div class="lightbox-caption-right">
+          <button id="lightbox-keys-btn" class="mini-action-btn" style="display:none;">&#9000; CONTROLS</button>
+          <button id="model-reset-btn" class="mini-action-btn" style="display:none;">RESET VIEW</button>
+          <a id="lightbox-external-btn" class="mini-action-btn" href="#" target="_blank" rel="noopener noreferrer" style="display:none; text-decoration:none;">OPEN TAB &#8599;</a>
+          <button id="lightbox-close" class="mini-action-btn lightbox-exit-btn" aria-label="Close Viewer">&#10005; EXIT</button>
+        </div>
+      </div>
+
+      <!-- INTERACTIVE ON-SCREEN CONTROLS POPOVER OVERLAY -->
+      <div id="lightbox-keys-popover" class="keys-hud-popover" style="display:none;"></div>
+
+      <!-- DRAGGABLE VIRTUAL CURSOR FOR EMBEDDED APPS (PRIORITIZED WHEN CONTROLS ARE ACTIVE) -->
+      <div id="lightbox-virtual-cursor" class="virtual-cursor-overlay" style="display:none;" aria-label="Virtual Cursor">
+        <div class="vcursor-pointer">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="#d92804" stroke="#ffffff" stroke-width="1.8">
+            <path d="M4 2 L4 20 L9.5 15 L13.5 22 L16.5 20.5 L12.5 13.5 L19.5 13.5 Z" />
+          </svg>
+        </div>
+        <div class="vcursor-grip-ring"></div>
+        <span class="vcursor-coord-tag">DRAG / TAP</span>
+      </div>
+
+      <div id="lightbox-loader" class="lightbox-loader" style="display:none;">
+        <div class="cad-spinner"></div>
+        <div class="cad-loader-text" id="lightbox-loader-text">LOADING FULL-RESOLUTION ASSET...</div>
+      </div>
+
+      <img id="lightbox-img" src="" alt="Full screen preview" />
+
+      <video id="lightbox-video" class="lightbox-video" controls controlsList="nodownload" playsinline preload="none" style="display:none;"></video>
+
+      <div id="lightbox-audio-stage" class="lightbox-generic-stage" style="display:none;">
+        <div class="generic-file-ext" id="lightbox-audio-title">AUDIO</div>
+        <audio id="lightbox-audio" controls controlsList="nodownload" preload="none" style="width: min(420px, 80vw);"></audio>
+      </div>
+
+      <div id="lightbox-3d-stage" class="lightbox-stl-stage" style="display:none;">
+        <div class="stl-controls-hint">
+          LEFT DRAG: ORBIT // RIGHT DRAG: PAN // SCROLL: ZOOM
+        </div>
+      </div>
+
+      <iframe id="lightbox-itch-frame" class="lightbox-itch-frame" style="display:none;" allow="autoplay; fullscreen; gamepad" title="Embedded Interactive App"></iframe>
+
+      <div id="lightbox-link-stage" class="lightbox-link-stage" style="display:none;"></div>
+
+      <iframe id="lightbox-pdf-frame" class="lightbox-pdf-frame" style="display:none;" title="Document Preview"></iframe>
+
+      <div id="lightbox-generic-stage" class="lightbox-generic-stage" style="display:none;">
+        <div class="generic-file-ext" id="lightbox-generic-ext">.FILE</div>
+        <div class="generic-file-name" id="lightbox-generic-name">filename.ext</div>
+        <p class="generic-file-desc" id="lightbox-generic-desc">Project file details.</p>
+      </div>
+
+    </div>
+
+    <button class="lightbox-nav lightbox-next" id="lightbox-next" aria-label="Next Item">&#8594;</button>
+  </div>
+  <canvas id="color-sampler-canvas" width="24" height="24" style="display:none;"></canvas>
+
+  <script src="script.js"></script>
+</body>
+</html>
