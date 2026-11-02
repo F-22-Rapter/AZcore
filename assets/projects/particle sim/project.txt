@@ -1,0 +1,9 @@
+TITLE: Subatomic Particle Simulator
+CODE: PRJ-2 // PROGRAMING
+TAGS: P5.js,Javascript
+CONTROLS: CURSOR:Virtual Mouse@4:2, C:Clear@0:2, P:Photons@1:2, 1:Proton@0:1, 2:Neutron@1:1, 3:Electron@2:1, Q:Pause@2:2, W:Start@3:2, E:Slow-mo@3:1
+MAIN_FILE: app:app/index.html|thumb=particlesim thumbnail.jpg
+APP: app/index.html|thumb=particlesim thumbnail.jpg
+ASSETS: app:app/index.html|thumb=particlesim thumbnail.jpg
+DESCRIPTION:
+Project description goes here.
