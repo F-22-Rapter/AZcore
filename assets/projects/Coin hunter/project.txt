@@ -1,0 +1,9 @@
+TITLE: Coin Hunter
+CODE: PRJ-1 // PROGRAMING
+TAGS: Unity, C#, Sprite Art, Sound Design
+CONTROLS: CURSOR:Virtual Mouse@2:2, W:Move@2:0, A:Move@1:1, S:Move@2:1, D:Move@3:1, E:Interact@1:0, W:Move@2:0, SPACE:Jump@3:0, A:Move@1:1, S:Move@2:1, D:Move@3:1
+MAIN_FILE: app:app/index.html|thumb=coinhunter thumbnail.png
+APP: app/index.html|thumb=coinhunter thumbnail.png
+ASSETS: app:app/index.html|thumb=coinhunter thumbnail.png
+DESCRIPTION:
+blaw blaw

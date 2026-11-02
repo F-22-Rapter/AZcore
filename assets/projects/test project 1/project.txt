@@ -1,9 +1,0 @@
-TITLE: Untitled Project
-CODE: PRJ // ARCHIVE
-TAGS: SolidWorks, Ansys Fluent CFD, High-Voltage 72s6p, Thermal Management
-CONTROLS: CURSOR: Virtual Mouse, WASD: Move
-MAIN_FILE: app:app/index.html|thumb=IMG_6367.jpg
-APP: app/index.html|thumb=IMG_6367.jpg
-ASSETS: app:app/index.html|thumb=IMG_6367.jpg
-DESCRIPTION:
-blaw blaw
