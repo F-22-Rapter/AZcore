@@ -1,9 +1,0 @@
-TITLE: big boom baamm
-CODE: PRJ 67 // ARCHIVE
-TAGS: gooning
-CONTROLS: SPACE: Action
-MAIN_FILE: run:https://www.instagram.com/|thumb=IMG_6294.jpg
-LINK: https://www.instagram.com/|thumb=IMG_6294.jpg
-ASSETS: run:https://www.instagram.com/|thumb=IMG_6294.jpg, IMG_6365.jpg
-DESCRIPTION:
-blaw blaw blaw

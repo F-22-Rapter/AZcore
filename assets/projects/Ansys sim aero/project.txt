@@ -1,0 +1,7 @@
+TITLE: Ansys Fluent Simulation
+CODE: PRJ // FSAE ELECTRIC
+TAGS: Ansys Fluent,CFDd, Solidworks
+MAIN_FILE: 9.png
+ASSETS: 9.png, 3.png, 6.png, 13.png, 11.png, 12.png
+DESCRIPTION:
+Project description goes here.
