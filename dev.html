@@ -1,0 +1,2764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AZCORE // Localhost Project Studio</title>
+  <link rel="icon" type="image/png" href="azcore-favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .dev-stage {
+      position: relative;
+      z-index: 10;
+      padding: 96px 36px 80px;
+      max-width: 1560px;
+      margin: 0 auto;
+    }
+
+    .fs-banner {
+      background: rgba(24, 27, 30, 0.92);
+      border: 1px solid var(--border-cad);
+      border-left: 3px solid var(--accent);
+      padding: 16px 22px;
+      margin-bottom: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .fs-status {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+    }
+
+    .fs-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #6c757d;
+      box-shadow: 0 0 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .fs-dot.connected {
+      background: #2ecc71;
+      box-shadow: 0 0 12px rgba(46, 204, 113, 0.8);
+    }
+
+    .fs-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .dev-grid {
+      display: grid;
+      grid-template-columns: 1.05fr 1fr;
+      gap: 28px;
+      align-items: start;
+    }
+
+    .dev-field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+
+    .dev-row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .dev-label {
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      letter-spacing: 0.08em;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .dev-label span {
+      color: var(--accent);
+    }
+
+    .dev-input,
+    .dev-textarea,
+    .dev-select {
+      width: 100%;
+      background: rgba(14, 16, 18, 0.88);
+      border: 1px solid var(--border-cad);
+      color: var(--text-main);
+      padding: 10px 12px;
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    .dev-select {
+      width: auto;
+      min-width: 210px;
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+
+    .dev-input:focus,
+    .dev-textarea:focus,
+    .dev-select:focus {
+      border-color: var(--accent);
+    }
+
+    .dev-textarea {
+      min-height: 100px;
+      resize: vertical;
+      font-family: var(--font-sans);
+      line-height: 1.5;
+    }
+
+    .dev-adder-box {
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid var(--border-cad);
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+
+    .dev-adder-box.highlight-box {
+      border-color: var(--accent);
+      background: rgba(217, 40, 4, 0.07);
+    }
+
+    .dev-adder-title {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--accent);
+      margin-bottom: 8px;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+    }
+
+    .dev-inline-add {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .dev-btn {
+      background: rgba(217, 40, 4, 0.18);
+      color: var(--text-main);
+      border: 1px solid var(--accent);
+      padding: 9px 16px;
+      font-family: var(--font-mono);
+      font-size: 0.76rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+
+    .dev-btn:hover {
+      background: var(--accent);
+    }
+
+    .dev-btn.success-btn {
+      background: rgba(46, 204, 113, 0.18);
+      border-color: #2ecc71;
+    }
+
+    .dev-btn.success-btn:hover {
+      background: #27ae60;
+      color: #fff;
+    }
+
+    .dev-btn.secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--border-cad);
+    }
+
+    .dev-btn.secondary:hover {
+      border-color: var(--accent);
+      background: rgba(217, 40, 4, 0.15);
+    }
+
+    /* --- 2D Grid Key Layout Designer --- */
+    .key-grid-designer-wrap {
+      margin-top: 10px;
+      background: rgba(12, 14, 16, 0.92);
+      border: 1px solid var(--border-cad);
+      padding: 12px;
+    }
+
+    .key-grid-designer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      color: var(--text-muted);
+    }
+
+    .key-grid-board {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(8, 58px);
+      grid-template-rows: repeat(4, 52px);
+      gap: 6px;
+      padding: 10px;
+      background: rgba(22, 25, 28, 0.95);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      width: max-content;
+      max-width: 100%;
+      overflow-x: auto;
+      user-select: none;
+    }
+
+    .key-grid-cell {
+      width: 58px;
+      height: 52px;
+      border: 1px dashed rgba(255, 255, 255, 0.12);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 0.6rem;
+      color: rgba(255, 255, 255, 0.15);
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .key-grid-cell.drag-over {
+      border-color: var(--accent);
+      background: rgba(217, 40, 4, 0.22);
+    }
+
+    .designer-key-item {
+      width: 100%;
+      height: 100%;
+      background: rgba(34, 39, 44, 0.98);
+      border: 2px solid rgba(255, 255, 255, 0.45);
+      border-bottom: 3px solid var(--accent);
+      border-radius: 7px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+      color: #fff;
+      font-family: var(--font-mono);
+      position: relative;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .designer-key-item:active {
+      cursor: grabbing;
+    }
+
+    .designer-key-item.is-cursor-key {
+      border-bottom-color: #f1c40f;
+      background: rgba(241, 196, 15, 0.18);
+    }
+
+    .designer-key-main {
+      font-size: 0.78rem;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+
+    .designer-key-sub {
+      font-size: 0.52rem;
+      color: var(--text-muted);
+      max-width: 50px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .designer-key-del {
+      position: absolute;
+      top: 1px;
+      right: 3px;
+      background: none;
+      border: none;
+      color: rgba(255, 255, 255, 0.45);
+      font-size: 0.6rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .designer-key-del:hover {
+      color: #ff5252;
+    }
+
+    .dev-dropzone {
+      border: 1px dashed var(--accent);
+      background: rgba(217, 40, 4, 0.06);
+      padding: 18px;
+      text-align: center;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      margin-bottom: 16px;
+      transition: background 0.2s ease;
+    }
+
+    .dev-dropzone:hover,
+    .dev-dropzone.dragover {
+      background: rgba(217, 40, 4, 0.16);
+      color: var(--text-main);
+    }
+
+    .asset-list-editor {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 360px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .asset-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 9px 12px;
+      background: rgba(16, 18, 20, 0.9);
+      border: 1px solid var(--border-cad);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      transition: border-color 0.2s ease, background 0.2s ease, transform 0.15s ease;
+    }
+
+    .asset-row.is-main {
+      border-color: var(--accent);
+      background: rgba(217, 40, 4, 0.12);
+    }
+
+    .asset-row.draggable-img {
+      cursor: grab;
+    }
+
+    .asset-row.thumb-drop-target {
+      border-style: dashed;
+    }
+
+    .asset-row.drag-target-hover {
+      border: 1px dashed #2ecc71 !important;
+      background: rgba(46, 204, 113, 0.16) !important;
+      transform: scale(1.01);
+    }
+
+    .asset-row-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      flex: 1;
+      flex-wrap: wrap;
+    }
+
+    .asset-type-pill {
+      font-size: 0.65rem;
+      padding: 2px 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      color: var(--accent);
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .asset-file-status {
+      font-size: 0.65rem;
+      padding: 1px 5px;
+      color: #2ecc71;
+      border: 1px solid rgba(46, 204, 113, 0.4);
+      background: rgba(46, 204, 113, 0.1);
+      flex-shrink: 0;
+    }
+
+    .asset-thumb-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.66rem;
+      padding: 2px 7px;
+      color: #f1c40f;
+      border: 1px solid rgba(241, 196, 15, 0.45);
+      background: rgba(241, 196, 15, 0.12);
+      flex-shrink: 0;
+    }
+
+    .asset-thumb-pill button {
+      background: transparent;
+      border: none;
+      color: #ff7675;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.72rem;
+    }
+
+    .asset-drop-hint {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      border: 1px dashed rgba(255, 255, 255, 0.2);
+      padding: 1px 6px;
+    }
+
+    .asset-token-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--text-main);
+      max-width: 280px;
+    }
+
+    .asset-row-actions {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .icon-btn {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+      border: 1px solid var(--border-cad);
+      padding: 3px 7px;
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      cursor: pointer;
+    }
+
+    .icon-btn:hover,
+    .icon-btn.active-main {
+      color: #fff;
+      border-color: var(--accent);
+      background: var(--accent);
+    }
+
+    .code-output-pre {
+      background: #101214;
+      border: 1px solid var(--border-cad);
+      padding: 16px;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: #e2e6ea;
+      white-space: pre-wrap;
+      word-break: break-all;
+      min-height: 190px;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+
+    .export-bar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .fs-log-box {
+      margin-top: 14px;
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--border-cad);
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      white-space: pre-line;
+      display: none;
+    }
+
+    .fs-log-box.visible {
+      display: block;
+    }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      font-family: var(--font-mono);
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .checkbox-row input {
+      accent-color: var(--accent);
+      width: 15px;
+      height: 15px;
+      cursor: pointer;
+    }
+
+    .quick-control-pills {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+
+    @media (max-width: 1080px) {
+      .dev-grid {
+        grid-template-columns: 1fr;
+      }
+      .dev-stage {
+        padding: 88px 16px 60px;
+      }
+    }
+  </style>
+</head>
+<body class="cad-theme page-ready">
+
+  <!-- AUTOCAD GRID BACKGROUND -->
+  <div class="bg-canvas-layer">
+    <div class="cad-grid-major"></div>
+    <div class="cad-grid-minor"></div>
+  </div>
+
+  <!-- HEADER -->
+  <header class="site-header" style="padding: 0 36px;">
+    <div class="brand" onclick="window.location.href='index.html'">
+      <span class="brand-mark"></span>
+      <span class="brand-name">AZCORE</span>
+      <span class="brand-tag">// LOCALHOST PROJECT STUDIO</span>
+    </div>
+
+    <div style="display:flex; gap:10px; align-items:center;">
+      <label class="dev-btn secondary" style="cursor:pointer;">
+        IMPORT project.txt
+        <input type="file" id="import-txt-input" accept=".txt" style="display:none;" />
+      </label>
+      <a href="index.html" class="tab-btn active">&#8592; OPEN LIVE SITE</a>
+    </div>
+  </header>
+
+  <main class="dev-stage">
+    <!-- FILE SYSTEM ACCESS API WORKSPACE BANNER -->
+    <div class="fs-banner">
+      <div class="fs-status">
+        <span id="fs-dot" class="fs-dot"></span>
+        <div>
+          <div id="fs-status-title" style="font-weight:700; color:var(--text-main);">
+            WORKSPACE NOT MOUNTED (BROWSER DOWNLOAD MODE)
+          </div>
+          <div id="fs-status-sub" style="font-size:0.72rem; color:var(--text-muted);">
+            Mount your local portfolio root folder to write project.txt, copy imported Unity/p5.js folders, and update script.js automatically.
+          </div>
+        </div>
+      </div>
+
+      <div class="fs-controls">
+        <button type="button" id="mount-repo-btn" class="dev-btn">
+          &#128193; MOUNT REPO ROOT FOLDER
+        </button>
+        <select id="existing-projects-select" class="dev-select" style="display:none;">
+          <option value="">-- Load Existing Project --</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="dev-grid">
+      <!-- LEFT COLUMN: BUILDER CONTROLS -->
+      <div class="cad-panel">
+        <div class="panel-header">
+          <span class="panel-title">// 01. PROJECT METADATA &amp; SNAP-GRID CONTROLS</span>
+          <button type="button" id="reset-form-btn" class="mini-action-btn">NEW / CLEAR</button>
+        </div>
+
+        <div class="dev-row-2">
+          <div class="dev-field-group">
+            <label class="dev-label">FOLDER NAME <span>assets/projects/&lt;folder&gt;/</span></label>
+            <input type="text" id="dev-folder" class="dev-input" placeholder="e.g. coin-hunter" value="new-project" />
+          </div>
+          <div class="dev-field-group">
+            <label class="dev-label">PROJECT CODE <span>HEADER TAG</span></label>
+            <input type="text" id="dev-code" class="dev-input" placeholder="PRJ // 01 — ENGINEERING" value="PRJ // ARCHIVE" />
+          </div>
+        </div>
+
+        <div class="dev-field-group">
+          <label class="dev-label">PROJECT TITLE <span>REQUIRED</span></label>
+          <input type="text" id="dev-title" class="dev-input" placeholder="e.g. Coin Hunter 1.2 / Particle Simulator" />
+        </div>
+
+        <div class="dev-field-group">
+          <label class="dev-label">SKILL / TECH TAGS <span>COMMA SEPARATED</span></label>
+          <input type="text" id="dev-tags" class="dev-input" placeholder="e.g. Unity, C#, WebGL, p5.js" />
+        </div>
+
+        <!-- INTERACTIVE CONTROLS + 2D SNAP GRID DESIGNER -->
+        <div class="dev-field-group">
+          <label class="dev-label">
+            INTERACTIVE CONTROLS &amp; 2D KEYPAD LAYOUT
+            <span>DRAG KEYS ON THE GRID BELOW TO ARRANGE</span>
+          </label>
+          <div class="dev-inline-add">
+            <input type="text" id="dev-keys" class="dev-input" placeholder="e.g. E:Interact@0,0, W:Move@2,0, SPACE:Jump@4,0, A:Move@1,1, S:Move@2,1, D:Move@3,1" style="flex:1;" />
+          </div>
+          <div class="quick-control-pills">
+            <button type="button" class="icon-btn" id="quick-add-wasd-layout-btn">+ WASD + E + SPACE LAYOUT</button>
+            <button type="button" class="icon-btn" id="quick-add-cursor-btn">+ VIRTUAL CURSOR</button>
+            <button type="button" class="icon-btn" id="quick-add-click-btn">+ LEFT CLICK</button>
+            <button type="button" class="icon-btn" id="quick-add-key-prompt-btn">+ CUSTOM KEY</button>
+            <button type="button" class="icon-btn" id="quick-clear-keys-btn">CLEAR KEYS</button>
+          </div>
+
+          <div class="key-grid-designer-wrap">
+            <div class="key-grid-designer-header">
+              <span>// SNAP-TO-GRID KEYPAD BUILDER (DRAG ANY KEY TO SNAP INTO CELL)</span>
+              <span>8 COLS &times; 4 ROWS</span>
+            </div>
+            <div id="key-grid-board" class="key-grid-board"></div>
+          </div>
+        </div>
+
+        <div class="dev-field-group">
+          <label class="dev-label">PROJECT DESCRIPTION <span>MULTILINE SUPPORTED</span></label>
+          <textarea id="dev-desc" class="dev-textarea" placeholder="Describe the engineering design, architecture, or gameplay..."></textarea>
+        </div>
+
+        <div class="panel-header" style="margin-top: 26px;">
+          <span class="panel-title">// 02. IMPORT LOCAL GAME / WEB APP OR MEDIA</span>
+        </div>
+
+        <!-- DIRECTLY IMPORT UNITY / P5.JS / HTML5 GAME FOLDER -->
+        <div class="dev-adder-box highlight-box">
+          <div class="dev-adder-title">&#128193; IMPORT LOCAL GAME / WEB APP FOLDER (UNITY WebGL, P5.JS, HTML/JS)</div>
+          <div class="dev-inline-add">
+            <label class="dev-btn" style="cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
+              &#128194; SELECT GAME / APP FOLDER (e.g. Coin Hunter 1.2 or Particle-Simulation)
+              <input type="file" id="dev-app-folder-picker" webkitdirectory directory multiple style="display:none;" />
+            </label>
+            <span id="app-folder-status" style="font-family:var(--font-mono); font-size:0.74rem; color:#2ecc71; align-self:center;"></span>
+          </div>
+          <div style="font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted); margin-top:8px;">
+            • Copies <code>index.html</code>, <code>Build/</code>, <code>TemplateData/</code>, <code>sketch.js</code>, <code>p5.min.js</code>, etc. directly into <code>assets/projects/&lt;folder&gt;/app/</code>!<br>
+            • Automatically unpacks Unity <code>.gz</code> files on save so GitHub Pages &amp; Localhost run it with zero server errors.
+          </div>
+        </div>
+
+        <!-- ADD CLICKABLE EXTERNAL WEBSITE LINK -->
+        <div class="dev-adder-box">
+          <div class="dev-adder-title">&#8599; OR ADD EXTERNAL WEBSITE LINK ("Run" OVERLAY)</div>
+          <div class="dev-inline-add">
+            <input type="text" id="dev-link-url" class="dev-input" placeholder="https://..." style="flex:1;" />
+            <button type="button" id="add-link-btn" class="dev-btn secondary">+ ADD EXTERNAL LINK</button>
+          </div>
+        </div>
+
+        <!-- ADD EXTERNAL ITCH.IO EMBED -->
+        <div class="dev-adder-box">
+          <div class="dev-adder-title">&#127918; OR ADD EXTERNAL ITCH.IO EMBED URL</div>
+          <div class="dev-inline-add">
+            <input type="text" id="dev-itch-input" class="dev-input" placeholder="Paste <iframe src=&quot;https://itch.io/embed-upload/...&quot;> or URL" style="flex:1;" />
+            <button type="button" id="add-itch-btn" class="dev-btn secondary">+ ADD ITCH.IO</button>
+          </div>
+        </div>
+
+        <!-- DRAG AND DROP LOCAL FILES OR FOLDERS -->
+        <div id="dev-dropzone" class="dev-dropzone">
+          <div><strong>DRAG &amp; DROP PROJECT FILES OR AN ENTIRE GAME FOLDER HERE</strong></div>
+          <div style="margin-top:4px; font-size:0.7rem;">
+            Tip: Drag an image onto a <strong>LOCAL WEB APP</strong>, <strong>RUN LINK</strong>, or <strong>ITCH.IO</strong> row below to assign it as its Run thumbnail!
+          </div>
+          <input type="file" id="dev-file-picker" multiple style="display:none;" />
+        </div>
+
+        <!-- MANUAL FILENAME INPUT -->
+        <div class="dev-inline-add" style="margin-bottom: 18px;">
+          <input type="text" id="dev-manual-file" class="dev-input" placeholder="Or type filename manually (e.g. app/index.html, assembly.glb)" style="flex:1;" />
+          <button type="button" id="add-manual-btn" class="dev-btn secondary">+ ADD FILE</button>
+        </div>
+
+        <!-- LINKED ASSETS LIST -->
+        <div class="dev-label" style="margin-bottom: 8px;">
+          LINKED PROJECT ASSETS (<span id="asset-count-label">0</span>)
+          <span>DRAG ANY IMAGE ONTO AN APP/GAME ROW TO SET THUMBNAIL</span>
+        </div>
+        <div id="asset-list-editor" class="asset-list-editor"></div>
+      </div>
+
+      <!-- RIGHT COLUMN: LIVE CARD PREVIEW (WITH PROJECT STACK) & DIRECT DISK SAVE -->
+      <div style="display:flex; flex-direction:column; gap:24px;">
+        <div class="cad-panel">
+          <div class="panel-header">
+            <span class="panel-title">// 03. LIVE PROJECT CARD &amp; STACK PREVIEW</span>
+            <span class="telemetry-badge" id="preview-main-badge">MAIN: NONE</span>
+          </div>
+          <div id="dev-live-card-preview"></div>
+        </div>
+
+        <div class="cad-panel">
+          <div class="panel-header">
+            <span class="panel-title">// 04. GENERATED project.txt &amp; DISK WRITE</span>
+            <span id="target-path-readout" style="font-family:var(--font-mono); font-size:0.74rem; color:var(--text-muted);">
+              assets/projects/new-project/project.txt
+            </span>
+          </div>
+
+          <pre id="generated-txt-output" class="code-output-pre"></pre>
+
+          <label class="checkbox-row">
+            <input type="checkbox" id="auto-register-script-cb" checked />
+            <span>Automatically add folder name to <code>foldersToCheck</code> in <code>script.js</code> when saving to disk</span>
+          </label>
+
+          <label class="checkbox-row">
+            <input type="checkbox" id="auto-unpack-gz-cb" checked />
+            <span>Automatically unpack Unity <code>.gz</code> files (<code>.data.gz</code>, <code>.wasm.gz</code>, <code>.js.gz</code>) so GitHub Pages &amp; Localhost serve them cleanly</span>
+          </label>
+
+          <div class="export-bar">
+            <button type="button" id="save-disk-btn" class="dev-btn success-btn">
+              &#128190; SAVE PROJECT &amp; COPY ALL FILES TO DISK
+            </button>
+            <button type="button" id="download-txt-btn" class="dev-btn secondary">
+              &#8681; DOWNLOAD project.txt ONLY
+            </button>
+            <button type="button" id="copy-txt-btn" class="dev-btn secondary">
+              COPY TEXT
+            </button>
+          </div>
+
+          <div id="fs-log-box" class="fs-log-box"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- DEV LIGHTBOX PREVIEW MODAL -->
+  <div id="dev-fullscreen-modal" class="lightbox-modal" aria-hidden="true">
+    <div class="lightbox-backdrop-hint">CLICK ANYWHERE OUTSIDE VIEWER TO CLOSE [ESC]</div>
+    <div class="lightbox-content-wrapper" style="width:88vw; max-width:88vw;">
+      <div class="lightbox-caption-bar">
+        <span id="dev-fs-caption">Untitled Project (WEB APP) // [1/1]</span>
+        <div class="lightbox-caption-right">
+          <button type="button" id="dev-fs-keys-btn" class="mini-action-btn" style="display:none;">&#9000; CONTROLS</button>
+          <a id="dev-fs-open-tab" class="mini-action-btn" href="#" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">OPEN TAB &#8599;</a>
+          <button type="button" id="dev-fs-close" class="mini-action-btn lightbox-exit-btn">&#10005; EXIT</button>
+        </div>
+      </div>
+      <div id="dev-fs-stage-wrap" class="dev-fs-stage-wrap" style="position:relative; width:100%; height:82vh; background:#0b0d0f; overflow:hidden;">
+        <div id="dev-fs-keys-popover" class="keys-hud-popover" style="display:none;"></div>
+
+        <!-- GAME CROSSHAIR VIRTUAL CURSOR IN DEV PREVIEW -->
+        <div id="dev-fs-virtual-cursor" class="virtual-cursor-overlay" style="display:none;" aria-label="Virtual Crosshair Cursor">
+          <svg class="vcursor-crosshair-svg" viewBox="0 0 32 32" width="32" height="32">
+            <line x1="16" y1="3" x2="16" y2="12" stroke="#000000" stroke-width="4" stroke-linecap="square" />
+            <line x1="16" y1="20" x2="16" y2="29" stroke="#000000" stroke-width="4" stroke-linecap="square" />
+            <line x1="3" y1="16" x2="12" y2="16" stroke="#000000" stroke-width="4" stroke-linecap="square" />
+            <line x1="20" y1="16" x2="29" y2="16" stroke="#000000" stroke-width="4" stroke-linecap="square" />
+            <line x1="16" y1="4" x2="16" y2="11" stroke="#ffffff" stroke-width="2" stroke-linecap="square" />
+            <line x1="16" y1="21" x2="16" y2="28" stroke="#ffffff" stroke-width="2" stroke-linecap="square" />
+            <line x1="4" y1="16" x2="11" y2="16" stroke="#ffffff" stroke-width="2" stroke-linecap="square" />
+            <line x1="21" y1="16" x2="28" y2="16" stroke="#ffffff" stroke-width="2" stroke-linecap="square" />
+            <circle cx="16" cy="16" r="2" fill="#d92804" />
+          </svg>
+        </div>
+
+        <iframe id="dev-fs-iframe" class="lightbox-itch-frame" style="width:100%; height:100%;" allow="autoplay; fullscreen; gamepad"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const GRID_COLS = 8;
+    const GRID_ROWS = 4;
+
+    const state = {
+      rootDirHandle: null,
+      projectsDirHandle: null,
+      folder: "new-project",
+      code: "PRJ // ARCHIVE",
+      title: "",
+      tags: "",
+      keys: "",
+      desc: "",
+      assets: [], // { id, token, type, thumb }
+      mainId: null,
+      drawerOpen: false,
+      localFilesMap: new Map(),     // relativePathLower -> { relativePath, file }
+      localObjectUrls: new Map()    // lowercase filename -> blob URL (for live preview)
+    };
+
+    let draggedImageAssetId = null;
+
+    // Virtual Cursor runtime state for dev.html preview (always starts OFF)
+    const devVirtualCursorState = {
+      enabled: false,
+      controlsActive: false,
+      xRatio: 0.5,
+      yRatio: 0.5,
+      isDragging: false,
+      isMouseDownHold: false
+    };
+
+    function logFsMessage(msg, isError = false) {
+      const box = document.getElementById("fs-log-box");
+      box.classList.add("visible");
+      box.style.borderColor = isError ? "#e74c3c" : "#2ecc71";
+      box.style.color = isError ? "#ff8a80" : "#d5f5e3";
+      box.textContent = msg;
+    }
+
+    function isImageFileName(name) {
+      return /\.(webp|jpg|jpeg|png|gif|avif|svg|bmp|heic|heif)$/i.test(name || "");
+    }
+
+    function isTargetableInteractiveType(type) {
+      return type === "LOCAL APP" || type === "ITCH.IO" || type === "RUN LINK";
+    }
+
+    function splitTokenAndThumb(rawToken) {
+      const parts = String(rawToken || "").split("|thumb=");
+      return {
+        baseToken: parts[0].trim(),
+        thumb: parts[1] ? parts[1].trim() : ""
+      };
+    }
+
+    function formatAssetToken(item) {
+      if (isTargetableInteractiveType(item.type) && item.thumb) {
+        return `${item.token}|thumb=${item.thumb}`;
+      }
+      return item.token;
+    }
+
+    function extractItchSrc(raw) {
+      if (!raw) return "";
+      const { baseToken } = splitTokenAndThumb(raw);
+      const trimmed = baseToken.trim().replace(/^(itch|app|embed)\s*:\s*/i, "").trim();
+      const m = trimmed.match(/src\s*=\s*["']([^"']+)["']/i);
+      if (m && m[1]) return m[1].trim();
+      if (/^\/\//.test(trimmed)) return "https:" + trimmed;
+      if (!/^https?:\/\//i.test(trimmed) && trimmed.includes("itch.io")) return "https://" + trimmed;
+      return trimmed;
+    }
+
+    function normalizeLink(raw) {
+      if (!raw) return "";
+      const { baseToken } = splitTokenAndThumb(raw);
+      const c = baseToken.trim().replace(/^(run|link|url)\s*:\s*/i, "").trim();
+      if (/^(https?:\/\/|mailto:|tel:|\/|\.)/i.test(c)) return c;
+      return "https://" + c;
+    }
+
+    function detectTokenType(token) {
+      if (/^app:/i.test(token) || /\.html?$/i.test(token)) return "LOCAL APP";
+      if (/^itch:/i.test(token)) return "ITCH.IO";
+      if (/^run:/i.test(token)) return "RUN LINK";
+      const dot = token.lastIndexOf(".");
+      const ext = dot !== -1 ? token.slice(dot + 1).toUpperCase() : "FILE";
+      return ext;
+    }
+
+    function getAssignedThumbSet() {
+      const set = new Set();
+      state.assets.forEach((a) => {
+        if (a.thumb) set.add(a.thumb.toLowerCase());
+      });
+      return set;
+    }
+
+    function addAssetToken(rawInputToken, explicitThumb = "") {
+      const { baseToken, thumb } = splitTokenAndThumb(rawInputToken);
+      let clean = baseToken.trim();
+      if (!clean) return;
+
+      if (/\.html?$/i.test(clean) && !/^(app|itch|run):/i.test(clean)) {
+        clean = `app:${clean}`;
+      }
+
+      const finalThumb = explicitThumb || thumb || "";
+
+      const usedThumbs = getAssignedThumbSet();
+      if (usedThumbs.has(clean.toLowerCase())) {
+        syncAll();
+        return;
+      }
+
+      const existing = state.assets.find((a) => a.token.toLowerCase() === clean.toLowerCase());
+      if (existing) {
+        if (finalThumb) existing.thumb = finalThumb;
+        syncAll();
+        return;
+      }
+
+      const id = "ast_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
+      const item = {
+        id,
+        token: clean,
+        type: detectTokenType(clean),
+        thumb: finalThumb
+      };
+      state.assets.push(item);
+
+      if (finalThumb) {
+        removeStandaloneImageByFilename(finalThumb);
+      }
+
+      if (!state.mainId) state.mainId = id;
+      syncAll();
+    }
+
+    function removeStandaloneImageByFilename(filename) {
+      const lower = filename.toLowerCase();
+      const idx = state.assets.findIndex((a) => a.token.toLowerCase() === lower);
+      if (idx !== -1) {
+        const removed = state.assets[idx];
+        state.assets.splice(idx, 1);
+        if (state.mainId === removed.id) {
+          state.mainId = state.assets[0] ? state.assets[0].id : null;
+        }
+      }
+    }
+
+    function assignThumbnailToTarget(targetItem, imageFilename, fileObj = null) {
+      if (!targetItem || !imageFilename) return;
+      const cleanName = imageFilename.trim();
+      if (fileObj) {
+        const lower = cleanName.toLowerCase();
+        state.localFilesMap.set(lower, { relativePath: cleanName, file: fileObj });
+        state.localObjectUrls.set(lower, URL.createObjectURL(fileObj));
+      }
+      targetItem.thumb = cleanName;
+      removeStandaloneImageByFilename(cleanName);
+      syncAll();
+    }
+
+    function handleImportedAppFolderFiles(fileList) {
+      const files = Array.from(fileList || []);
+      if (files.length === 0) return;
+
+      let count = 0;
+      let detectedEntryHtml = null;
+
+      files.forEach((file) => {
+        if (file.name === ".DS_Store" || file.name.toLowerCase() === "project.txt") return;
+
+        const rawRel = file.webkitRelativePath || file.name;
+        const parts = rawRel.split("/").filter(Boolean);
+        const subPath = parts.length > 1 ? parts.slice(1).join("/") : parts[0];
+        const targetRelPath = `app/${subPath}`;
+
+        state.localFilesMap.set(targetRelPath.toLowerCase(), {
+          relativePath: targetRelPath,
+          file: file
+        });
+        count++;
+
+        if (/^app\/index\.html?$/i.test(targetRelPath)) {
+          detectedEntryHtml = "app/index.html";
+        } else if (!detectedEntryHtml && /\.html?$/i.test(targetRelPath)) {
+          detectedEntryHtml = targetRelPath;
+        }
+      });
+
+      if (!detectedEntryHtml) {
+        detectedEntryHtml = "app/index.html";
+      }
+
+      addAssetToken(`app:${detectedEntryHtml}`);
+      const appAsset = state.assets.find(
+        (a) => a.token.toLowerCase() === `app:${detectedEntryHtml.toLowerCase()}`
+      );
+      if (appAsset) {
+        state.mainId = appAsset.id;
+      }
+
+      document.getElementById("app-folder-status").textContent =
+        `✓ Queued ${count} files → assets/projects/${state.folder || "new-project"}/app/`;
+
+      logFsMessage(
+        `Queued local web app (${count} files) for assets/projects/${state.folder || "new-project"}/app/.\n` +
+          `Entry point: ${detectedEntryHtml}\n` +
+          `Click "SAVE PROJECT & COPY ALL FILES TO DISK" to write the entire app folder!`
+      );
+      syncAll();
+    }
+
+    document.getElementById("dev-app-folder-picker").addEventListener("change", (e) => {
+      handleImportedAppFolderFiles(e.target.files);
+    });
+
+    async function maybeDecompressUnityGzFile(relativePath, fileObj) {
+      const shouldUnpack = document.getElementById("auto-unpack-gz-cb").checked;
+      if (!shouldUnpack) return { finalRelPath: relativePath, finalBlob: fileObj };
+
+      if (/\.gz$/i.test(relativePath) && typeof DecompressionStream !== "undefined") {
+        try {
+          const ds = new DecompressionStream("gzip");
+          const decompressedStream = fileObj.stream().pipeThrough(ds);
+          const unpackedBlob = await new Response(decompressedStream).blob();
+          const newRelPath = relativePath.replace(/\.gz$/i, "");
+          return { finalRelPath: newRelPath, finalBlob: unpackedBlob };
+        } catch (err) {
+          return { finalRelPath: relativePath, finalBlob: fileObj };
+        }
+      }
+
+      if (/index\.html?$/i.test(relativePath) || /\.loader\.js$/i.test(relativePath)) {
+        try {
+          const text = await fileObj.text();
+          if (/\.(data|framework\.js|wasm|symbols\.json)\.gz/i.test(text)) {
+            const patched = text.replace(/\.(data|framework\.js|wasm|symbols\.json)\.gz/gi, ".$1");
+            return {
+              finalRelPath: relativePath,
+              finalBlob: new Blob([patched], { type: fileObj.type || "text/plain" })
+            };
+          }
+        } catch (e) {}
+      }
+
+      return { finalRelPath: relativePath, finalBlob: fileObj };
+    }
+
+    async function writeNestedFileToProjDir(projDirHandle, relativePath, blobData) {
+      const parts = relativePath.split("/").filter(Boolean);
+      let currentDir = projDirHandle;
+      for (let i = 0; i < parts.length - 1; i++) {
+        currentDir = await currentDir.getDirectoryHandle(parts[i], { create: true });
+      }
+      const fileName = parts[parts.length - 1];
+      const fileHandle = await currentDir.getFileHandle(fileName, { create: true });
+      const writable = await fileHandle.createWritable();
+      await writable.write(blobData);
+      await writable.close();
+    }
+
+    /**
+     * ========================================================================
+     * INTERACTIVE CONTROLS, 2D SNAP GRID & VIRTUAL CROSSHAIR ENGINE
+     * ========================================================================
+     */
+    function resolveKeySpec(rawToken) {
+      const upper = String(rawToken || "").trim().toUpperCase();
+      const map = {
+        CURSOR: { tokenName: "CURSOR", label: "CURSOR", key: "__CURSOR__", code: "VirtualCursor", keyCode: 0, isCursorToggle: true },
+        MOUSE: { tokenName: "CURSOR", label: "CURSOR", key: "__CURSOR__", code: "VirtualCursor", keyCode: 0, isCursorToggle: true },
+        POINTER: { tokenName: "CURSOR", label: "CURSOR", key: "__CURSOR__", code: "VirtualCursor", keyCode: 0, isCursorToggle: true },
+        CLICK: { tokenName: "CLICK", label: "L-CLICK", key: "__CLICK__", code: "MouseLeft", keyCode: 1, isMouseClick: true },
+        LMB: { tokenName: "CLICK", label: "L-CLICK", key: "__CLICK__", code: "MouseLeft", keyCode: 1, isMouseClick: true },
+        SPACE: { tokenName: "SPACE", label: "SPACE", key: " ", code: "Space", keyCode: 32 },
+        SPACEBAR: { tokenName: "SPACE", label: "SPACE", key: " ", code: "Space", keyCode: 32 },
+        UP: { tokenName: "UP", label: "↑", key: "ArrowUp", code: "ArrowUp", keyCode: 38 },
+        ARROWUP: { tokenName: "UP", label: "↑", key: "ArrowUp", code: "ArrowUp", keyCode: 38 },
+        "↑": { tokenName: "UP", label: "↑", key: "ArrowUp", code: "ArrowUp", keyCode: 38 },
+        DOWN: { tokenName: "DOWN", label: "↓", key: "ArrowDown", code: "ArrowDown", keyCode: 40 },
+        ARROWDOWN: { tokenName: "DOWN", label: "↓", key: "ArrowDown", code: "ArrowDown", keyCode: 40 },
+        "↓": { tokenName: "DOWN", label: "↓", key: "ArrowDown", code: "ArrowDown", keyCode: 40 },
+        LEFT: { tokenName: "LEFT", label: "←", key: "ArrowLeft", code: "ArrowLeft", keyCode: 37 },
+        ARROWLEFT: { tokenName: "LEFT", label: "←", key: "ArrowLeft", code: "ArrowLeft", keyCode: 37 },
+        "←": { tokenName: "LEFT", label: "←", key: "ArrowLeft", code: "ArrowLeft", keyCode: 37 },
+        RIGHT: { tokenName: "RIGHT", label: "→", key: "ArrowRight", code: "ArrowRight", keyCode: 39 },
+        ARROWRIGHT: { tokenName: "RIGHT", label: "→", key: "ArrowRight", code: "ArrowRight", keyCode: 39 },
+        "→": { tokenName: "RIGHT", label: "→", key: "ArrowRight", code: "ArrowRight", keyCode: 39 },
+        SHIFT: { tokenName: "SHIFT", label: "SHIFT", key: "Shift", code: "ShiftLeft", keyCode: 16 },
+        CTRL: { tokenName: "CTRL", label: "CTRL", key: "Control", code: "ControlLeft", keyCode: 17 },
+        CONTROL: { tokenName: "CTRL", label: "CTRL", key: "Control", code: "ControlLeft", keyCode: 17 },
+        ALT: { tokenName: "ALT", label: "ALT", key: "Alt", code: "AltLeft", keyCode: 18 },
+        ENTER: { tokenName: "ENTER", label: "ENTER", key: "Enter", code: "Enter", keyCode: 13 },
+        TAB: { tokenName: "TAB", label: "TAB", key: "Tab", code: "Tab", keyCode: 9 },
+        ESC: { tokenName: "ESC", label: "ESC", key: "Escape", code: "Escape", keyCode: 27 },
+        ESCAPE: { tokenName: "ESC", label: "ESC", key: "Escape", code: "Escape", keyCode: 27 }
+      };
+
+      if (map[upper]) return map[upper];
+
+      if (upper.length === 1) {
+        const codeNum = upper.charCodeAt(0);
+        const isDigit = /[0-9]/.test(upper);
+        return {
+          tokenName: upper,
+          label: upper,
+          key: upper.toLowerCase(),
+          code: isDigit ? `Digit${upper}` : `Key${upper}`,
+          keyCode: codeNum
+        };
+      }
+
+      return {
+        tokenName: upper,
+        label: upper,
+        key: rawToken.trim(),
+        code: upper,
+        keyCode: 0
+      };
+    }
+
+    function expandVirtualKeysList(keysString) {
+      if (!keysString || !keysString.trim()) return [];
+      const entries = keysString
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+
+      const rawButtons = [];
+
+      entries.forEach((entry) => {
+        let coordCol = null;
+        let coordRow = null;
+        let cleanEntry = entry;
+
+        const coordMatch = entry.match(/@(\d+)\s*[:x,]\s*(\d+)$/i);
+        if (coordMatch) {
+          coordCol = Math.max(0, Math.min(GRID_COLS - 1, parseInt(coordMatch[1], 10)));
+          coordRow = Math.max(0, Math.min(GRID_ROWS - 1, parseInt(coordMatch[2], 10)));
+          cleanEntry = entry.slice(0, coordMatch.index).trim();
+        }
+
+        const parts = cleanEntry.split(":");
+        const rawKeyPart = parts[0].trim();
+        const actionDesc = parts.length >= 2 ? parts.slice(1).join(":").trim() : "";
+        const upperKey = rawKeyPart.toUpperCase().replace(/\s+/g, "");
+
+        if (upperKey === "WASD") {
+          const wasdDefaults = [
+            { ch: "W", c: 2, r: 0 },
+            { ch: "A", c: 1, r: 1 },
+            { ch: "S", c: 2, r: 1 },
+            { ch: "D", c: 3, r: 1 }
+          ];
+          wasdDefaults.forEach((item) => {
+            rawButtons.push({
+              ...resolveKeySpec(item.ch),
+              desc: actionDesc || "Move",
+              col: item.c,
+              row: item.r
+            });
+          });
+        } else if (upperKey === "ARROWS" || upperKey === "ARROWKEYS") {
+          const arrowDefaults = [
+            { dir: "UP", c: 2, r: 0 },
+            { dir: "LEFT", c: 1, r: 1 },
+            { dir: "DOWN", c: 2, r: 1 },
+            { dir: "RIGHT", c: 3, r: 1 }
+          ];
+          arrowDefaults.forEach((item) => {
+            rawButtons.push({
+              ...resolveKeySpec(item.dir),
+              desc: actionDesc || "Move",
+              col: item.c,
+              row: item.r
+            });
+          });
+        } else if (rawKeyPart.includes("/")) {
+          rawKeyPart
+            .split("/")
+            .map((k) => k.trim())
+            .filter(Boolean)
+            .forEach((k) => {
+              rawButtons.push({ ...resolveKeySpec(k), desc: actionDesc, col: null, row: null });
+            });
+        } else {
+          rawButtons.push({
+            ...resolveKeySpec(rawKeyPart),
+            desc: actionDesc,
+            col: coordCol,
+            row: coordRow
+          });
+        }
+      });
+
+      // Assign non-colliding grid coordinates for any keys without explicit @col:row
+      const occupied = new Set();
+      rawButtons.forEach((b) => {
+        if (b.col !== null && b.row !== null) {
+          occupied.add(`${b.col}:${b.row}`);
+        }
+      });
+
+      let nextCol = 0;
+      let nextRow = 0;
+      rawButtons.forEach((b) => {
+        if (b.col === null || b.row === null) {
+          while (occupied.has(`${nextCol}:${nextRow}`)) {
+            nextCol++;
+            if (nextCol >= GRID_COLS) {
+              nextCol = 0;
+              nextRow = Math.min(GRID_ROWS - 1, nextRow + 1);
+            }
+          }
+          b.col = nextCol;
+          b.row = nextRow;
+          occupied.add(`${b.col}:${b.row}`);
+        }
+      });
+
+      return rawButtons;
+    }
+
+    function serializeButtonsToKeysString(buttons) {
+      return buttons
+        .map((b) => {
+          const descPart = b.desc ? `:${b.desc}` : "";
+          return `${b.tokenName}${descPart}@${b.col}:${b.row}`;
+        })
+        .join(", ");
+    }
+
+    function renderKeyGridDesigner() {
+      const board = document.getElementById("key-grid-board");
+      if (!board) return;
+
+      const buttons = expandVirtualKeysList(state.keys);
+      board.innerHTML = "";
+
+      for (let r = 0; r < GRID_ROWS; r++) {
+        for (let c = 0; c < GRID_COLS; c++) {
+          const cell = document.createElement("div");
+          cell.className = "key-grid-cell";
+          cell.dataset.col = c;
+          cell.dataset.row = r;
+
+          const matchIdx = buttons.findIndex((b) => b.col === c && b.row === r);
+          if (matchIdx !== -1) {
+            const b = buttons[matchIdx];
+            const keyEl = document.createElement("div");
+            keyEl.className =
+              "designer-key-item" + (b.isCursorToggle ? " is-cursor-key" : "");
+            keyEl.draggable = true;
+            keyEl.innerHTML = `
+              <button type="button" class="designer-key-del" title="Remove Key">&times;</button>
+              <span class="designer-key-main">${b.label}</span>
+              ${b.desc ? `<span class="designer-key-sub">${b.desc}</span>` : ""}
+            `;
+
+            keyEl.addEventListener("dragstart", (e) => {
+              e.dataTransfer.setData("text/plain", String(matchIdx));
+            });
+
+            keyEl.querySelector(".designer-key-del").addEventListener("click", (e) => {
+              e.stopPropagation();
+              buttons.splice(matchIdx, 1);
+              state.keys = serializeButtonsToKeysString(buttons);
+              document.getElementById("dev-keys").value = state.keys;
+              syncAll();
+            });
+
+            cell.appendChild(keyEl);
+          } else {
+            cell.textContent = `${c},${r}`;
+          }
+
+          cell.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            cell.classList.add("drag-over");
+          });
+
+          cell.addEventListener("dragleave", () => {
+            cell.classList.remove("drag-over");
+          });
+
+          cell.addEventListener("drop", (e) => {
+            e.preventDefault();
+            cell.classList.remove("drag-over");
+            const draggedIdx = parseInt(e.dataTransfer.getData("text/plain"), 10);
+            if (isNaN(draggedIdx) || !buttons[draggedIdx]) return;
+
+            const targetCol = c;
+            const targetRow = r;
+            const existingAtTarget = buttons.find(
+              (item, idx) => idx !== draggedIdx && item.col === targetCol && item.row === targetRow
+            );
+
+            if (existingAtTarget) {
+              existingAtTarget.col = buttons[draggedIdx].col;
+              existingAtTarget.row = buttons[draggedIdx].row;
+            }
+
+            buttons[draggedIdx].col = targetCol;
+            buttons[draggedIdx].row = targetRow;
+
+            state.keys = serializeButtonsToKeysString(buttons);
+            document.getElementById("dev-keys").value = state.keys;
+            syncAll();
+          });
+
+          board.appendChild(cell);
+        }
+      }
+    }
+
+    function dispatchVirtualCursorToIframe(frame, xRatio, yRatio, eventType = "mousemove", isPressed = false) {
+      if (!frame || !frame.contentWindow) return;
+      try {
+        const doc = frame.contentDocument;
+        const win = frame.contentWindow;
+        const target = (doc && (doc.querySelector("canvas") || doc.body || doc.documentElement)) || null;
+        if (!target) return;
+
+        const rect = target.getBoundingClientRect();
+        const clientX = rect.left + xRatio * (rect.width || frame.clientWidth || 800);
+        const clientY = rect.top + yRatio * (rect.height || frame.clientHeight || 600);
+        const offsetX = xRatio * (rect.width || 800);
+        const offsetY = yRatio * (rect.height || 600);
+
+        win.__azcoreVirtualCursorActive = true;
+        if (typeof win.mouseX === "number") win.mouseX = offsetX;
+        if (typeof win.mouseY === "number") win.mouseY = offsetY;
+        if (typeof win.pmouseX === "number") win.pmouseX = offsetX;
+        if (typeof win.pmouseY === "number") win.pmouseY = offsetY;
+        if (eventType === "mousedown") win.mouseIsPressed = true;
+        if (eventType === "mouseup") win.mouseIsPressed = false;
+
+        const mouseInit = {
+          bubbles: true,
+          cancelable: true,
+          composed: true,
+          view: win,
+          clientX,
+          clientY,
+          screenX: clientX,
+          screenY: clientY,
+          button: 0,
+          buttons: isPressed ? 1 : 0
+        };
+
+        const mEvt = new MouseEvent(eventType, mouseInit);
+        mEvt.__azcoreSynthetic = true;
+        target.dispatchEvent(mEvt);
+        doc.dispatchEvent(mEvt);
+        win.dispatchEvent(mEvt);
+
+        if (typeof PointerEvent !== "undefined") {
+          const pType =
+            eventType === "mousedown"
+              ? "pointerdown"
+              : eventType === "mouseup"
+              ? "pointerup"
+              : "pointermove";
+          const pEvt = new PointerEvent(pType, {
+            ...mouseInit,
+            pointerId: 1,
+            pointerType: "mouse",
+            isPrimary: true
+          });
+          pEvt.__azcoreSynthetic = true;
+          target.dispatchEvent(pEvt);
+        }
+      } catch (e) {}
+    }
+
+    function setIframeVirtualCursorFlag(frame, isActive) {
+      if (!frame || !frame.contentWindow) return;
+      try {
+        frame.contentWindow.__azcoreVirtualCursorActive = Boolean(isActive);
+      } catch (e) {}
+    }
+
+    function installRealMouseBlockerInIframe(frame) {
+      if (!frame || !frame.contentDocument) return;
+      try {
+        const doc = frame.contentDocument;
+        if (doc.__azcoreMousePrioritizerInstalled) return;
+        doc.__azcoreMousePrioritizerInstalled = true;
+
+        const blockRealPointerIfVirtualActive = (e) => {
+          if (
+            devVirtualCursorState.controlsActive &&
+            devVirtualCursorState.enabled &&
+            !e.__azcoreSynthetic &&
+            e.isTrusted
+          ) {
+            e.stopImmediatePropagation();
+            e.stopPropagation();
+            e.preventDefault();
+          }
+        };
+
+        ["mousemove", "pointermove", "mousedown", "mouseup", "touchstart", "touchmove", "touchend"].forEach(
+          (evtName) => {
+            doc.addEventListener(evtName, blockRealPointerIfVirtualActive, true);
+          }
+        );
+      } catch (e) {}
+    }
+
+  function updateDevVirtualCursorVisibilityAndPosition() {
+      const cursorEl = document.getElementById("dev-fs-virtual-cursor");
+      const stageWrap = document.getElementById("dev-fs-stage-wrap");
+      const frame = document.getElementById("dev-fs-iframe");
+      if (!cursorEl || !stageWrap) return;
+
+      const active = Boolean(devVirtualCursorState.controlsActive && devVirtualCursorState.enabled);
+      cursorEl.style.display = active ? "flex" : "none";
+      stageWrap.classList.toggle("virtual-cursor-priority", active);
+      setIframeVirtualCursorFlag(frame, active);
+
+      const pop = document.getElementById("dev-fs-keys-popover");
+      if (pop) {
+        const toggleBtn = pop.querySelector('.virtual-key-btn[data-cursor-toggle="true"]');
+        if (toggleBtn) toggleBtn.classList.toggle("pressed", active);
+      }
+
+      if (active) {
+        const wrapRect = stageWrap.getBoundingClientRect();
+        const frameRect = frame ? frame.getBoundingClientRect() : wrapRect;
+
+        const frameOffsetLeft = frameRect.left - wrapRect.left;
+        const frameOffsetTop = frameRect.top - wrapRect.top;
+        const w = frameRect.width || stageWrap.clientWidth || 800;
+        const h = frameRect.height || stageWrap.clientHeight || 600;
+
+        const px = frameOffsetLeft + devVirtualCursorState.xRatio * w;
+        const py = frameOffsetTop + devVirtualCursorState.yRatio * h;
+        cursorEl.style.left = `${px}px`;
+        cursorEl.style.top = `${py}px`;
+
+        installRealMouseBlockerInIframe(frame);
+        dispatchVirtualCursorToIframe(
+          frame,
+          devVirtualCursorState.xRatio,
+          devVirtualCursorState.yRatio,
+          "mousemove",
+          devVirtualCursorState.isMouseDownHold
+        );
+      }
+    }
+
+    function setupDevVirtualCursorDrag() {
+      const cursorEl = document.getElementById("dev-fs-virtual-cursor");
+      const stageWrap = document.getElementById("dev-fs-stage-wrap");
+      const frame = document.getElementById("dev-fs-iframe");
+      if (!cursorEl || !stageWrap || cursorEl.dataset.bound === "true") return;
+      cursorEl.dataset.bound = "true";
+
+      let startX = 0;
+      let startY = 0;
+      let grabOffsetX = 0;
+      let grabOffsetY = 0;
+      let moved = false;
+
+      const onPointerDown = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        devVirtualCursorState.isDragging = true;
+        moved = false;
+        const pt = e.touches ? e.touches[0] : e;
+        startX = pt.clientX;
+        startY = pt.clientY;
+
+        const cursorRect = cursorEl.getBoundingClientRect();
+        const cursorCenterX = cursorRect.left + cursorRect.width / 2;
+        const cursorCenterY = cursorRect.top + cursorRect.height / 2;
+        grabOffsetX = pt.clientX - cursorCenterX;
+        grabOffsetY = pt.clientY - cursorCenterY;
+
+        cursorEl.classList.add("dragging");
+      };
+
+      const onPointerMove = (e) => {
+        if (!devVirtualCursorState.isDragging) return;
+        e.preventDefault();
+        const pt = e.touches ? e.touches[0] : e;
+        if (Math.hypot(pt.clientX - startX, pt.clientY - startY) > 5) {
+          moved = true;
+        }
+        const rect = frame ? frame.getBoundingClientRect() : stageWrap.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+
+        const exactCenterX = pt.clientX - grabOffsetX;
+        const exactCenterY = pt.clientY - grabOffsetY;
+
+        devVirtualCursorState.xRatio = Math.max(0, Math.min(1, (exactCenterX - rect.left) / rect.width));
+        devVirtualCursorState.yRatio = Math.max(0, Math.min(1, (exactCenterY - rect.top) / rect.height));
+        updateDevVirtualCursorVisibilityAndPosition();
+      };
+
+      const onPointerUp = (e) => {
+        if (!devVirtualCursorState.isDragging) return;
+        e.preventDefault();
+        devVirtualCursorState.isDragging = false;
+        cursorEl.classList.remove("dragging");
+
+        if (!moved) {
+          cursorEl.classList.add("clicking");
+          setTimeout(() => cursorEl.classList.remove("clicking"), 150);
+          dispatchVirtualCursorToIframe(frame, devVirtualCursorState.xRatio, devVirtualCursorState.yRatio, "mousedown", true);
+          dispatchVirtualCursorToIframe(frame, devVirtualCursorState.xRatio, devVirtualCursorState.yRatio, "mouseup", false);
+          dispatchVirtualCursorToIframe(frame, devVirtualCursorState.xRatio, devVirtualCursorState.yRatio, "click", false);
+        }
+      };
+
+      cursorEl.addEventListener("mousedown", onPointerDown);
+      cursorEl.addEventListener("touchstart", onPointerDown, { passive: false });
+      window.addEventListener("mousemove", onPointerMove, { passive: false });
+      window.addEventListener("touchmove", onPointerMove, { passive: false });
+      window.addEventListener("mouseup", onPointerUp);
+      window.addEventListener("touchend", onPointerUp);
+    }
+    function makeHudPopoverDraggable(popoverEl) {
+      if (!popoverEl || popoverEl.dataset.dragBound === "true") return;
+      popoverEl.dataset.dragBound = "true";
+
+      let isDraggingHud = false;
+      let offsetX = 0;
+      let offsetY = 0;
+
+      const onStart = (e) => {
+        const handle = e.target.closest(".keys-hud-drag-handle");
+        if (!handle) return;
+        e.preventDefault();
+        e.stopPropagation();
+        isDraggingHud = true;
+
+        const rect = popoverEl.getBoundingClientRect();
+        const parentRect = popoverEl.offsetParent
+          ? popoverEl.offsetParent.getBoundingClientRect()
+          : { left: 0, top: 0 };
+        const pt = e.touches ? e.touches[0] : e;
+
+        popoverEl.style.left = `${rect.left - parentRect.left}px`;
+        popoverEl.style.top = `${rect.top - parentRect.top}px`;
+        popoverEl.style.bottom = "auto";
+        popoverEl.style.transform = "none";
+
+        offsetX = pt.clientX - rect.left;
+        offsetY = pt.clientY - rect.top;
+      };
+
+      const onMove = (e) => {
+        if (!isDraggingHud) return;
+        e.preventDefault();
+        const pt = e.touches ? e.touches[0] : e;
+        const parentRect = popoverEl.offsetParent
+          ? popoverEl.offsetParent.getBoundingClientRect()
+          : { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
+
+        let newLeft = pt.clientX - parentRect.left - offsetX;
+        let newTop = pt.clientY - parentRect.top - offsetY;
+
+        newLeft = Math.max(4, Math.min(parentRect.width - popoverEl.offsetWidth - 4, newLeft));
+        newTop = Math.max(4, Math.min(parentRect.height - popoverEl.offsetHeight - 4, newTop));
+
+        popoverEl.style.left = `${Math.round(newLeft)}px`;
+        popoverEl.style.top = `${Math.round(newTop)}px`;
+      };
+
+      const onEnd = () => {
+        isDraggingHud = false;
+      };
+
+      popoverEl.addEventListener("mousedown", onStart);
+      popoverEl.addEventListener("touchstart", onStart, { passive: false });
+      window.addEventListener("mousemove", onMove, { passive: false });
+      window.addEventListener("touchmove", onMove, { passive: false });
+      window.addEventListener("mouseup", onEnd);
+      window.addEventListener("touchend", onEnd);
+    }
+
+    function triggerSyntheticKeyEvent(eventType, spec) {
+      const eventInit = {
+        key: spec.key,
+        code: spec.code,
+        keyCode: spec.keyCode,
+        which: spec.keyCode,
+        bubbles: true,
+        cancelable: true,
+        composed: true
+      };
+
+      const createEvt = () => {
+        const ev = new KeyboardEvent(eventType, eventInit);
+        try {
+          Object.defineProperty(ev, "keyCode", { get: () => spec.keyCode });
+          Object.defineProperty(ev, "which", { get: () => spec.keyCode });
+        } catch (e) {}
+        return ev;
+      };
+
+      window.dispatchEvent(createEvt());
+      document.dispatchEvent(createEvt());
+
+      const frame = document.getElementById("dev-fs-iframe");
+      if (frame && frame.src) {
+        try {
+          frame.focus();
+          if (frame.contentWindow) {
+            frame.contentWindow.focus();
+            frame.contentWindow.dispatchEvent(createEvt());
+          }
+          if (frame.contentDocument) {
+            frame.contentDocument.dispatchEvent(createEvt());
+            const canvas = frame.contentDocument.querySelector("canvas");
+            if (canvas) canvas.dispatchEvent(createEvt());
+          }
+        } catch (e) {}
+      }
+    }
+
+    function renderKeysBadgesHtml(keysString) {
+      const buttons = expandVirtualKeysList(keysString);
+      if (buttons.length === 0) return "";
+
+      const minCol = Math.min(...buttons.map((b) => b.col));
+      const maxCol = Math.max(...buttons.map((b) => b.col));
+      const minRow = Math.min(...buttons.map((b) => b.row));
+      const maxRow = Math.max(...buttons.map((b) => b.row));
+      const colSpan = Math.max(1, maxCol - minCol + 1);
+      const rowSpan = Math.max(1, maxRow - minRow + 1);
+
+      return `
+        <div class="keys-hud-title keys-hud-drag-handle" title="Drag to move keypad">
+          <span>&#9783; DRAG KEYPAD</span>
+          <span>TAP / HOLD KEYS</span>
+        </div>
+        <div class="keys-pad-grid" style="grid-template-columns: repeat(${colSpan}, minmax(54px, auto)); grid-template-rows: repeat(${rowSpan}, 50px);">
+          ${buttons
+            .map(
+              (b) => `
+            <div
+              role="button"
+              tabindex="-1"
+              class="virtual-key-btn ${b.isCursorToggle ? "vkey-cursor-toggle" : ""}"
+              style="grid-column: ${b.col - minCol + 1}; grid-row: ${b.row - minRow + 1};"
+              data-key="${b.key}"
+              data-code="${b.code}"
+              data-keycode="${b.keyCode}"
+              data-cursor-toggle="${b.isCursorToggle ? "true" : "false"}"
+              data-mouse-click="${b.isMouseClick ? "true" : "false"}"
+            >
+              <span class="vkey-main">${b.isCursorToggle ? "+ " + b.label : b.label}</span>
+              ${b.desc ? `<span class="vkey-sub">${b.desc}</span>` : ""}
+            </div>
+          `
+            )
+            .join("")}
+        </div>
+      `;
+    }
+
+    function bindInteractiveVirtualKeys(containerEl) {
+      if (!containerEl) return;
+      makeHudPopoverDraggable(containerEl);
+
+      containerEl.addEventListener("mousedown", (e) => {
+        if (!e.target.closest(".keys-hud-drag-handle")) e.preventDefault();
+      });
+      containerEl.addEventListener(
+        "touchstart",
+        (e) => {
+          if (!e.target.closest(".keys-hud-drag-handle")) e.preventDefault();
+        },
+        { passive: false }
+      );
+
+      const btns = containerEl.querySelectorAll(".virtual-key-btn");
+
+      btns.forEach((btn) => {
+        if (btn.dataset.bound === "true") return;
+        btn.dataset.bound = "true";
+
+        const isCursorToggle = btn.dataset.cursorToggle === "true";
+        const isMouseClick = btn.dataset.mouseClick === "true";
+
+        if (isCursorToggle) {
+          const toggleCursor = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            devVirtualCursorState.enabled = !devVirtualCursorState.enabled;
+            updateDevVirtualCursorVisibilityAndPosition();
+          };
+          btn.addEventListener("mousedown", toggleCursor);
+          btn.addEventListener("touchstart", toggleCursor, { passive: false });
+          return;
+        }
+
+        if (isMouseClick) {
+          const frame = document.getElementById("dev-fs-iframe");
+          const downClick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            btn.classList.add("pressed");
+            devVirtualCursorState.isMouseDownHold = true;
+            dispatchVirtualCursorToIframe(frame, devVirtualCursorState.xRatio, devVirtualCursorState.yRatio, "mousedown", true);
+          };
+          const upClick = (e) => {
+            if (e) {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+            if (!btn.classList.contains("pressed")) return;
+            btn.classList.remove("pressed");
+            devVirtualCursorState.isMouseDownHold = false;
+            dispatchVirtualCursorToIframe(frame, devVirtualCursorState.xRatio, devVirtualCursorState.yRatio, "mouseup", false);
+            dispatchVirtualCursorToIframe(frame, devVirtualCursorState.xRatio, devVirtualCursorState.yRatio, "click", false);
+          };
+          btn.addEventListener("mousedown", downClick);
+          btn.addEventListener("touchstart", downClick, { passive: false });
+          btn.addEventListener("mouseup", upClick);
+          btn.addEventListener("mouseleave", upClick);
+          btn.addEventListener("touchend", upClick);
+          return;
+        }
+
+        const spec = {
+          key: btn.dataset.key || "",
+          code: btn.dataset.code || "",
+          keyCode: Number(btn.dataset.keycode || 0)
+        };
+
+        let repeatTimer = null;
+
+        const startPress = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          btn.classList.add("pressed");
+          triggerSyntheticKeyEvent("keydown", spec);
+
+          if (repeatTimer) clearInterval(repeatTimer);
+          repeatTimer = setInterval(() => {
+            triggerSyntheticKeyEvent("keydown", spec);
+          }, 65);
+        };
+
+        const endPress = (e) => {
+          if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+          if (!btn.classList.contains("pressed")) return;
+          btn.classList.remove("pressed");
+          if (repeatTimer) {
+            clearInterval(repeatTimer);
+            repeatTimer = null;
+          }
+          triggerSyntheticKeyEvent("keyup", spec);
+        };
+
+        btn.addEventListener("mousedown", startPress);
+        btn.addEventListener("touchstart", startPress, { passive: false });
+        btn.addEventListener("mouseup", endPress);
+        btn.addEventListener("mouseleave", endPress);
+        btn.addEventListener("touchend", endPress);
+        btn.addEventListener("touchcancel", endPress);
+        btn.addEventListener("contextmenu", (e) => e.preventDefault());
+      });
+    }
+
+    function buildProjectTxtString() {
+      const lines = [];
+      lines.push(`TITLE: ${state.title || "Untitled Project"}`);
+      lines.push(`CODE: ${state.code || "PRJ // ARCHIVE"}`);
+      if (state.tags.trim()) {
+        lines.push(`TAGS: ${state.tags.trim()}`);
+      }
+      if (state.keys.trim()) {
+        lines.push(`CONTROLS: ${state.keys.trim()}`);
+      }
+
+      const usedThumbs = getAssignedThumbSet();
+      const ordered = state.assets.filter((a) => !usedThumbs.has(a.token.toLowerCase()));
+
+      if (state.mainId) {
+        const idx = ordered.findIndex((a) => a.id === state.mainId);
+        if (idx > 0) {
+          const [mainItem] = ordered.splice(idx, 1);
+          ordered.unshift(mainItem);
+        }
+      }
+
+      if (ordered.length > 0) {
+        lines.push(`MAIN_FILE: ${formatAssetToken(ordered[0])}`);
+      }
+
+      ordered.forEach((a) => {
+        if (/^app:/i.test(a.token)) {
+          const rawApp = a.token.replace(/^app:/i, "");
+          lines.push(`APP: ${rawApp}${a.thumb ? "|thumb=" + a.thumb : ""}`);
+        } else if (/^run:/i.test(a.token)) {
+          const rawUrl = a.token.replace(/^run:/i, "");
+          lines.push(`LINK: ${rawUrl}${a.thumb ? "|thumb=" + a.thumb : ""}`);
+        } else if (/^itch:/i.test(a.token)) {
+          const rawItch = a.token.replace(/^itch:/i, "");
+          lines.push(`ITCH: ${rawItch}${a.thumb ? "|thumb=" + a.thumb : ""}`);
+        }
+      });
+
+      if (ordered.length > 0) {
+        lines.push(`ASSETS: ${ordered.map((a) => formatAssetToken(a)).join(", ")}`);
+      }
+
+      lines.push("DESCRIPTION:");
+      lines.push(state.desc || "Project description goes here.");
+      return lines.join("\n");
+    }
+
+    function renderAssetListEditor() {
+      const listEl = document.getElementById("asset-list-editor");
+      const usedThumbs = getAssignedThumbSet();
+      const visibleAssets = state.assets.filter((a) => !usedThumbs.has(a.token.toLowerCase()));
+      document.getElementById("asset-count-label").textContent = visibleAssets.length;
+
+      if (visibleAssets.length === 0) {
+        listEl.innerHTML = `
+          <div style="padding:18px; border:1px dashed var(--border-cad); text-align:center; font-family:var(--font-mono); font-size:0.75rem; color:var(--text-muted);">
+            No assets added yet. Import a Local Game/App Folder, or drop files above.
+          </div>
+        `;
+        return;
+      }
+
+      listEl.innerHTML = "";
+      visibleAssets.forEach((item) => {
+        const isMain = item.id === state.mainId;
+        const isTargetable = isTargetableInteractiveType(item.type);
+        const isDraggableImg = !isTargetable && isImageFileName(item.token);
+
+        const cleanRel = item.token.replace(/^app:/i, "").toLowerCase();
+        const hasQueuedFile =
+          state.localFilesMap.has(cleanRel) ||
+          (item.thumb && state.localFilesMap.has(item.thumb.toLowerCase()));
+
+        const row = document.createElement("div");
+        row.className =
+          "asset-row" +
+          (isMain ? " is-main" : "") +
+          (isDraggableImg ? " draggable-img" : "") +
+          (isTargetable ? " thumb-drop-target" : "");
+
+        if (isDraggableImg) {
+          row.setAttribute("draggable", "true");
+          row.addEventListener("dragstart", (e) => {
+            draggedImageAssetId = item.id;
+            e.dataTransfer.setData("text/plain", item.token);
+          });
+          row.addEventListener("dragend", () => {
+            draggedImageAssetId = null;
+          });
+        }
+
+        if (isTargetable) {
+          row.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            row.classList.add("drag-target-hover");
+          });
+          row.addEventListener("dragleave", () => {
+            row.classList.remove("drag-target-hover");
+          });
+          row.addEventListener("drop", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            row.classList.remove("drag-target-hover");
+
+            if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+              const file = e.dataTransfer.files[0];
+              if (isImageFileName(file.name)) {
+                assignThumbnailToTarget(item, file.name, file);
+                return;
+              }
+            }
+
+            if (draggedImageAssetId) {
+              const draggedItem = state.assets.find((a) => a.id === draggedImageAssetId);
+              if (draggedItem && isImageFileName(draggedItem.token)) {
+                assignThumbnailToTarget(item, draggedItem.token);
+              }
+              draggedImageAssetId = null;
+            }
+          });
+        }
+
+        row.innerHTML = `
+          <div class="asset-row-left">
+            <span class="asset-type-pill">${item.type}</span>
+            ${hasQueuedFile ? `<span class="asset-file-status">READY TO COPY</span>` : ""}
+            <span class="asset-token-text" title="${item.token}">${
+              isDraggableImg ? "&#9776; " : ""
+            }${item.token}</span>
+            ${
+              isTargetable
+                ? item.thumb
+                  ? `<span class="asset-thumb-pill" title="Assigned Run Thumbnail">THUMB: ${item.thumb} <button type="button" data-act="clear-thumb" title="Remove Thumbnail">&#10005;</button></span>`
+                  : `<span class="asset-drop-hint">&#8681; DRAG THUMBNAIL IMAGE HERE</span>`
+                : ""
+            }
+          </div>
+          <div class="asset-row-actions">
+            <button type="button" class="icon-btn ${isMain ? "active-main" : ""}" data-act="main" title="Set as Main Showcase Asset">&#9733; MAIN</button>
+            <button type="button" class="icon-btn" data-act="up" title="Move Up">&#8593;</button>
+            <button type="button" class="icon-btn" data-act="down" title="Move Down">&#8595;</button>
+            <button type="button" class="icon-btn" data-act="del" title="Remove">&#10005;</button>
+          </div>
+        `;
+
+        const clearThumbBtn = row.querySelector('[data-act="clear-thumb"]');
+        if (clearThumbBtn) {
+          clearThumbBtn.addEventListener("click", (ev) => {
+            ev.stopPropagation();
+            item.thumb = "";
+            syncAll();
+          });
+        }
+
+        row.querySelector('[data-act="main"]').addEventListener("click", () => {
+          state.mainId = item.id;
+          syncAll();
+        });
+        row.querySelector('[data-act="up"]').addEventListener("click", () => {
+          const realIdx = state.assets.findIndex((a) => a.id === item.id);
+          if (realIdx <= 0) return;
+          const tmp = state.assets[realIdx - 1];
+          state.assets[realIdx - 1] = state.assets[realIdx];
+          state.assets[realIdx] = tmp;
+          syncAll();
+        });
+        row.querySelector('[data-act="down"]').addEventListener("click", () => {
+          const realIdx = state.assets.findIndex((a) => a.id === item.id);
+          if (realIdx === -1 || realIdx >= state.assets.length - 1) return;
+          const tmp = state.assets[realIdx + 1];
+          state.assets[realIdx + 1] = state.assets[realIdx];
+          state.assets[realIdx] = tmp;
+          syncAll();
+        });
+        row.querySelector('[data-act="del"]').addEventListener("click", () => {
+          const realIdx = state.assets.findIndex((a) => a.id === item.id);
+          if (realIdx !== -1) state.assets.splice(realIdx, 1);
+          if (state.mainId === item.id) {
+            state.mainId = state.assets[0] ? state.assets[0].id : null;
+          }
+          syncAll();
+        });
+
+        listEl.appendChild(row);
+      });
+    }
+
+    function resolvePreviewThumbUrl(item) {
+      if (item && item.thumb) {
+        const lower = item.thumb.toLowerCase();
+        if (state.localObjectUrls.has(lower)) {
+          return state.localObjectUrls.get(lower);
+        }
+      }
+      return (
+        state.localObjectUrls.get("run.webp") ||
+        state.localObjectUrls.get("run.png") ||
+        state.localObjectUrls.get("run.jpg") ||
+        `data:image/svg+xml;utf8,${encodeURIComponent(
+          `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500">
+            <rect width="800" height="500" fill="#14181c"/>
+            <line x1="0" y1="250" x2="800" y2="250" stroke="rgba(217,40,4,0.35)" stroke-width="1" stroke-dasharray="6,6"/>
+            <line x1="400" y1="0" x2="400" y2="500" stroke="rgba(217,40,4,0.35)" stroke-width="1" stroke-dasharray="6,6"/>
+            <text x="28" y="468" fill="#9aa4ae" font-family="monospace" font-size="15">${
+              item && item.thumb
+                ? "THUMBNAIL: " + item.thumb
+                : "DRAG ANY IMAGE ONTO THIS ITEM TO SET THUMBNAIL"
+            }</text>
+          </svg>`
+        )}`
+      );
+    }
+
+    function openDevFullscreenGame(embedUrl) {
+      const modal = document.getElementById("dev-fullscreen-modal");
+      const iframe = document.getElementById("dev-fs-iframe");
+      const openTabBtn = document.getElementById("dev-fs-open-tab");
+      const captionEl = document.getElementById("dev-fs-caption");
+      const keysBtn = document.getElementById("dev-fs-keys-btn");
+      const keysPopover = document.getElementById("dev-fs-keys-popover");
+
+      captionEl.textContent = `${state.title || "Untitled Project"} (INTERACTIVE APP)`;
+      openTabBtn.href = embedUrl;
+      iframe.src = embedUrl;
+
+      // Controls & Virtual Cursor ALWAYS start turned OFF when opening
+      devVirtualCursorState.xRatio = 0.5;
+      devVirtualCursorState.yRatio = 0.5;
+      devVirtualCursorState.controlsActive = false;
+      devVirtualCursorState.enabled = false;
+
+      iframe.onload = () => {
+        try {
+          iframe.focus();
+          if (iframe.contentWindow) iframe.contentWindow.focus();
+          updateDevVirtualCursorVisibilityAndPosition();
+        } catch (e) {}
+      };
+      modal.classList.add("open");
+      modal.setAttribute("aria-hidden", "false");
+
+      setupDevVirtualCursorDrag();
+
+      if (state.keys && state.keys.trim()) {
+        keysBtn.style.display = "inline-block";
+        keysPopover.innerHTML = renderKeysBadgesHtml(state.keys);
+        bindInteractiveVirtualKeys(keysPopover);
+        keysPopover.style.display = "none";
+      } else {
+        keysBtn.style.display = "none";
+        keysPopover.style.display = "none";
+      }
+      updateDevVirtualCursorVisibilityAndPosition();
+    }
+
+    function createDevMediaElement(item, isStackItem = false) {
+      const hasKeys = !isStackItem && Boolean(state.keys && state.keys.trim());
+      const keysOverlayHtml = hasKeys
+        ? `
+          <button type="button" class="keys-trigger-badge" data-act="toggle-keys">&#9000; CONTROLS</button>
+          <div class="keys-hud-popover" style="display:none;">
+            ${renderKeysBadgesHtml(state.keys)}
+          </div>
+        `
+        : "";
+
+      if (/^run:/i.test(item.token)) {
+        const url = item.token.replace(/^run:/i, "");
+        const thumbSrc = resolvePreviewThumbUrl(item);
+        const wrap = document.createElement("div");
+        wrap.className = "run-card-outer-wrap" + (isStackItem ? " stack-run-only" : "");
+        wrap.innerHTML = `
+          ${keysOverlayHtml}
+          <a class="run-link-card" href="${url}" target="_blank" rel="noopener noreferrer" style="min-height:100%;">
+            <img class="run-base-img" src="${thumbSrc}" alt="Run thumbnail" />
+            ${isStackItem ? "" : `<div class="stl-badge-overlay">WEB APPLICATION // CLICK TO LAUNCH &#8599;</div>`}
+            <div class="run-overlay">
+              <div class="run-btn-pill">
+                <span class="run-btn-icon">&#9654;</span>
+                <span class="run-btn-label">Run</span>
+              </div>
+            </div>
+          </a>
+        `;
+        if (!isStackItem) bindKeysToggleInContainer(wrap);
+        return wrap;
+      }
+
+      if (/^(itch|app):/i.test(item.token)) {
+        const isLocalApp = /^app:/i.test(item.token);
+        const folderClean = (state.folder || "new-project").trim().replace(/^\/+|\/+$/g, "");
+        const rawTarget = item.token.replace(/^(itch|app):/i, "");
+        const embedUrl = isLocalApp
+          ? `assets/projects/${folderClean}/${rawTarget}`
+          : rawTarget;
+
+        const thumbSrc = resolvePreviewThumbUrl(item);
+        const wrap = document.createElement("div");
+        wrap.className = "run-card-outer-wrap" + (isStackItem ? " stack-run-only" : "");
+        wrap.innerHTML = `
+          ${keysOverlayHtml}
+          <div class="run-link-card" data-act="run-itch-fs" style="min-height:100%;">
+            <img class="run-base-img" src="${thumbSrc}" alt="Run Thumbnail" />
+            ${
+              isStackItem
+                ? ""
+                : `<div class="stl-badge-overlay">${
+                    isLocalApp
+                      ? "LOCAL EMBEDDED APP // CLICK RUN TO PLAY"
+                      : "INTERACTIVE GAME // CLICK RUN TO PLAY"
+                  }</div>`
+            }
+            <div class="run-overlay">
+              <div class="run-btn-pill">
+                <span class="run-btn-icon">&#9654;</span>
+                <span class="run-btn-label">Run</span>
+              </div>
+            </div>
+          </div>
+        `;
+        wrap.querySelector('[data-act="run-itch-fs"]').addEventListener("click", (e) => {
+          e.stopPropagation();
+          openDevFullscreenGame(embedUrl);
+        });
+        if (!isStackItem) bindKeysToggleInContainer(wrap);
+        return wrap;
+      }
+
+      if (
+        state.localObjectUrls.has(item.token.toLowerCase()) &&
+        isImageFileName(item.token)
+      ) {
+        const img = document.createElement("img");
+        img.src = state.localObjectUrls.get(item.token.toLowerCase());
+        img.alt = item.token;
+        img.style.width = "100%";
+        img.style.height = "100%";
+        img.style.objectFit = "contain";
+        return img;
+      }
+
+      const card = document.createElement("div");
+      card.className = "universal-asset-card";
+      card.style.minHeight = "100%";
+      card.innerHTML = `
+        <div class="stl-badge-overlay">${item.type} // LINKED ASSET</div>
+        <div class="universal-asset-icon">.${item.type}</div>
+        <div class="universal-asset-label">${item.token}</div>
+      `;
+      return card;
+    }
+
+    function bindKeysToggleInContainer(container) {
+      const btn = container.querySelector('[data-act="toggle-keys"]');
+      const pop = container.querySelector(".keys-hud-popover");
+      if (btn && pop) {
+        bindInteractiveVirtualKeys(pop);
+        btn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const isOpen = pop.style.display === "block";
+          pop.style.display = isOpen ? "none" : "block";
+        });
+      }
+    }
+
+    function renderLivePreview() {
+      const container = document.getElementById("dev-live-card-preview");
+      const usedThumbs = getAssignedThumbSet();
+
+      const ordered = state.assets.filter((a) => !usedThumbs.has(a.token.toLowerCase()));
+      if (state.mainId) {
+        const idx = ordered.findIndex((a) => a.id === state.mainId);
+        if (idx > 0) {
+          const [mainItem] = ordered.splice(idx, 1);
+          ordered.unshift(mainItem);
+        }
+      }
+
+      const mainItem = ordered[0] || null;
+      document.getElementById("preview-main-badge").textContent = mainItem
+        ? `MAIN: ${mainItem.type}`
+        : "MAIN: NONE";
+
+      const tagsList = state.tags
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+
+      const stackPreview = ordered.slice(0, 3);
+      const stackVisualHtml = stackPreview
+        .map((item) => {
+          if (isTargetableInteractiveType(item.type)) {
+            const tUrl = resolvePreviewThumbUrl(item);
+            return `<img class="stack-card-img" src="${tUrl}" alt="Run stack preview" />`;
+          }
+          if (
+            state.localObjectUrls.has(item.token.toLowerCase()) &&
+            isImageFileName(item.token)
+          ) {
+            return `<img class="stack-card-img" src="${state.localObjectUrls.get(
+              item.token.toLowerCase()
+            )}" alt="Stack preview" />`;
+          }
+          return `<div class="stack-card-badge">[${item.type}]</div>`;
+        })
+        .join("");
+
+      const folderClean = (state.folder || "new-project").trim().replace(/^\/+|\/+$/g, "");
+
+      container.innerHTML = `
+        <article class="project-card" style="padding:20px;">
+          <div class="project-top-layout" style="grid-template-columns: 1fr;">
+            <div class="project-main-img-wrap" id="dev-preview-main-stage" style="min-height:280px; max-height:340px;"></div>
+            <div class="project-info-col">
+              <div>
+                <div class="project-code">${state.code || "PRJ // ARCHIVE"}</div>
+                <h2 class="project-title" style="font-size:1.35rem;">${state.title || "Untitled Project"}</h2>
+                <p class="project-desc" style="font-size:0.88rem;">${state.desc || "Project description preview..."}</p>
+                <div class="project-tags">
+                  ${tagsList.map((t) => `<span class="skill-tag">${t}</span>`).join("")}
+                </div>
+              </div>
+
+              <div class="photo-stack-trigger" id="dev-stack-trigger">
+                <div class="stack-visual">${
+                  stackVisualHtml || `<div class="stack-card-badge">[EMPTY]</div>`
+                }</div>
+                <div class="stack-meta">
+                  <span class="stack-title">PROJECT STACK (${ordered.length} LINKED)</span>
+                  <span class="stack-subtitle" id="dev-stack-subtitle">
+                    ${
+                      state.drawerOpen
+                        ? "Click stack to collapse project grid &#8593;"
+                        : "Click stack to reveal full project grid &#8595;"
+                    }
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="dev-preview-drawer" class="project-expanded-drawer ${
+            state.drawerOpen ? "open" : ""
+          }">
+            <div class="drawer-header">
+              <span>// LINKED FROM assets/projects/${folderClean}/project.txt (${ordered.length} ITEMS)</span>
+              <span>STACK ITEMS SHOW ONLY THE RUN BUTTON</span>
+            </div>
+            <div class="project-gallery-grid" id="dev-preview-gallery-grid"></div>
+          </div>
+        </article>
+      `;
+
+      const mainStage = document.getElementById("dev-preview-main-stage");
+      if (mainItem) {
+        mainStage.appendChild(createDevMediaElement(mainItem, false));
+      } else {
+        mainStage.innerHTML = `
+          <div class="universal-asset-card" style="min-height:280px;">
+            <div class="universal-asset-icon">+</div>
+            <div class="universal-asset-label">ADD AN ASSET TO PREVIEW</div>
+          </div>
+        `;
+      }
+
+      const galleryGrid = document.getElementById("dev-preview-gallery-grid");
+      ordered.forEach((asset) => {
+        const cell = document.createElement("div");
+        cell.className = "project-gallery-item";
+        cell.appendChild(createDevMediaElement(asset, true));
+        galleryGrid.appendChild(cell);
+      });
+
+      document.getElementById("dev-stack-trigger").addEventListener("click", () => {
+        state.drawerOpen = !state.drawerOpen;
+        const drawer = document.getElementById("dev-preview-drawer");
+        const sub = document.getElementById("dev-stack-subtitle");
+        drawer.classList.toggle("open", state.drawerOpen);
+        sub.innerHTML = state.drawerOpen
+          ? "Click stack to collapse project grid &#8593;"
+          : "Click stack to reveal full project grid &#8595;";
+      });
+    }
+
+    function syncAll() {
+      const folderClean = (state.folder || "new-project").trim().replace(/^\/+|\/+$/g, "");
+      document.getElementById("target-path-readout").textContent = `assets/projects/${folderClean}/project.txt`;
+
+      renderKeyGridDesigner();
+      renderAssetListEditor();
+      renderLivePreview();
+      document.getElementById("generated-txt-output").textContent = buildProjectTxtString();
+    }
+
+    function parseProjectTextIntoEditor(text, folderName) {
+      state.assets = [];
+      state.mainId = null;
+      state.keys = "";
+      document.getElementById("dev-keys").value = "";
+
+      if (folderName) {
+        state.folder = folderName;
+        document.getElementById("dev-folder").value = folderName;
+      }
+
+      const lines = text.replace(/\r\n/g, "\n").split("\n");
+      let inDesc = false;
+      const descLines = [];
+      let rawMain = "";
+
+      for (const rawLine of lines) {
+        const line = rawLine.trim();
+        if (/^TITLE\s*:/i.test(line)) {
+          inDesc = false;
+          state.title = line.replace(/^TITLE\s*:\s*/i, "").trim();
+          document.getElementById("dev-title").value = state.title;
+        } else if (/^CODE\s*:/i.test(line)) {
+          inDesc = false;
+          state.code = line.replace(/^CODE\s*:\s*/i, "").trim();
+          document.getElementById("dev-code").value = state.code;
+        } else if (/^TAGS\s*:/i.test(line)) {
+          inDesc = false;
+          state.tags = line.replace(/^TAGS\s*:\s*/i, "").trim();
+          document.getElementById("dev-tags").value = state.tags;
+        } else if (/^(KEYS|CONTROLS|CONTROLLS)\s*:/i.test(line)) {
+          inDesc = false;
+          state.keys = line.replace(/^(KEYS|CONTROLS|CONTROLLS)\s*:\s*/i, "").trim();
+          document.getElementById("dev-keys").value = state.keys;
+        } else if (/^(APP|LOCAL_APP|WEB_APP)\s*:/i.test(line)) {
+          inDesc = false;
+          const rawVal = line.replace(/^(APP|LOCAL_APP|WEB_APP)\s*:\s*/i, "").trim();
+          const { baseToken, thumb } = splitTokenAndThumb(rawVal);
+          const cleanPath = baseToken.replace(/^app\s*:\s*/i, "").trim();
+          if (cleanPath) addAssetToken(`app:${cleanPath}`, thumb);
+        } else if (/^ITCH(_EMBED|_GAME|_URL)?\s*:/i.test(line)) {
+          inDesc = false;
+          const rawVal = line.replace(/^ITCH(_EMBED|_GAME|_URL)?\s*:\s*/i, "").trim();
+          const { baseToken, thumb } = splitTokenAndThumb(rawVal);
+          const src = extractItchSrc(baseToken);
+          if (src) addAssetToken(`itch:${src}`, thumb);
+        } else if (/^(LINK|RUN|RUN_LINK|URL|WEBSITE)\s*:/i.test(line)) {
+          inDesc = false;
+          const rawVal = line.replace(/^(LINK|RUN|RUN_LINK|URL|WEBSITE)\s*:\s*/i, "").trim();
+          const { baseToken, thumb } = splitTokenAndThumb(rawVal);
+          const lnk = normalizeLink(baseToken);
+          if (lnk) addAssetToken(`run:${lnk}`, thumb);
+        } else if (/^MAIN(_IMAGE|_STL|_MODEL|_GLB|_VIDEO|_FILE|_ITCH|_LINK|_APP)?\s*:/i.test(line)) {
+          inDesc = false;
+          rawMain = line
+            .replace(/^MAIN(_IMAGE|_STL|_MODEL|_GLB|_VIDEO|_FILE|_ITCH|_LINK|_APP)?\s*:\s*/i, "")
+            .trim();
+          const { baseToken, thumb } = splitTokenAndThumb(rawMain);
+          addAssetToken(baseToken, thumb);
+        } else if (/^(IMAGES|FILES|ASSETS|MODELS|VIDEOS)\s*:/i.test(line)) {
+          inDesc = false;
+          line
+            .replace(/^(IMAGES|FILES|ASSETS|MODELS|VIDEOS)\s*:\s*/i, "")
+            .split(",")
+            .map((i) => i.trim())
+            .filter(Boolean)
+            .forEach((rawToken) => {
+              const { baseToken, thumb } = splitTokenAndThumb(rawToken);
+              addAssetToken(baseToken, thumb);
+            });
+        } else if (/^DESCRIPTION\s*:/i.test(line)) {
+          inDesc = true;
+          const first = line.replace(/^DESCRIPTION\s*:\s*/i, "").trim();
+          if (first) descLines.push(first);
+        } else if (inDesc) {
+          descLines.push(rawLine);
+        }
+      }
+
+      state.desc = descLines.join("\n").trim();
+      document.getElementById("dev-desc").value = state.desc;
+
+      if (rawMain) {
+        const { baseToken } = splitTokenAndThumb(rawMain);
+        const found = state.assets.find((a) => a.token.toLowerCase() === baseToken.toLowerCase());
+        if (found) state.mainId = found.id;
+      }
+      syncAll();
+    }
+
+    async function mountRepositoryFolder() {
+      if (!("showDirectoryPicker" in window)) {
+        logFsMessage(
+          "Your browser does not support the File System Access API. Use Chrome, Edge, or Brave on desktop.",
+          true
+        );
+        return false;
+      }
+
+      try {
+        const handle = await window.showDirectoryPicker({ mode: "readwrite" });
+        state.rootDirHandle = handle;
+
+        if (handle.name === "projects") {
+          state.projectsDirHandle = handle;
+        } else {
+          const assetsDir = await handle.getDirectoryHandle("assets", { create: true });
+          state.projectsDirHandle = await assetsDir.getDirectoryHandle("projects", { create: true });
+        }
+
+        document.getElementById("fs-dot").classList.add("connected");
+        document.getElementById("fs-status-title").textContent =
+          `CONNECTED TO WORKSPACE: /${handle.name}`;
+        document.getElementById("fs-status-sub").textContent =
+          `Direct read/write active for assets/projects/ (including nested Unity & p5.js folders) and script.js`;
+        document.getElementById("mount-repo-btn").innerHTML = "&#128193; CHANGE REPO FOLDER";
+
+        await refreshExistingProjectsDropdown();
+        logFsMessage(`Mounted workspace "/${handle.name}" successfully.`);
+        return true;
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          logFsMessage(`Failed to mount folder: ${err.message}`, true);
+        }
+        return false;
+      }
+    }
+
+    async function refreshExistingProjectsDropdown() {
+      if (!state.projectsDirHandle) return;
+      const select = document.getElementById("existing-projects-select");
+      select.innerHTML = `<option value="">-- Load Existing Project --</option>`;
+
+      const folderNames = [];
+      for await (const [name, entry] of state.projectsDirHandle.entries()) {
+        if (entry.kind === "directory") {
+          folderNames.push(name);
+        }
+      }
+
+      folderNames.sort().forEach((name) => {
+        const opt = document.createElement("option");
+        opt.value = name;
+        opt.textContent = `assets/projects/${name}/`;
+        select.appendChild(opt);
+      });
+
+      select.style.display = "inline-block";
+    }
+
+    async function loadProjectFromDiskFolder(folderName) {
+      if (!state.projectsDirHandle || !folderName) return;
+      try {
+        const projDir = await state.projectsDirHandle.getDirectoryHandle(folderName);
+        state.localFilesMap.clear();
+        state.localObjectUrls.clear();
+        document.getElementById("app-folder-status").textContent = "";
+
+        for await (const [entryName, entry] of projDir.entries()) {
+          if (entry.kind === "file" && entryName.toLowerCase() !== "project.txt") {
+            const fileObj = await entry.getFile();
+            state.localObjectUrls.set(entryName.toLowerCase(), URL.createObjectURL(fileObj));
+          }
+        }
+
+        const txtHandle = await projDir.getFileHandle("project.txt");
+        const txtFile = await txtHandle.getFile();
+        const rawText = await txtFile.text();
+        parseProjectTextIntoEditor(rawText, folderName);
+        logFsMessage(`Loaded existing project from assets/projects/${folderName}/project.txt`);
+      } catch (err) {
+        logFsMessage(`Could not read project.txt in ${folderName}: ${err.message}`, true);
+      }
+    }
+
+    async function saveProjectDirectlyToDisk() {
+      if (!state.projectsDirHandle) {
+        const ok = await mountRepositoryFolder();
+        if (!ok) return;
+      }
+
+      const folderClean = (state.folder || "new-project").trim().replace(/^\/+|\/+$/g, "");
+      if (!folderClean) {
+        logFsMessage("Please enter a valid project folder name.", true);
+        return;
+      }
+
+      try {
+        logFsMessage("Writing project.txt and copying/unpacking project files...");
+        const projDir = await state.projectsDirHandle.getDirectoryHandle(folderClean, {
+          create: true
+        });
+
+        const txtHandle = await projDir.getFileHandle("project.txt", { create: true });
+        const txtWritable = await txtHandle.createWritable();
+        await txtWritable.write(buildProjectTxtString());
+        await txtWritable.close();
+
+        let copiedCount = 0;
+        let unpackedGzCount = 0;
+
+        for (const [, entry] of state.localFilesMap.entries()) {
+          const { finalRelPath, finalBlob } = await maybeDecompressUnityGzFile(
+            entry.relativePath,
+            entry.file
+          );
+          if (finalRelPath !== entry.relativePath) unpackedGzCount++;
+          await writeNestedFileToProjDir(projDir, finalRelPath, finalBlob);
+          copiedCount++;
+        }
+
+        let scriptStatus = "";
+        const shouldUpdateScript = document.getElementById("auto-register-script-cb").checked;
+        if (shouldUpdateScript && state.rootDirHandle) {
+          try {
+            const scriptHandle = await state.rootDirHandle.getFileHandle("script.js");
+            const scriptFile = await scriptHandle.getFile();
+            const scriptText = await scriptFile.text();
+
+            const regex = /(foldersToCheck\s*:\s*\[)([\s\S]*?)(\])/;
+            const match = scriptText.match(regex);
+            if (match) {
+              const currentItems = match[2]
+                .split(",")
+                .map((s) => s.trim().replace(/^['"]|['"]$/g, ""))
+                .filter(Boolean);
+
+              if (!currentItems.includes(folderClean)) {
+                currentItems.push(folderClean);
+                const updatedArrayStr = currentItems.map((c) => `"${c}"`).join(", ");
+                const updatedScript = scriptText.replace(regex, `$1${updatedArrayStr}$3`);
+
+                const sw = await scriptHandle.createWritable();
+                await sw.write(updatedScript);
+                await sw.close();
+                scriptStatus = `\n• Added "${folderClean}" to foldersToCheck in script.js`;
+              } else {
+                scriptStatus = `\n• "${folderClean}" is already registered in script.js`;
+              }
+            }
+          } catch (e) {}
+        }
+
+        await refreshExistingProjectsDropdown();
+        document.getElementById("existing-projects-select").value = folderClean;
+        syncAll();
+
+        logFsMessage(
+          `SAVED TO DISK SUCCESSFULLY:\n` +
+            `• Wrote assets/projects/${folderClean}/project.txt\n` +
+            `• Copied ${copiedCount} file(s) into assets/projects/${folderClean}/` +
+            (unpackedGzCount > 0
+              ? `\n• Automatically unpacked ${unpackedGzCount} Unity .gz archive(s) for GitHub Pages / Localhost compatibility!`
+              : "") +
+            scriptStatus
+        );
+      } catch (err) {
+        logFsMessage(`Error saving to disk: ${err.message}`, true);
+      }
+    }
+
+    document.getElementById("mount-repo-btn").addEventListener("click", mountRepositoryFolder);
+    document.getElementById("existing-projects-select").addEventListener("change", (e) => {
+      if (e.target.value) loadProjectFromDiskFolder(e.target.value);
+    });
+    document.getElementById("save-disk-btn").addEventListener("click", saveProjectDirectlyToDisk);
+
+    function appendQuickControlToken(tokenSnippet) {
+      const input = document.getElementById("dev-keys");
+      const current = input.value.trim();
+      input.value = current ? `${current}, ${tokenSnippet}` : tokenSnippet;
+      state.keys = input.value;
+      syncAll();
+    }
+
+    document.getElementById("quick-add-wasd-layout-btn").addEventListener("click", () => {
+      const preset = "E:Interact@0:0, W:Move@2:0, SPACE:Jump@4:0, A:Move@1:1, S:Move@2:1, D:Move@3:1";
+      const input = document.getElementById("dev-keys");
+      input.value = input.value.trim() ? `${input.value.trim()}, ${preset}` : preset;
+      state.keys = input.value;
+      syncAll();
+    });
+    document.getElementById("quick-add-cursor-btn").addEventListener("click", () => {
+      appendQuickControlToken("CURSOR:Crosshair");
+    });
+    document.getElementById("quick-add-click-btn").addEventListener("click", () => {
+      appendQuickControlToken("CLICK:Fire");
+    });
+    document.getElementById("quick-add-key-prompt-btn").addEventListener("click", () => {
+      const k = prompt("Enter Key (e.g. Q, E, R, 1, 2, SHIFT, SPACE):", "E");
+      if (!k) return;
+      const desc = prompt("Optional short label (e.g. Interact, Spawn, Boost):", "");
+      appendQuickControlToken(desc ? `${k.trim()}:${desc.trim()}` : k.trim());
+    });
+    document.getElementById("quick-clear-keys-btn").addEventListener("click", () => {
+      state.keys = "";
+      document.getElementById("dev-keys").value = "";
+      syncAll();
+    });
+
+    // Input Listeners
+    document.getElementById("dev-folder").addEventListener("input", (e) => {
+      state.folder = e.target.value;
+      syncAll();
+    });
+    document.getElementById("dev-code").addEventListener("input", (e) => {
+      state.code = e.target.value;
+      syncAll();
+    });
+    document.getElementById("dev-title").addEventListener("input", (e) => {
+      state.title = e.target.value;
+      syncAll();
+    });
+    document.getElementById("dev-tags").addEventListener("input", (e) => {
+      state.tags = e.target.value;
+      syncAll();
+    });
+    document.getElementById("dev-keys").addEventListener("input", (e) => {
+      state.keys = e.target.value;
+      syncAll();
+    });
+    document.getElementById("dev-desc").addEventListener("input", (e) => {
+      state.desc = e.target.value;
+      syncAll();
+    });
+
+    document.getElementById("add-link-btn").addEventListener("click", () => {
+      const input = document.getElementById("dev-link-url");
+      const url = normalizeLink(input.value);
+      if (!url) return;
+      addAssetToken(`run:${url}`);
+      input.value = "";
+    });
+
+    document.getElementById("add-itch-btn").addEventListener("click", () => {
+      const input = document.getElementById("dev-itch-input");
+      const src = extractItchSrc(input.value);
+      if (!src) return;
+      addAssetToken(`itch:${src}`);
+      input.value = "";
+    });
+
+    document.getElementById("add-manual-btn").addEventListener("click", () => {
+      const input = document.getElementById("dev-manual-file");
+      if (!input.value.trim()) return;
+      input.value
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .forEach((t) => addAssetToken(t));
+      input.value = "";
+    });
+
+    const dropzone = document.getElementById("dev-dropzone");
+    const filePicker = document.getElementById("dev-file-picker");
+
+    function handleFiles(fileList) {
+      const usedThumbs = getAssignedThumbSet();
+      Array.from(fileList).forEach((file) => {
+        if (file.name.toLowerCase() === "project.txt") return;
+        const lower = file.name.toLowerCase();
+        state.localFilesMap.set(lower, { relativePath: file.name, file });
+        state.localObjectUrls.set(lower, URL.createObjectURL(file));
+
+        if (usedThumbs.has(lower)) {
+          syncAll();
+          return;
+        }
+        addAssetToken(file.name);
+      });
+    }
+
+    async function readDroppedDirectoryEntry(dirEntry, basePath = "") {
+      const collected = [];
+      const reader = dirEntry.createReader();
+
+      const readBatch = () =>
+        new Promise((resolve) => {
+          reader.readEntries(async (entries) => {
+            if (!entries.length) {
+              resolve();
+              return;
+            }
+            for (const entry of entries) {
+              if (entry.isFile) {
+                const file = await new Promise((res) => entry.file(res));
+                Object.defineProperty(file, "webkitRelativePath", {
+                  value: `${dirEntry.name}/${basePath}${file.name}`
+                });
+                collected.push(file);
+              } else if (entry.isDirectory) {
+                const subFiles = await readDroppedDirectoryEntry(
+                  entry,
+                  `${basePath}${entry.name}/`
+                );
+                collected.push(...subFiles);
+              }
+            }
+            await readBatch();
+            resolve();
+          });
+        });
+
+      await readBatch();
+      return collected;
+    }
+
+    dropzone.addEventListener("click", () => filePicker.click());
+    filePicker.addEventListener("change", (e) => handleFiles(e.target.files));
+    dropzone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      dropzone.classList.add("dragover");
+    });
+    dropzone.addEventListener("dragleave", () => dropzone.classList.remove("dragover"));
+    dropzone.addEventListener("drop", async (e) => {
+      e.preventDefault();
+      dropzone.classList.remove("dragover");
+
+      if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+        const firstEntry =
+          e.dataTransfer.items[0].webkitGetAsEntry &&
+          e.dataTransfer.items[0].webkitGetAsEntry();
+        if (firstEntry && firstEntry.isDirectory) {
+          const allFolderFiles = await readDroppedDirectoryEntry(firstEntry);
+          handleImportedAppFolderFiles(allFolderFiles);
+          return;
+        }
+      }
+
+      if (e.dataTransfer.files) handleFiles(e.dataTransfer.files);
+    });
+
+    document.getElementById("import-txt-input").addEventListener("change", async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const text = await file.text();
+      parseProjectTextIntoEditor(text);
+    });
+
+    document.getElementById("reset-form-btn").addEventListener("click", () => {
+      state.title = "";
+      state.code = "PRJ // ARCHIVE";
+      state.tags = "";
+      state.keys = "";
+      state.desc = "";
+      state.assets = [];
+      state.mainId = null;
+      state.localFilesMap.clear();
+      state.localObjectUrls.clear();
+      document.getElementById("dev-title").value = "";
+      document.getElementById("dev-code").value = state.code;
+      document.getElementById("dev-tags").value = "";
+      document.getElementById("dev-keys").value = "";
+      document.getElementById("dev-desc").value = "";
+      document.getElementById("app-folder-status").textContent = "";
+      syncAll();
+    });
+
+    const devFsModal = document.getElementById("dev-fullscreen-modal");
+    const closeDevFs = () => {
+      devFsModal.classList.remove("open");
+      devFsModal.setAttribute("aria-hidden", "true");
+      document.getElementById("dev-fs-iframe").src = "";
+      devVirtualCursorState.controlsActive = false;
+      devVirtualCursorState.enabled = false;
+      updateDevVirtualCursorVisibilityAndPosition();
+    };
+    document.getElementById("dev-fs-close").addEventListener("click", closeDevFs);
+    devFsModal.addEventListener("click", (e) => {
+      if (e.target === devFsModal) closeDevFs();
+    });
+    document.getElementById("dev-fs-keys-btn").addEventListener("click", (e) => {
+      e.stopPropagation();
+      const pop = document.getElementById("dev-fs-keys-popover");
+      const nowOpen = pop.style.display !== "block";
+      pop.style.display = nowOpen ? "block" : "none";
+      devVirtualCursorState.controlsActive = nowOpen;
+      if (!nowOpen) {
+        devVirtualCursorState.enabled = false;
+      }
+      updateDevVirtualCursorVisibilityAndPosition();
+    });
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && devFsModal.classList.contains("open")) {
+        closeDevFs();
+      }
+    });
+
+    document.getElementById("download-txt-btn").addEventListener("click", () => {
+      const content = buildProjectTxtString();
+      const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "project.txt";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById("copy-txt-btn").addEventListener("click", (e) => {
+      navigator.clipboard.writeText(buildProjectTxtString()).then(() => {
+        const btn = e.target;
+        const orig = btn.textContent;
+        btn.textContent = "COPIED!";
+        setTimeout(() => (btn.textContent = orig), 1500);
+      });
+    });
+
+    syncAll();
+  </script>
+</body>
+</html>
