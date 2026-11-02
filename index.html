@@ -18,6 +18,8 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <!-- HEIC/HEIF Phone Photo Decoder -->
+  <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
 </head>
 <body class="cad-theme">
 
@@ -45,7 +47,7 @@
       <span class="brand-name" id="nav-brand-name">AZCORE</span>
     </div>
 
-    <!-- Hamburger Menu Toggle Button (Only visible below 600px) -->
+    <!-- Hamburger Menu Toggle Button (Only visible below 860px) -->
     <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Toggle Navigation Menu" aria-expanded="false">
       <span class="ham-line"></span>
       <span class="ham-line"></span>
@@ -178,15 +180,31 @@
     <div class="lightbox-backdrop-hint">CLICK ANYWHERE OUTSIDE VIEWER TO CLOSE [ESC]</div>
     <button class="lightbox-nav lightbox-prev" id="lightbox-prev" aria-label="Previous Item">&#8592;</button>
 
-<div class="lightbox-content-wrapper" id="lightbox-content-wrapper">
+    <div class="lightbox-content-wrapper" id="lightbox-content-wrapper">
       
-      <!-- MOVED TO TOP: LIGHTBOX CAPTION / HEADER BAR -->
+      <!-- LIGHTBOX CAPTION / HEADER BAR -->
       <div class="lightbox-caption-bar">
         <span id="lightbox-caption">PREVIEW</span>
         <div class="lightbox-caption-right">
+          <button id="lightbox-keys-btn" class="mini-action-btn" style="display:none;">&#9000; CONTROLS</button>
           <button id="model-reset-btn" class="mini-action-btn" style="display:none;">RESET VIEW</button>
+          <a id="lightbox-external-btn" class="mini-action-btn" href="#" target="_blank" rel="noopener noreferrer" style="display:none; text-decoration:none;">OPEN TAB &#8599;</a>
           <button id="lightbox-close" class="mini-action-btn lightbox-exit-btn" aria-label="Close Viewer">&#10005; EXIT</button>
         </div>
+      </div>
+
+      <!-- INTERACTIVE ON-SCREEN CONTROLS POPOVER OVERLAY -->
+      <div id="lightbox-keys-popover" class="keys-hud-popover" style="display:none;"></div>
+
+      <!-- DRAGGABLE VIRTUAL CURSOR FOR EMBEDDED APPS (PRIORITIZED WHEN CONTROLS ARE ACTIVE) -->
+      <div id="lightbox-virtual-cursor" class="virtual-cursor-overlay" style="display:none;" aria-label="Virtual Cursor">
+        <div class="vcursor-pointer">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="#d92804" stroke="#ffffff" stroke-width="1.8">
+            <path d="M4 2 L4 20 L9.5 15 L13.5 22 L16.5 20.5 L12.5 13.5 L19.5 13.5 Z" />
+          </svg>
+        </div>
+        <div class="vcursor-grip-ring"></div>
+        <span class="vcursor-coord-tag">DRAG / TAP</span>
       </div>
 
       <div id="lightbox-loader" class="lightbox-loader" style="display:none;">
@@ -196,13 +214,30 @@
 
       <img id="lightbox-img" src="" alt="Full screen preview" />
 
+      <video id="lightbox-video" class="lightbox-video" controls controlsList="nodownload" playsinline preload="none" style="display:none;"></video>
+
+      <div id="lightbox-audio-stage" class="lightbox-generic-stage" style="display:none;">
+        <div class="generic-file-ext" id="lightbox-audio-title">AUDIO</div>
+        <audio id="lightbox-audio" controls controlsList="nodownload" preload="none" style="width: min(420px, 80vw);"></audio>
+      </div>
+
       <div id="lightbox-3d-stage" class="lightbox-stl-stage" style="display:none;">
         <div class="stl-controls-hint">
           LEFT DRAG: ORBIT // RIGHT DRAG: PAN // SCROLL: ZOOM
         </div>
       </div>
 
-      <iframe id="lightbox-pdf-frame" class="lightbox-pdf-frame" style="display:none;" title="Resume PDF Preview"></iframe>
+      <iframe id="lightbox-itch-frame" class="lightbox-itch-frame" style="display:none;" allow="autoplay; fullscreen; gamepad" title="Embedded Interactive App"></iframe>
+
+      <div id="lightbox-link-stage" class="lightbox-link-stage" style="display:none;"></div>
+
+      <iframe id="lightbox-pdf-frame" class="lightbox-pdf-frame" style="display:none;" title="Document Preview"></iframe>
+
+      <div id="lightbox-generic-stage" class="lightbox-generic-stage" style="display:none;">
+        <div class="generic-file-ext" id="lightbox-generic-ext">.FILE</div>
+        <div class="generic-file-name" id="lightbox-generic-name">filename.ext</div>
+        <p class="generic-file-desc" id="lightbox-generic-desc">Project file details.</p>
+      </div>
 
     </div>
 

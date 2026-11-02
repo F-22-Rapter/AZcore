@@ -35,19 +35,19 @@ const PORTFOLIO_CONFIG = {
     skills: [
       {
         category: "CAD & SIMULATION",
-        items: ["SolidWorks", "AutoCAD", "Revit", "Ansys Fluent CFD", "Inventor", "Blender", "Unity", "Visual Studio Code", "MATLAB"]
+        items: ["SolidWorks", "AutoCAD", "Revit", "Ansys Fluent CFD", "Inventor", "Blender", "Unity"]
       },
       {
         category: "FABRICATION & HARDWARE",
         items: ["Manual Lathe Machining", "Manual Mill Machining", "Li-Ion Pack Assembly", "3D Printing", "Metal Working", "Soldering"]
       },
       {
-        category: "CODE & MEDIA",
+        category: "DIGITAL MEDIA",
         items: ["Lightroom Classic", "DaVinci Resolve", "Photoshop", "Microsoft 365"]
       },
       {
-        category: "Languages",
-        items: ["English", "Ukranian", "Russian"]
+        category: "LANGUAGES & DEVELOPMENT",
+        items: ["English", "Ukrainian", "Russian", "new-row", "Python", "C#", "MATLAB", "Javascript"]
       }
     ],
     socials: [
@@ -61,7 +61,7 @@ const PORTFOLIO_CONFIG = {
   projectsConfig: {
     baseFolder: "assets/projects/",
     textFileName: "project.txt",
-    foldersToCheck: ["LARP", "fabrication"]
+    foldersToCheck: ["LARP", "fabrication", "test project 1", "test project 2", "blaw blaw blaw","recursiver"]
   },
 
   // -------------------- TAB 3: PHOTOGRAPHY FOLDER CONFIG --------------------
@@ -76,27 +76,763 @@ const PORTFOLIO_CONFIG = {
 
 /**
  * ============================================================================
- * 2. FILE HELPERS & BATCHED URL MATCHING
+ * 2. FILE HELPERS, LOCAL WEB APPS, CONTROLS, VIRTUAL CURSOR & HEIC DECODING
  * ============================================================================
  */
 const verifiedUrlCache = new Map();
+const heicBlobCache = new Map();
+
+// Runtime state for the Lightbox Virtual Cursor overlay
+const lightboxVirtualCursorState = {
+  enabled: false,
+  controlsActive: false,
+  xRatio: 0.5,
+  yRatio: 0.5,
+  isDragging: false,
+  isMouseDownHold: false
+};
 
 function normalizeFolder(path) {
   if (!path) return "";
   return path.endsWith("/") ? path : path + "/";
 }
 
+function getFileExtension(filename) {
+  if (!filename) return "";
+  const clean = filename.split("|")[0].split("?")[0].split("#")[0];
+  const dot = clean.lastIndexOf(".");
+  return dot !== -1 ? clean.slice(dot + 1).toLowerCase() : "";
+}
+
+function splitAssetTokenAndThumb(rawToken) {
+  const parts = String(rawToken || "").split("|thumb=");
+  return {
+    baseToken: parts[0].trim(),
+    thumbFile: parts[1] ? parts[1].trim() : ""
+  };
+}
+
+function extractItchEmbedUrl(rawInput) {
+  if (!rawInput) return "";
+  const { baseToken } = splitAssetTokenAndThumb(rawInput);
+  const trimmed = baseToken.trim().replace(/^itch\s*:\s*/i, "").trim();
+  const iframeSrcMatch = trimmed.match(/src\s*=\s*["']([^"']+)["']/i);
+  let url = iframeSrcMatch && iframeSrcMatch[1] ? iframeSrcMatch[1].trim() : trimmed;
+
+  if (/^\/\//.test(url)) url = "https:" + url;
+  if (!/^https?:\/\//i.test(url) && url.includes("itch.io")) {
+    url = "https://" + url;
+  }
+  return url;
+}
+
+function normalizeExternalUrl(rawUrl) {
+  if (!rawUrl) return "#";
+  const { baseToken } = splitAssetTokenAndThumb(rawUrl);
+  const cleaned = baseToken.trim().replace(/^(run|link|url)\s*:\s*/i, "").trim();
+  if (/^(https?:\/\/|mailto:|tel:|\/|\.)/i.test(cleaned)) return cleaned;
+  return "https://" + cleaned;
+}
+
+function getFallbackRunSvgDataUri() {
+  return `data:image/svg+xml;utf8,${encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500">
+      <rect width="800" height="500" fill="#14181c"/>
+      <g stroke="rgba(255,255,255,0.06)" stroke-width="1">
+        <line x1="0" y1="100" x2="800" y2="100"/><line x1="0" y1="200" x2="800" y2="200"/>
+        <line x1="0" y1="300" x2="800" y2="300"/><line x1="0" y1="400" x2="800" y2="400"/>
+        <line x1="160" y1="0" x2="160" y2="500"/><line x1="320" y1="0" x2="320" y2="500"/>
+        <line x1="480" y1="0" x2="480" y2="500"/><line x1="640" y1="0" x2="640" y2="500"/>
+      </g>
+      <line x1="0" y1="250" x2="800" y2="250" stroke="rgba(217,40,4,0.35)" stroke-width="1" stroke-dasharray="6,6"/>
+      <line x1="400" y1="0" x2="400" y2="500" stroke="rgba(217,40,4,0.35)" stroke-width="1" stroke-dasharray="6,6"/>
+      <text x="28" y="468" fill="#9aa4ae" font-family="monospace" font-size="15">LAUNCH APPLICATION</text>
+    </svg>`
+  )}`;
+}
+
 function getAssetType(filename) {
-  if (/\.glb|\.gltf$/i.test(filename)) return "glb";
-  if (/\.stl$/i.test(filename)) return "stl";
-  return "image";
+  if (!filename) return "file";
+  const { baseToken } = splitAssetTokenAndThumb(filename);
+  const trimmed = baseToken.trim();
+  if (/^(app|embed)\s*:/i.test(trimmed)) {
+    return "itch";
+  }
+  if (/^itch\s*:/i.test(trimmed) || /<iframe/i.test(trimmed) || /itch\.io\/embed/i.test(trimmed)) {
+    return "itch";
+  }
+  if (/^(run|link|url)\s*:/i.test(trimmed)) {
+    return "link";
+  }
+  const ext = getFileExtension(trimmed);
+  if (["html", "htm"].includes(ext)) return "itch";
+  if (["glb", "gltf"].includes(ext)) return "glb";
+  if (ext === "stl") return "stl";
+  if (["mp4", "webm", "mov", "m4v", "ogg", "ogv", "mkv", "avi"].includes(ext)) return "video";
+  if (["mp3", "wav", "m4a", "flac", "aac"].includes(ext)) return "audio";
+  if (ext === "pdf") return "pdf";
+  if (["heic", "heif"].includes(ext)) return "heic";
+  if (["jpg", "jpeg", "png", "webp", "gif", "bmp", "svg", "avif"].includes(ext)) return "image";
+  return "file";
 }
 
 function is3DAsset(type) {
   return type === "glb" || type === "stl";
 }
 
-// Helper to run async tasks in small batches to prevent mobile network crashes
+function isImageAsset(type) {
+  return type === "image" || type === "heic";
+}
+
+async function loadImageSourceWithHeicSupport(url) {
+  if (!/\.heic$|\.heif$/i.test(url)) return url;
+  if (heicBlobCache.has(url)) return heicBlobCache.get(url);
+
+  if (typeof heic2any === "undefined") return url;
+  const res = await fetch(url);
+  const blob = await res.blob();
+  const converted = await heic2any({ blob, toType: "image/jpeg", quality: 0.88 });
+  const finalBlob = Array.isArray(converted) ? converted[0] : converted;
+  const objectUrl = URL.createObjectURL(finalBlob);
+  heicBlobCache.set(url, objectUrl);
+  return objectUrl;
+}
+
+/**
+ * Maps control tokens to key specs or virtual cursor / click actions
+ */
+function resolveKeySpec(rawToken) {
+  const upper = String(rawToken || "").trim().toUpperCase();
+  const map = {
+    CURSOR: { label: "CURSOR", key: "__CURSOR__", code: "VirtualCursor", keyCode: 0, isCursorToggle: true },
+    MOUSE: { label: "CURSOR", key: "__CURSOR__", code: "VirtualCursor", keyCode: 0, isCursorToggle: true },
+    POINTER: { label: "CURSOR", key: "__CURSOR__", code: "VirtualCursor", keyCode: 0, isCursorToggle: true },
+    CLICK: { label: "L-CLICK", key: "__CLICK__", code: "MouseLeft", keyCode: 1, isMouseClick: true },
+    LMB: { label: "L-CLICK", key: "__CLICK__", code: "MouseLeft", keyCode: 1, isMouseClick: true },
+    SPACE: { label: "SPACE", key: " ", code: "Space", keyCode: 32 },
+    SPACEBAR: { label: "SPACE", key: " ", code: "Space", keyCode: 32 },
+    UP: { label: "↑", key: "ArrowUp", code: "ArrowUp", keyCode: 38 },
+    ARROWUP: { label: "↑", key: "ArrowUp", code: "ArrowUp", keyCode: 38 },
+    "↑": { label: "↑", key: "ArrowUp", code: "ArrowUp", keyCode: 38 },
+    DOWN: { label: "↓", key: "ArrowDown", code: "ArrowDown", keyCode: 40 },
+    ARROWDOWN: { label: "↓", key: "ArrowDown", code: "ArrowDown", keyCode: 40 },
+    "↓": { label: "↓", key: "ArrowDown", code: "ArrowDown", keyCode: 40 },
+    LEFT: { label: "←", key: "ArrowLeft", code: "ArrowLeft", keyCode: 37 },
+    ARROWLEFT: { label: "←", key: "ArrowLeft", code: "ArrowLeft", keyCode: 37 },
+    "←": { label: "←", key: "ArrowLeft", code: "ArrowLeft", keyCode: 37 },
+    RIGHT: { label: "→", key: "ArrowRight", code: "ArrowRight", keyCode: 39 },
+    ARROWRIGHT: { label: "→", key: "ArrowRight", code: "ArrowRight", keyCode: 39 },
+    "→": { label: "→", key: "ArrowRight", code: "ArrowRight", keyCode: 39 },
+    SHIFT: { label: "SHIFT", key: "Shift", code: "ShiftLeft", keyCode: 16 },
+    CTRL: { label: "CTRL", key: "Control", code: "ControlLeft", keyCode: 17 },
+    CONTROL: { label: "CTRL", key: "Control", code: "ControlLeft", keyCode: 17 },
+    ALT: { label: "ALT", key: "Alt", code: "AltLeft", keyCode: 18 },
+    ENTER: { label: "ENTER", key: "Enter", code: "Enter", keyCode: 13 },
+    TAB: { label: "TAB", key: "Tab", code: "Tab", keyCode: 9 },
+    ESC: { label: "ESC", key: "Escape", code: "Escape", keyCode: 27 },
+    ESCAPE: { label: "ESC", key: "Escape", code: "Escape", keyCode: 27 }
+  };
+
+  if (map[upper]) return map[upper];
+
+  if (upper.length === 1) {
+    const codeNum = upper.charCodeAt(0);
+    const isDigit = /[0-9]/.test(upper);
+    return {
+      label: upper,
+      key: upper.toLowerCase(),
+      code: isDigit ? `Digit${upper}` : `Key${upper}`,
+      keyCode: codeNum
+    };
+  }
+
+  return {
+    label: upper,
+    key: rawToken.trim(),
+    code: upper,
+    keyCode: 0
+  };
+}
+
+function expandVirtualKeysList(keysString) {
+  if (!keysString || !keysString.trim()) return [];
+  const entries = keysString
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+
+  const buttons = [];
+
+  entries.forEach((entry) => {
+    const parts = entry.split(":");
+    const rawKeyPart = parts[0].trim();
+    const actionDesc = parts.length >= 2 ? parts.slice(1).join(":").trim() : "";
+    const upperKey = rawKeyPart.toUpperCase().replace(/\s+/g, "");
+
+    if (upperKey === "WASD") {
+      ["W", "A", "S", "D"].forEach((ch) => {
+        buttons.push({ ...resolveKeySpec(ch), desc: actionDesc || "Move" });
+      });
+    } else if (upperKey === "ARROWS" || upperKey === "ARROWKEYS") {
+      ["UP", "LEFT", "DOWN", "RIGHT"].forEach((dir) => {
+        buttons.push({ ...resolveKeySpec(dir), desc: actionDesc || "Move" });
+      });
+    } else if (rawKeyPart.includes("/")) {
+      rawKeyPart
+        .split("/")
+        .map((k) => k.trim())
+        .filter(Boolean)
+        .forEach((k) => {
+          buttons.push({ ...resolveKeySpec(k), desc: actionDesc });
+        });
+    } else {
+      buttons.push({ ...resolveKeySpec(rawKeyPart), desc: actionDesc });
+    }
+  });
+
+  return buttons;
+}
+
+function hasCursorOptionInControls(keysString) {
+  return expandVirtualKeysList(keysString).some((b) => b.isCursorToggle);
+}
+
+/**
+ * Dispatches virtual cursor coordinate events directly into iframe games (p5.js, Unity, HTML5)
+ */
+function dispatchVirtualCursorToLightboxIframe(xRatio, yRatio, eventType = "mousemove", isPressed = false) {
+  const frame = document.getElementById("lightbox-itch-frame");
+  if (!frame || !frame.contentWindow) return;
+  try {
+    const doc = frame.contentDocument;
+    const win = frame.contentWindow;
+    const target = (doc && (doc.querySelector("canvas") || doc.body || doc.documentElement)) || null;
+    if (!target) return;
+
+    const rect = target.getBoundingClientRect();
+    const clientX = rect.left + xRatio * (rect.width || frame.clientWidth || 800);
+    const clientY = rect.top + yRatio * (rect.height || frame.clientHeight || 600);
+    const offsetX = xRatio * (rect.width || 800);
+    const offsetY = yRatio * (rect.height || 600);
+
+    win.__azcoreVirtualCursorActive = true;
+    if (typeof win.mouseX === "number") win.mouseX = offsetX;
+    if (typeof win.mouseY === "number") win.mouseY = offsetY;
+    if (typeof win.pmouseX === "number") win.pmouseX = offsetX;
+    if (typeof win.pmouseY === "number") win.pmouseY = offsetY;
+    if (eventType === "mousedown") win.mouseIsPressed = true;
+    if (eventType === "mouseup") win.mouseIsPressed = false;
+
+    const mouseInit = {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      view: win,
+      clientX,
+      clientY,
+      screenX: clientX,
+      screenY: clientY,
+      button: 0,
+      buttons: isPressed ? 1 : 0
+    };
+
+    const mEvt = new MouseEvent(eventType, mouseInit);
+    mEvt.__azcoreSynthetic = true;
+    target.dispatchEvent(mEvt);
+    doc.dispatchEvent(mEvt);
+    win.dispatchEvent(mEvt);
+
+    if (typeof PointerEvent !== "undefined") {
+      const pType =
+        eventType === "mousedown"
+          ? "pointerdown"
+          : eventType === "mouseup"
+          ? "pointerup"
+          : "pointermove";
+      const pEvt = new PointerEvent(pType, {
+        ...mouseInit,
+        pointerId: 1,
+        pointerType: "mouse",
+        isPrimary: true
+      });
+      pEvt.__azcoreSynthetic = true;
+      target.dispatchEvent(pEvt);
+    }
+  } catch (e) {}
+}
+
+function installRealMouseBlockerInLightboxIframe() {
+  const frame = document.getElementById("lightbox-itch-frame");
+  if (!frame || !frame.contentDocument) return;
+  try {
+    const doc = frame.contentDocument;
+    if (doc.__azcoreMousePrioritizerInstalled) return;
+    doc.__azcoreMousePrioritizerInstalled = true;
+
+    const blockRealPointerIfVirtualActive = (e) => {
+      if (
+        lightboxVirtualCursorState.controlsActive &&
+        lightboxVirtualCursorState.enabled &&
+        !e.__azcoreSynthetic &&
+        e.isTrusted
+      ) {
+        e.stopImmediatePropagation();
+        e.stopPropagation();
+        e.preventDefault();
+      }
+    };
+
+    ["mousemove", "pointermove", "mousedown", "mouseup", "touchstart", "touchmove", "touchend"].forEach(
+      (evtName) => {
+        doc.addEventListener(evtName, blockRealPointerIfVirtualActive, true);
+      }
+    );
+  } catch (e) {}
+}
+
+function updateLightboxVirtualCursorVisibilityAndPosition() {
+  const cursorEl = document.getElementById("lightbox-virtual-cursor");
+  const stageWrap = document.getElementById("lightbox-content-wrapper");
+  const frame = document.getElementById("lightbox-itch-frame");
+  if (!cursorEl || !stageWrap) return;
+
+  const active = lightboxVirtualCursorState.controlsActive && lightboxVirtualCursorState.enabled;
+  cursorEl.style.display = active ? "block" : "none";
+  stageWrap.classList.toggle("virtual-cursor-priority", active);
+
+  const pop = document.getElementById("lightbox-keys-popover");
+  if (pop) {
+    const toggleBtn = pop.querySelector('.virtual-key-btn[data-cursor-toggle="true"]');
+    if (toggleBtn) toggleBtn.classList.toggle("pressed", active);
+  }
+
+  if (active) {
+    const w = stageWrap.clientWidth || 800;
+    const h = stageWrap.clientHeight || 600;
+    const px = Math.round(lightboxVirtualCursorState.xRatio * w);
+    const py = Math.round(lightboxVirtualCursorState.yRatio * h);
+    cursorEl.style.left = `${px}px`;
+    cursorEl.style.top = `${py}px`;
+    const tag = cursorEl.querySelector(".vcursor-coord-tag");
+    if (tag) tag.textContent = `X:${px} Y:${py}`;
+    installRealMouseBlockerInLightboxIframe();
+    dispatchVirtualCursorToLightboxIframe(
+      lightboxVirtualCursorState.xRatio,
+      lightboxVirtualCursorState.yRatio,
+      "mousemove",
+      lightboxVirtualCursorState.isMouseDownHold
+    );
+  }
+}
+
+function setupLightboxVirtualCursorDrag() {
+  const cursorEl = document.getElementById("lightbox-virtual-cursor");
+  const stageWrap = document.getElementById("lightbox-content-wrapper");
+  if (!cursorEl || !stageWrap || cursorEl.dataset.bound === "true") return;
+  cursorEl.dataset.bound = "true";
+
+  let startX = 0;
+  let startY = 0;
+  let moved = false;
+
+  const onPointerDown = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    lightboxVirtualCursorState.isDragging = true;
+    moved = false;
+    const pt = e.touches ? e.touches[0] : e;
+    startX = pt.clientX;
+    startY = pt.clientY;
+    cursorEl.classList.add("dragging");
+  };
+
+  const onPointerMove = (e) => {
+    if (!lightboxVirtualCursorState.isDragging) return;
+    e.preventDefault();
+    const pt = e.touches ? e.touches[0] : e;
+    if (Math.hypot(pt.clientX - startX, pt.clientY - startY) > 5) {
+      moved = true;
+    }
+    const rect = stageWrap.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+
+    lightboxVirtualCursorState.xRatio = Math.max(0, Math.min(1, (pt.clientX - rect.left) / rect.width));
+    lightboxVirtualCursorState.yRatio = Math.max(0, Math.min(1, (pt.clientY - rect.top) / rect.height));
+    updateLightboxVirtualCursorVisibilityAndPosition();
+  };
+
+  const onPointerUp = (e) => {
+    if (!lightboxVirtualCursorState.isDragging) return;
+    e.preventDefault();
+    lightboxVirtualCursorState.isDragging = false;
+    cursorEl.classList.remove("dragging");
+
+    if (!moved) {
+      cursorEl.classList.add("clicking");
+      setTimeout(() => cursorEl.classList.remove("clicking"), 160);
+      dispatchVirtualCursorToLightboxIframe(lightboxVirtualCursorState.xRatio, lightboxVirtualCursorState.yRatio, "mousedown", true);
+      dispatchVirtualCursorToLightboxIframe(lightboxVirtualCursorState.xRatio, lightboxVirtualCursorState.yRatio, "mouseup", false);
+      dispatchVirtualCursorToLightboxIframe(lightboxVirtualCursorState.xRatio, lightboxVirtualCursorState.yRatio, "click", false);
+    }
+  };
+
+  cursorEl.addEventListener("mousedown", onPointerDown);
+  cursorEl.addEventListener("touchstart", onPointerDown, { passive: false });
+  window.addEventListener("mousemove", onPointerMove, { passive: false });
+  window.addEventListener("touchmove", onPointerMove, { passive: false });
+  window.addEventListener("mouseup", onPointerUp);
+  window.addEventListener("touchend", onPointerUp);
+}
+
+function triggerSyntheticKeyEvent(eventType, spec) {
+  const eventInit = {
+    key: spec.key,
+    code: spec.code,
+    keyCode: spec.keyCode,
+    which: spec.keyCode,
+    bubbles: true,
+    cancelable: true,
+    composed: true
+  };
+
+  const createEvt = () => {
+    const ev = new KeyboardEvent(eventType, eventInit);
+    try {
+      Object.defineProperty(ev, "keyCode", { get: () => spec.keyCode });
+      Object.defineProperty(ev, "which", { get: () => spec.keyCode });
+    } catch (e) {}
+    return ev;
+  };
+
+  window.dispatchEvent(createEvt());
+  document.dispatchEvent(createEvt());
+
+  const iframes = document.querySelectorAll("#lightbox-itch-frame, #dev-fs-iframe, iframe");
+  iframes.forEach((frame) => {
+    if (!frame || frame.style.display === "none") return;
+
+    try {
+      frame.focus();
+      if (frame.contentWindow) {
+        frame.contentWindow.focus();
+        frame.contentWindow.dispatchEvent(createEvt());
+      }
+      if (frame.contentDocument) {
+        frame.contentDocument.dispatchEvent(createEvt());
+        const canvas = frame.contentDocument.querySelector("canvas");
+        if (canvas) canvas.dispatchEvent(createEvt());
+      }
+    } catch (e) {}
+
+    try {
+      if (frame.contentWindow) {
+        frame.contentWindow.postMessage(
+          {
+            type: "AZCORE_KEY_EVENT",
+            eventType,
+            key: spec.key,
+            code: spec.code,
+            keyCode: spec.keyCode
+          },
+          "*"
+        );
+      }
+    } catch (e) {}
+  });
+}
+
+function buildKeysHudContentHtml(keysString) {
+  const buttons = expandVirtualKeysList(keysString);
+  if (buttons.length === 0) return "";
+
+  return `
+    <div class="keys-hud-title">// INTERACTIVE CONTROLS (TAP / HOLD OR DRAG VIRTUAL CURSOR)</div>
+    <div class="keys-pad-grid">
+      ${buttons
+        .map(
+          (b) => `
+        <div
+          role="button"
+          tabindex="-1"
+          class="virtual-key-btn ${b.isCursorToggle ? "vkey-cursor-toggle" : ""}"
+          data-key="${b.key}"
+          data-code="${b.code}"
+          data-keycode="${b.keyCode}"
+          data-cursor-toggle="${b.isCursorToggle ? "true" : "false"}"
+          data-mouse-click="${b.isMouseClick ? "true" : "false"}"
+        >
+          <span class="vkey-main">${b.isCursorToggle ? "&#10148; " + b.label : b.label}</span>
+          ${b.desc ? `<span class="vkey-sub">${b.desc}</span>` : ""}
+        </div>
+      `
+        )
+        .join("")}
+    </div>
+  `;
+}
+
+function bindInteractiveVirtualKeys(containerEl) {
+  if (!containerEl) return;
+
+  containerEl.addEventListener("mousedown", (e) => e.preventDefault());
+  containerEl.addEventListener("touchstart", (e) => e.preventDefault(), { passive: false });
+
+  const btns = containerEl.querySelectorAll(".virtual-key-btn");
+
+  btns.forEach((btn) => {
+    if (btn.dataset.bound === "true") return;
+    btn.dataset.bound = "true";
+
+    const isCursorToggle = btn.dataset.cursorToggle === "true";
+    const isMouseClick = btn.dataset.mouseClick === "true";
+
+    if (isCursorToggle) {
+      const toggleCursor = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        lightboxVirtualCursorState.enabled = !lightboxVirtualCursorState.enabled;
+        updateLightboxVirtualCursorVisibilityAndPosition();
+      };
+      btn.addEventListener("mousedown", toggleCursor);
+      btn.addEventListener("touchstart", toggleCursor, { passive: false });
+      return;
+    }
+
+    if (isMouseClick) {
+      const downClick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        btn.classList.add("pressed");
+        lightboxVirtualCursorState.isMouseDownHold = true;
+        dispatchVirtualCursorToLightboxIframe(
+          lightboxVirtualCursorState.xRatio,
+          lightboxVirtualCursorState.yRatio,
+          "mousedown",
+          true
+        );
+      };
+      const upClick = (e) => {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        if (!btn.classList.contains("pressed")) return;
+        btn.classList.remove("pressed");
+        lightboxVirtualCursorState.isMouseDownHold = false;
+        dispatchVirtualCursorToLightboxIframe(
+          lightboxVirtualCursorState.xRatio,
+          lightboxVirtualCursorState.yRatio,
+          "mouseup",
+          false
+        );
+        dispatchVirtualCursorToLightboxIframe(
+          lightboxVirtualCursorState.xRatio,
+          lightboxVirtualCursorState.yRatio,
+          "click",
+          false
+        );
+      };
+      btn.addEventListener("mousedown", downClick);
+      btn.addEventListener("touchstart", downClick, { passive: false });
+      btn.addEventListener("mouseup", upClick);
+      btn.addEventListener("mouseleave", upClick);
+      btn.addEventListener("touchend", upClick);
+      return;
+    }
+
+    const spec = {
+      key: btn.dataset.key || "",
+      code: btn.dataset.code || "",
+      keyCode: Number(btn.dataset.keycode || 0)
+    };
+
+    let repeatTimer = null;
+
+    const startPress = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      btn.classList.add("pressed");
+      triggerSyntheticKeyEvent("keydown", spec);
+
+      if (repeatTimer) clearInterval(repeatTimer);
+      repeatTimer = setInterval(() => {
+        triggerSyntheticKeyEvent("keydown", spec);
+      }, 65);
+    };
+
+    const endPress = (e) => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      if (!btn.classList.contains("pressed")) return;
+      btn.classList.remove("pressed");
+      if (repeatTimer) {
+        clearInterval(repeatTimer);
+        repeatTimer = null;
+      }
+      triggerSyntheticKeyEvent("keyup", spec);
+    };
+
+    btn.addEventListener("mousedown", startPress);
+    btn.addEventListener("touchstart", startPress, { passive: false });
+    btn.addEventListener("mouseup", endPress);
+    btn.addEventListener("mouseleave", endPress);
+    btn.addEventListener("touchend", endPress);
+    btn.addEventListener("touchcancel", endPress);
+    btn.addEventListener("contextmenu", (e) => e.preventDefault());
+  });
+}
+
+function attachKeysOverlayIfPresent(containerEl, keysString) {
+  if (!keysString || !keysString.trim()) return;
+
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "keys-trigger-badge";
+  btn.innerHTML = "&#9000; CONTROLS";
+
+  const popover = document.createElement("div");
+  popover.className = "keys-hud-popover";
+  popover.style.display = "none";
+  popover.innerHTML = buildKeysHudContentHtml(keysString);
+  bindInteractiveVirtualKeys(popover);
+
+  btn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const isVisible = popover.style.display === "block";
+    popover.style.display = isVisible ? "none" : "block";
+  });
+
+  popover.addEventListener("click", (e) => {
+    e.stopPropagation();
+  });
+
+  containerEl.appendChild(btn);
+  containerEl.appendChild(popover);
+}
+
+function createRunLinkCard(asset, projectKeys = "") {
+  const outer = document.createElement("div");
+  outer.className = "run-card-outer-wrap";
+
+  const linkEl = document.createElement("a");
+  linkEl.className = "run-link-card";
+  linkEl.href = asset.targetUrl;
+  linkEl.target = "_blank";
+  linkEl.rel = "noopener noreferrer";
+  linkEl.title = `Launch ${asset.targetUrl}`;
+
+  const img = document.createElement("img");
+  img.className = "run-base-img";
+  img.loading = "lazy";
+  img.decoding = "async";
+  img.alt = "Run Application";
+
+  loadImageSourceWithHeicSupport(asset.previewSrc).then((url) => {
+    img.src = url;
+  });
+
+  const badge = document.createElement("div");
+  badge.className = "stl-badge-overlay";
+  badge.innerHTML = "WEB APPLICATION // CLICK TO LAUNCH &#8599;";
+
+  const overlay = document.createElement("div");
+  overlay.className = "run-overlay";
+  overlay.innerHTML = `
+    <div class="run-btn-pill">
+      <span class="run-btn-icon">&#9654;</span>
+      <span class="run-btn-label">Run</span>
+    </div>
+  `;
+
+  linkEl.appendChild(img);
+  linkEl.appendChild(badge);
+  linkEl.appendChild(overlay);
+
+  linkEl.addEventListener("click", (e) => {
+    e.stopPropagation();
+  });
+
+  outer.appendChild(linkEl);
+  attachKeysOverlayIfPresent(outer, projectKeys);
+  return outer;
+}
+
+function createItchEmbedCard(asset, onOpenLightboxModal, projectKeys = "") {
+  const outer = document.createElement("div");
+  outer.className = "run-card-outer-wrap";
+
+  const card = document.createElement("div");
+  card.className = "run-link-card";
+  card.title = "Click Run to launch";
+
+  const bgImg = document.createElement("img");
+  bgImg.className = "run-base-img";
+  bgImg.loading = "lazy";
+  bgImg.decoding = "async";
+  bgImg.alt = "Run Application";
+
+  const thumbToLoad = asset.previewSrc || getFallbackRunSvgDataUri();
+  loadImageSourceWithHeicSupport(thumbToLoad).then((url) => {
+    bgImg.src = url;
+  });
+
+  const badge = document.createElement("div");
+  badge.className = "stl-badge-overlay";
+  badge.textContent = "INTERACTIVE APPLICATION // CLICK RUN TO LAUNCH";
+
+  const overlay = document.createElement("div");
+  overlay.className = "run-overlay";
+  overlay.innerHTML = `
+    <div class="run-btn-pill">
+      <span class="run-btn-icon">&#9654;</span>
+      <span class="run-btn-label">Run</span>
+    </div>
+  `;
+
+  card.appendChild(bgImg);
+  card.appendChild(badge);
+  card.appendChild(overlay);
+
+  card.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (onOpenLightboxModal) onOpenLightboxModal();
+  });
+
+  outer.appendChild(card);
+  attachKeysOverlayIfPresent(outer, projectKeys);
+  return outer;
+}
+
+function createUniversalAssetCard(asset) {
+  const ext = getFileExtension(asset.file).toUpperCase() || "FILE";
+  const wrap = document.createElement("div");
+  wrap.className = "universal-asset-card";
+
+  let badgeText = `${ext} // CLICK TO VIEW`;
+  let centerIcon = `.${ext}`;
+
+  if (asset.type === "video") {
+    badgeText = `VIDEO (${ext}) // CLICK TO STREAM`;
+    centerIcon = "&#9654;";
+  } else if (asset.type === "audio") {
+    badgeText = `AUDIO (${ext}) // CLICK TO PLAY`;
+    centerIcon = "&#9835;";
+  } else if (asset.type === "pdf") {
+    badgeText = "PDF DOCUMENT // CLICK TO VIEW";
+    centerIcon = "PDF";
+  }
+
+  wrap.innerHTML = `
+    <div class="stl-badge-overlay">${badgeText}</div>
+    <div class="universal-asset-icon">${centerIcon}</div>
+    <div class="universal-asset-label">${asset.file}</div>
+  `;
+  return wrap;
+}
+
 async function runInBatches(items, batchSize, asyncFn) {
   const results = [];
   for (let i = 0; i < items.length; i += batchSize) {
@@ -116,7 +852,8 @@ async function verifyFileExistsFast(url) {
       return false;
     }
     const contentType = res.headers.get("content-type") || "";
-    const isValid = !contentType.includes("text/html");
+    const isHtmlFileRequest = /\.html?(\?|$)/i.test(url);
+    const isValid = isHtmlFileRequest ? true : !contentType.includes("text/html");
     verifiedUrlCache.set(url, isValid);
     return isValid;
   } catch (e) {
@@ -126,6 +863,7 @@ async function verifyFileExistsFast(url) {
 }
 
 async function resolveValidUrlWithCaseFallback(baseFolder, fileName) {
+  if (!fileName) return null;
   const primary = `${baseFolder}${fileName}`;
   if (await verifyFileExistsFast(primary)) return primary;
 
@@ -150,7 +888,7 @@ async function resolveDualImageUrls(baseFolder, previewSub, fullSub, fileName) {
   const baseName = dotIdx !== -1 ? fileName.slice(0, dotIdx) : fileName;
   const originalExt = dotIdx !== -1 ? fileName.slice(dotIdx) : ".webp";
 
-  const previewExts = [...new Set([".webp", originalExt, ".jpg", ".JPG", ".png"])];
+  const previewExts = [...new Set([".webp", originalExt, ".jpg", ".JPG", ".png", ".heic", ".HEIC"])];
   let previewUrl = null;
   for (const ext of previewExts) {
     const candidate = `${normBase}${normPrev}${baseName}${ext}`;
@@ -160,7 +898,7 @@ async function resolveDualImageUrls(baseFolder, previewSub, fullSub, fileName) {
     }
   }
 
-  const fullExts = [...new Set([".jpg", ".JPG", ".jpeg", originalExt, ".png", ".webp"])];
+  const fullExts = [...new Set([".jpg", ".JPG", ".jpeg", originalExt, ".png", ".webp", ".heic", ".HEIC"])];
   let fullUrl = null;
   for (const ext of fullExts) {
     const candidate = `${normBase}${normFull}${baseName}${ext}`;
@@ -184,7 +922,7 @@ async function resolveDualImageUrls(baseFolder, previewSub, fullSub, fileName) {
 
 /**
  * ============================================================================
- * 3. UNIFIED 3D ENGINE (SINGLETON DRACO DECODER & CONTEXT RECYCLING)
+ * 3. UNIFIED 3D ENGINE
  * ============================================================================
  */
 const modelCache = new Map();
@@ -231,7 +969,6 @@ function load3DModelObject(url, type) {
           wrapper.add(root);
           wrapper.scale.set(scale, scale, scale);
 
-          // Cap cache size on mobile so RAM doesn't bloat
           if (IS_MOBILE && modelCache.size >= 2) {
             const oldestKey = modelCache.keys().next().value;
             modelCache.delete(oldestKey);
@@ -283,7 +1020,6 @@ function load3DModelObject(url, type) {
   });
 }
 
-// Mounts WebGL ONLY when visible in viewport and releases GPU context when scrolled away
 function mountAutoRotating3DPreview(container, modelUrl, type) {
   const badge = document.createElement("div");
   badge.className = "stl-badge-overlay";
@@ -323,7 +1059,7 @@ function mountAutoRotating3DPreview(container, modelUrl, type) {
     load3DModelObject(modelUrl, type)
       .then((obj) => {
         isLoadingModel = false;
-        if (!isVisible) return; // Scrolled past before load finished
+        if (!isVisible) return;
 
         scene = new THREE.Scene();
         camera = new THREE.PerspectiveCamera(40, 16 / 10, 0.1, 2000);
@@ -385,7 +1121,6 @@ function mountAutoRotating3DPreview(container, modelUrl, type) {
         if (isVisible) {
           initContext();
         } else {
-          // On mobile, aggressively free WebGL contexts when offscreen
           if (IS_MOBILE) {
             destroyContext();
           } else if (animFrameId) {
@@ -410,11 +1145,10 @@ function mountAutoRotating3DPreview(container, modelUrl, type) {
 
 /**
  * ============================================================================
- * 4. POST-BOOT DEFERRED BACKGROUND PRE-WARM (DESKTOP ONLY)
+ * 4. POST-BOOT DEFERRED BACKGROUND PRE-WARM
  * ============================================================================
  */
 function backgroundPrewarmPreviewImages(previewUrls) {
-  // Never pre-warm all images into RAM on mobile devices
   if (IS_MOBILE || !previewUrls || previewUrls.length === 0) return;
 
   let currentIndex = 0;
@@ -423,6 +1157,7 @@ function backgroundPrewarmPreviewImages(previewUrls) {
     const chunkLimit = Math.min(currentIndex + 3, previewUrls.length);
 
     for (let i = currentIndex; i < chunkLimit; i++) {
+      if (/\.heic$|\.heif$/i.test(previewUrls[i])) continue;
       const bgImg = new Image();
       bgImg.crossOrigin = "anonymous";
       bgImg.decoding = "async";
@@ -440,7 +1175,7 @@ function backgroundPrewarmPreviewImages(previewUrls) {
 
 /**
  * ============================================================================
- * 5. TAB 1: RENDER ABOUT ME (LOADS IMMEDIATELY)
+ * 5. TAB 1: RENDER ABOUT ME
  * ============================================================================
  */
 async function renderAboutSection() {
@@ -459,10 +1194,12 @@ async function renderAboutSection() {
   const resolvedProfile =
     (await resolveValidUrlWithCaseFallback(normAboutFolder, cfg.profileImage)) ||
     (await resolveValidUrlWithCaseFallback(normAboutFolder, "profile.jpg")) ||
-    (await resolveValidUrlWithCaseFallback(normAboutFolder, "profile.png"));
+    (await resolveValidUrlWithCaseFallback(normAboutFolder, "profile.png")) ||
+    (await resolveValidUrlWithCaseFallback(normAboutFolder, "profile.heic"));
 
   if (resolvedProfile) {
-    profileImg.src = resolvedProfile;
+    const finalProfileUrl = await loadImageSourceWithHeicSupport(resolvedProfile);
+    profileImg.src = finalProfileUrl;
   } else {
     profileImg.src = `data:image/svg+xml;utf8,${encodeURIComponent(
       `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="750" viewBox="0 0 600 750">
@@ -479,6 +1216,7 @@ async function renderAboutSection() {
       [
         {
           type: "image",
+          file: cfg.profileImage,
           previewSrc: profileImg.src,
           fullSrc: profileImg.src,
           caption: `${cfg.name}`
@@ -519,7 +1257,14 @@ async function renderAboutSection() {
       <div class="skill-group">
         <div class="skill-group-title">${group.category}</div>
         <div class="skill-tags">
-          ${group.items.map((item) => `<span class="skill-tag">${item}</span>`).join("")}
+          ${group.items
+            .map((item) => {
+              if (item === "new-row") {
+                return `<div class="skill-row-break"></div>`;
+              }
+              return `<span class="skill-tag">${item}</span>`;
+            })
+            .join("")}
         </div>
       </div>`
     )
@@ -538,7 +1283,7 @@ async function renderAboutSection() {
 
 /**
  * ============================================================================
- * 6. TAB 2: REWORKED PROJECT SYSTEM
+ * 6. TAB 2: PROJECT SYSTEM
  * ============================================================================
  */
 let projectsLoaded = false;
@@ -550,14 +1295,26 @@ function parseProjectTextFile(rawText, folderPath) {
     title: "",
     code: "PRJ // ARCHIVE",
     tags: [],
+    keys: "",
     mainAsset: "",
     assets: [],
+    localApps: [],
+    itchEmbeds: [],
+    runLinks: [],
+    assignedThumbFiles: new Set(),
     description: "",
     folder: folderPath
   };
 
   let inDescription = false;
   const descLines = [];
+
+  function registerThumbIfPresent(rawToken) {
+    const { thumbFile } = splitAssetTokenAndThumb(rawToken);
+    if (thumbFile) {
+      data.assignedThumbFiles.add(thumbFile.toLowerCase());
+    }
+  }
 
   for (const rawLine of lines) {
     const line = rawLine.trim();
@@ -575,16 +1332,59 @@ function parseProjectTextFile(rawText, folderPath) {
         .split(",")
         .map((t) => t.trim())
         .filter(Boolean);
-    } else if (/^MAIN(_IMAGE|_STL|_MODEL|_GLB)?\s*:/i.test(line)) {
+    } else if (/^(KEYS|CONTROLS|CONTROLLS)\s*:/i.test(line)) {
       inDescription = false;
-      data.mainAsset = line.replace(/^MAIN(_IMAGE|_STL|_MODEL|_GLB)?\s*:\s*/i, "").trim();
-    } else if (/^(IMAGES|FILES|ASSETS|MODELS)\s*:/i.test(line)) {
+      data.keys = line.replace(/^(KEYS|CONTROLS|CONTROLLS)\s*:\s*/i, "").trim();
+    } else if (/^(APP|LOCAL_APP|WEB_APP)\s*:/i.test(line)) {
+      inDescription = false;
+      const rawApp = line.replace(/^(APP|LOCAL_APP|WEB_APP)\s*:\s*/i, "").trim();
+      registerThumbIfPresent(rawApp);
+      const { baseToken, thumbFile } = splitAssetTokenAndThumb(rawApp);
+      const cleanAppPath = baseToken.replace(/^app\s*:\s*/i, "").trim();
+      if (cleanAppPath) {
+        data.localApps.push(`app:${cleanAppPath}${thumbFile ? "|thumb=" + thumbFile : ""}`);
+      }
+    } else if (/^ITCH(_EMBED|_GAME|_URL)?\s*:/i.test(line)) {
+      inDescription = false;
+      const rawItch = line.replace(/^ITCH(_EMBED|_GAME|_URL)?\s*:\s*/i, "").trim();
+      registerThumbIfPresent(rawItch);
+      const { thumbFile } = splitAssetTokenAndThumb(rawItch);
+      const embedUrl = extractItchEmbedUrl(rawItch);
+      if (embedUrl) {
+        data.itchEmbeds.push(`itch:${embedUrl}${thumbFile ? "|thumb=" + thumbFile : ""}`);
+      }
+    } else if (/^(LINK|RUN|RUN_LINK|URL|WEBSITE)\s*:/i.test(line)) {
+      inDescription = false;
+      const rawLink = line.replace(/^(LINK|RUN|RUN_LINK|URL|WEBSITE)\s*:\s*/i, "").trim();
+      registerThumbIfPresent(rawLink);
+      const { thumbFile } = splitAssetTokenAndThumb(rawLink);
+      if (rawLink) {
+        data.runLinks.push(
+          `run:${normalizeExternalUrl(rawLink)}${thumbFile ? "|thumb=" + thumbFile : ""}`
+        );
+      }
+    } else if (/^MAIN(_IMAGE|_STL|_MODEL|_GLB|_VIDEO|_FILE|_ITCH|_LINK|_APP)?\s*:/i.test(line)) {
+      inDescription = false;
+      const rawMain = line
+        .replace(/^MAIN(_IMAGE|_STL|_MODEL|_GLB|_VIDEO|_FILE|_ITCH|_LINK|_APP)?\s*:\s*/i, "")
+        .trim();
+      registerThumbIfPresent(rawMain);
+      const { thumbFile } = splitAssetTokenAndThumb(rawMain);
+      if (/^<iframe/i.test(rawMain) || /itch\.io\/embed/i.test(rawMain)) {
+        data.mainAsset = `itch:${extractItchEmbedUrl(rawMain)}${
+          thumbFile ? "|thumb=" + thumbFile : ""
+        }`;
+      } else {
+        data.mainAsset = rawMain;
+      }
+    } else if (/^(IMAGES|FILES|ASSETS|MODELS|VIDEOS)\s*:/i.test(line)) {
       inDescription = false;
       const items = line
-        .replace(/^(IMAGES|FILES|ASSETS|MODELS)\s*:\s*/i, "")
+        .replace(/^(IMAGES|FILES|ASSETS|MODELS|VIDEOS)\s*:\s*/i, "")
         .split(",")
         .map((i) => i.trim())
         .filter(Boolean);
+      items.forEach(registerThumbIfPresent);
       data.assets.push(...items);
     } else if (/^DESCRIPTION\s*:/i.test(line)) {
       inDescription = true;
@@ -597,26 +1397,107 @@ function parseProjectTextFile(rawText, folderPath) {
 
   data.description = descLines.join("\n").trim();
 
+  [...data.localApps, ...data.runLinks, ...data.itchEmbeds].forEach((token) => {
+    const tBase = splitAssetTokenAndThumb(token).baseToken.toLowerCase();
+    if (
+      !data.assets.some(
+        (a) => splitAssetTokenAndThumb(a).baseToken.toLowerCase() === tBase
+      )
+    ) {
+      data.assets.push(token);
+    }
+  });
+
   if (data.mainAsset) {
+    const mainBase = splitAssetTokenAndThumb(data.mainAsset).baseToken.toLowerCase();
     data.assets = [
       data.mainAsset,
-      ...data.assets.filter((a) => a.toLowerCase() !== data.mainAsset.toLowerCase())
+      ...data.assets.filter(
+        (a) => splitAssetTokenAndThumb(a).baseToken.toLowerCase() !== mainBase
+      )
     ];
   }
+
+  const hasInteractiveItem = data.assets.some((a) => {
+    const t = getAssetType(a);
+    return t === "itch" || t === "link";
+  });
+
+  data.assets = data.assets.filter((item) => {
+    const { baseToken } = splitAssetTokenAndThumb(item);
+    const lower = baseToken.toLowerCase();
+    if (data.assignedThumbFiles.has(lower)) return false;
+    if (hasInteractiveItem && /^run\.(webp|png|jpg|jpeg)$/i.test(lower)) return false;
+    return true;
+  });
 
   return data;
 }
 
-async function resolveProjectAsset(projFolder, fileName) {
-  const assetType = getAssetType(fileName);
-  const resolvedUrl = await resolveValidUrlWithCaseFallback(projFolder, fileName);
+async function resolveProjectAsset(projFolder, rawToken) {
+  const { baseToken, thumbFile } = splitAssetTokenAndThumb(rawToken);
+  const isLocalHtmlApp =
+    /^(app|embed)\s*:/i.test(baseToken) || /\.html?$/i.test(baseToken);
+  const assetType = getAssetType(baseToken);
+
+  if (assetType === "link") {
+    const targetUrl = normalizeExternalUrl(baseToken);
+    const customThumbUrl = thumbFile
+      ? await resolveValidUrlWithCaseFallback(projFolder, thumbFile)
+      : null;
+    const runImgUrl =
+      customThumbUrl ||
+      (await resolveValidUrlWithCaseFallback(projFolder, "run.webp")) ||
+      (await resolveValidUrlWithCaseFallback(projFolder, "run.png")) ||
+      (await resolveValidUrlWithCaseFallback(projFolder, "run.jpg")) ||
+      getFallbackRunSvgDataUri();
+
+    return {
+      type: "link",
+      file: thumbFile || "WEB APP",
+      previewSrc: runImgUrl,
+      fullSrc: runImgUrl,
+      targetUrl: targetUrl
+    };
+  }
+
+  if (isLocalHtmlApp || assetType === "itch") {
+    let embedUrl = "";
+    if (isLocalHtmlApp) {
+      const cleanRel = baseToken.replace(/^(app|embed)\s*:\s*/i, "").trim();
+      embedUrl = /^https?:\/\//i.test(cleanRel) ? cleanRel : `${projFolder}${cleanRel}`;
+    } else {
+      embedUrl = extractItchEmbedUrl(baseToken);
+    }
+    if (!embedUrl) return null;
+
+    const customThumbUrl = thumbFile
+      ? await resolveValidUrlWithCaseFallback(projFolder, thumbFile)
+      : null;
+    const optionalCover =
+      customThumbUrl ||
+      (await resolveValidUrlWithCaseFallback(projFolder, "run.webp")) ||
+      (await resolveValidUrlWithCaseFallback(projFolder, "itch.webp")) ||
+      (await resolveValidUrlWithCaseFallback(projFolder, "cover.webp")) ||
+      getFallbackRunSvgDataUri();
+
+    return {
+      type: "itch",
+      file: isLocalHtmlApp ? "WEB APP" : "ITCH.IO GAME",
+      previewSrc: optionalCover,
+      fullSrc: embedUrl,
+      embedUrl: embedUrl
+    };
+  }
+
+  const resolvedUrl = await resolveValidUrlWithCaseFallback(projFolder, baseToken);
   if (!resolvedUrl) return null;
 
   return {
     type: assetType,
     previewSrc: resolvedUrl,
     fullSrc: resolvedUrl,
-    file: fileName
+    file: baseToken
   };
 }
 
@@ -668,7 +1549,7 @@ async function loadAndRenderProjects() {
         <div class="empty-state-box">
           <div class="empty-state-title">// 0 PROJECT TEXT FILES DETECTED</div>
           <div class="empty-state-desc">
-            No valid <code>project.txt</code> files with linked images, <code>.glb</code>, or <code>.stl</code> models were found inside <code>${normBase}</code>.
+            No valid <code>project.txt</code> files with linked assets were found inside <code>${normBase}</code>.
           </div>
         </div>
       `;
@@ -686,11 +1567,19 @@ async function loadAndRenderProjects() {
       const stackPreview = proj.verifiedAssets.slice(0, 3);
 
       const stackVisualHtml = stackPreview
-        .map((item) =>
-          is3DAsset(item.type)
-            ? `<div class="stack-card-3d">[3D ${item.type.toUpperCase()}]</div>`
-            : `<img class="stack-card-img" src="${item.previewSrc}" loading="lazy" decoding="async" alt="Stack preview" />`
-        )
+        .map((item) => {
+          if (is3DAsset(item.type)) {
+            return `<div class="stack-card-3d">[3D ${item.type.toUpperCase()}]</div>`;
+          }
+          if (item.type === "itch" || item.type === "link") {
+            return `<img class="stack-card-img" src="${item.previewSrc}" loading="lazy" decoding="async" alt="Run preview" />`;
+          }
+          if (item.type === "image") {
+            return `<img class="stack-card-img" src="${item.previewSrc}" loading="lazy" decoding="async" alt="Stack preview" />`;
+          }
+          const ext = getFileExtension(item.file).toUpperCase() || item.type.toUpperCase();
+          return `<div class="stack-card-badge">[${ext}]</div>`;
+        })
         .join("");
 
       card.innerHTML = `
@@ -720,7 +1609,7 @@ async function loadAndRenderProjects() {
         <div id="${drawerId}" class="project-expanded-drawer">
           <div class="drawer-header">
             <span>// LINKED FROM ${proj.folder}project.txt (${proj.verifiedAssets.length} ITEMS)</span>
-            <span>CLICK ANY IMAGE, .GLB, OR .STL MODEL FOR FULL SCREEN</span>
+            <span>CLICK ANY ASSET FOR FULL VIEW OR LAUNCH</span>
           </div>
           <div class="project-gallery-grid"></div>
         </div>
@@ -730,8 +1619,12 @@ async function loadAndRenderProjects() {
 
       const lightboxList = proj.verifiedAssets.map((asset, i) => ({
         type: asset.type,
+        file: asset.file,
         previewSrc: asset.previewSrc,
         fullSrc: asset.fullSrc,
+        embedUrl: asset.embedUrl,
+        targetUrl: asset.targetUrl,
+        keys: proj.keys,
         caption: `${proj.title} (${asset.file}) // [${i + 1}/${proj.verifiedAssets.length}]`
       }));
 
@@ -741,19 +1634,31 @@ async function loadAndRenderProjects() {
         stage3d.className = "stl-preview-container";
         mainWrap.prepend(stage3d);
         mountAutoRotating3DPreview(stage3d, mainAsset.fullSrc, mainAsset.type);
-      } else {
+        mainWrap.addEventListener("click", () => openLightbox(lightboxList, 0));
+      } else if (mainAsset.type === "link") {
+        mainWrap.style.cursor = "pointer";
+        mainWrap.prepend(createRunLinkCard(mainAsset, proj.keys));
+      } else if (mainAsset.type === "itch") {
+        mainWrap.style.cursor = "pointer";
+        mainWrap.prepend(
+          createItchEmbedCard(mainAsset, () => openLightbox(lightboxList, 0), proj.keys)
+        );
+      } else if (isImageAsset(mainAsset.type)) {
         const mainImg = document.createElement("img");
         mainImg.className = "interactive-img project-main-img";
-        mainImg.src = mainAsset.previewSrc;
         mainImg.loading = "lazy";
         mainImg.decoding = "async";
         mainImg.alt = proj.title;
         mainWrap.prepend(mainImg);
+        loadImageSourceWithHeicSupport(mainAsset.previewSrc).then((url) => {
+          mainImg.src = url;
+        });
+        mainWrap.addEventListener("click", () => openLightbox(lightboxList, 0));
+      } else {
+        mainWrap.prepend(createUniversalAssetCard(mainAsset));
+        mainWrap.addEventListener("click", () => openLightbox(lightboxList, 0));
       }
 
-      mainWrap.addEventListener("click", () => openLightbox(lightboxList, 0));
-
-      // Populate drawer items ONLY when the user opens the drawer to save memory
       const galleryGrid = card.querySelector(".project-gallery-grid");
       let drawerPopulated = false;
 
@@ -767,7 +1672,6 @@ async function loadAndRenderProjects() {
 
           if (is3DAsset(asset.type)) {
             if (IS_MOBILE) {
-              // On mobile, use a lightweight placeholder card inside sub-grids to prevent multiple WebGL contexts
               const box3d = document.createElement("div");
               box3d.className = "stl-preview-container";
               box3d.style.display = "flex";
@@ -781,17 +1685,33 @@ async function loadAndRenderProjects() {
               itemWrap.appendChild(box3d);
               mountAutoRotating3DPreview(box3d, asset.fullSrc, asset.type);
             }
-          } else {
+            itemWrap.addEventListener("click", () => openLightbox(lightboxList, assetIdx));
+          } else if (asset.type === "link") {
+            itemWrap.appendChild(createRunLinkCard(asset, proj.keys));
+          } else if (asset.type === "itch") {
+            itemWrap.appendChild(
+              createItchEmbedCard(
+                asset,
+                () => openLightbox(lightboxList, assetIdx),
+                proj.keys
+              )
+            );
+          } else if (isImageAsset(asset.type)) {
             const img = document.createElement("img");
             img.className = "interactive-img";
-            img.src = asset.previewSrc;
             img.loading = "lazy";
             img.decoding = "async";
             img.alt = `${proj.title} item ${assetIdx + 1}`;
             itemWrap.appendChild(img);
+            loadImageSourceWithHeicSupport(asset.previewSrc).then((url) => {
+              img.src = url;
+            });
+            itemWrap.addEventListener("click", () => openLightbox(lightboxList, assetIdx));
+          } else {
+            itemWrap.appendChild(createUniversalAssetCard(asset));
+            itemWrap.addEventListener("click", () => openLightbox(lightboxList, assetIdx));
           }
 
-          itemWrap.addEventListener("click", () => openLightbox(lightboxList, assetIdx));
           galleryGrid.appendChild(itemWrap);
         });
       }
@@ -837,7 +1757,6 @@ async function discoverPhotographyDualAssets() {
         .map((l) => l.trim())
         .filter(Boolean);
 
-      // Resolve in small batches of 6 instead of firing 50+ requests at once
       const resolvedBatch = await runInBatches(lines, 6, async (fileName) => {
         const dual = await resolveDualImageUrls(
           normFolder,
@@ -960,7 +1879,8 @@ async function loadAndRenderPhotography() {
     grid.innerHTML = "";
 
     const lightboxItems = photoItems.map((item, i) => ({
-      type: "image",
+      type: getAssetType(item.fullUrl),
+      file: item.fileName,
       previewSrc: item.previewUrl,
       fullSrc: item.fullUrl,
       caption: `${item.fileName} // [${i + 1} / ${photoItems.length}]`
@@ -973,8 +1893,11 @@ async function loadAndRenderPhotography() {
           const card = entry.target;
           const img = card.querySelector("img");
           if (img && img.dataset.src) {
-            img.src = img.dataset.src;
+            const rawUrl = img.dataset.src;
             img.removeAttribute("data-src");
+            loadImageSourceWithHeicSupport(rawUrl).then((url) => {
+              img.src = url;
+            });
           }
           obs.unobserve(card);
         });
@@ -1025,7 +1948,7 @@ async function loadAndRenderPhotography() {
 
 /**
  * ============================================================================
- * 8. INSTANT CACHED AVERAGE COLOR ENGINE (NULL-SAFE)
+ * 8. INSTANT CACHED AVERAGE COLOR ENGINE
  * ============================================================================
  */
 let colorUpdateRaf = null;
@@ -1155,7 +2078,7 @@ function switchTab(targetIndex) {
 
 /**
  * ============================================================================
- * 10. UNIVERSAL LIGHTBOX (PROGRESSIVE IMAGE LOADING & 3D GEOMETRY)
+ * 10. UNIVERSAL LIGHTBOX & VIRTUAL CURSOR SYSTEM
  * ============================================================================
  */
 let currentLightboxList = [];
@@ -1170,7 +2093,12 @@ let lbScene = null,
   lbAnimId = null;
 
 function preventBackgroundScroll(e) {
-  if (e.target && e.target.closest("#lightbox-3d-stage")) return;
+  if (
+    e.target &&
+    (e.target.closest("#lightbox-3d-stage") || e.target.closest(".keys-hud-popover"))
+  ) {
+    return;
+  }
   e.preventDefault();
 }
 
@@ -1280,15 +2208,16 @@ function closeLightbox() {
   const modal = document.getElementById("lightbox-modal");
   modal.classList.remove("open");
   modal.setAttribute("aria-hidden", "true");
-  
+
   activeFullImageRequestToken++;
+  lightboxVirtualCursorState.controlsActive = false;
+  updateLightboxVirtualCursorVisibilityAndPosition();
 
   if (lbAnimId) {
     cancelAnimationFrame(lbAnimId);
     lbAnimId = null;
   }
 
-  // Free lightbox 3D WebGL context on mobile when closed
   if (IS_MOBILE && lbRenderer) {
     lbRenderer.dispose();
     if (lbRenderer.forceContextLoss) lbRenderer.forceContextLoss();
@@ -1302,9 +2231,38 @@ function closeLightbox() {
     lbModelGroup = null;
   }
 
-  // Free high-res image memory immediately on close
   const imgEl = document.getElementById("lightbox-img");
   if (imgEl) imgEl.src = "";
+
+  const videoEl = document.getElementById("lightbox-video");
+  if (videoEl) {
+    videoEl.pause();
+    videoEl.removeAttribute("src");
+    videoEl.load();
+    videoEl.style.display = "none";
+  }
+
+  const audioEl = document.getElementById("lightbox-audio");
+  if (audioEl) {
+    audioEl.pause();
+    audioEl.removeAttribute("src");
+    audioEl.load();
+  }
+
+  const itchFrame = document.getElementById("lightbox-itch-frame");
+  if (itchFrame) {
+    itchFrame.src = "";
+    itchFrame.style.display = "none";
+  }
+
+  const linkStage = document.getElementById("lightbox-link-stage");
+  if (linkStage) {
+    linkStage.innerHTML = "";
+    linkStage.style.display = "none";
+  }
+
+  const keysPop = document.getElementById("lightbox-keys-popover");
+  if (keysPop) keysPop.style.display = "none";
 
   document.getElementById("lightbox-pdf-frame").src = "";
   document.getElementById("lightbox-loader").style.display = "none";
@@ -1314,23 +2272,84 @@ function closeLightbox() {
   window.removeEventListener("touchmove", preventBackgroundScroll);
 }
 
+function showGenericFileFallback(item, message) {
+  const genericStage = document.getElementById("lightbox-generic-stage");
+  const ext = getFileExtension(item.file || item.fullSrc).toUpperCase() || "FILE";
+  document.getElementById("lightbox-generic-ext").textContent = `.${ext}`;
+  document.getElementById("lightbox-generic-name").textContent =
+    item.file || item.caption || "Project Asset";
+  document.getElementById("lightbox-generic-desc").textContent =
+    message || "Preview not available in browser for this file format.";
+  genericStage.style.display = "flex";
+}
+
 function updateLightboxSlide() {
   if (!currentLightboxList.length) return;
   const item = currentLightboxList[currentLightboxIndex];
   const requestToken = ++activeFullImageRequestToken;
 
   const imgEl = document.getElementById("lightbox-img");
+  const videoEl = document.getElementById("lightbox-video");
+  const audioStage = document.getElementById("lightbox-audio-stage");
+  const audioEl = document.getElementById("lightbox-audio");
   const stage3d = document.getElementById("lightbox-3d-stage");
+  const itchFrame = document.getElementById("lightbox-itch-frame");
+  const linkStage = document.getElementById("lightbox-link-stage");
   const pdfFrame = document.getElementById("lightbox-pdf-frame");
+  const genericStage = document.getElementById("lightbox-generic-stage");
   const resetBtn = document.getElementById("model-reset-btn");
+  const externalBtn = document.getElementById("lightbox-external-btn");
+  const keysBtn = document.getElementById("lightbox-keys-btn");
+  const keysPopover = document.getElementById("lightbox-keys-popover");
   const loaderOverlay = document.getElementById("lightbox-loader");
   const loaderText = document.getElementById("lightbox-loader-text");
 
   imgEl.style.display = "none";
+  videoEl.style.display = "none";
+  audioStage.style.display = "none";
   stage3d.style.display = "none";
+  if (itchFrame) {
+    itchFrame.src = "";
+    itchFrame.style.display = "none";
+  }
+  if (linkStage) {
+    linkStage.innerHTML = "";
+    linkStage.style.display = "none";
+  }
   pdfFrame.style.display = "none";
+  genericStage.style.display = "none";
   resetBtn.style.display = "none";
+  if (externalBtn) externalBtn.style.display = "none";
+  if (keysBtn) keysBtn.style.display = "none";
+  if (keysPopover) keysPopover.style.display = "none";
   loaderOverlay.style.display = "none";
+
+  lightboxVirtualCursorState.xRatio = 0.5;
+  lightboxVirtualCursorState.yRatio = 0.5;
+  lightboxVirtualCursorState.enabled = hasCursorOptionInControls(item.keys);
+
+  if (item.keys && item.keys.trim() && keysBtn && keysPopover) {
+    keysBtn.style.display = "inline-block";
+    keysPopover.innerHTML = buildKeysHudContentHtml(item.keys);
+    bindInteractiveVirtualKeys(keysPopover);
+    keysPopover.style.display = "block";
+    lightboxVirtualCursorState.controlsActive = true;
+  } else {
+    lightboxVirtualCursorState.controlsActive = false;
+  }
+  updateLightboxVirtualCursorVisibilityAndPosition();
+  setupLightboxVirtualCursorDrag();
+
+  if (videoEl) {
+    videoEl.pause();
+    videoEl.removeAttribute("src");
+    videoEl.load();
+  }
+  if (audioEl) {
+    audioEl.pause();
+    audioEl.removeAttribute("src");
+    audioEl.load();
+  }
 
   if (lbAnimId) {
     cancelAnimationFrame(lbAnimId);
@@ -1341,33 +2360,100 @@ function updateLightboxSlide() {
     stage3d.style.display = "block";
     resetBtn.style.display = "inline-block";
     initOrUpdateLightbox3D(item.fullSrc, item.type);
+  } else if (item.type === "itch") {
+    itchFrame.style.display = "block";
+    itchFrame.src = item.embedUrl || item.fullSrc;
+    itchFrame.onload = () => {
+      try {
+        itchFrame.focus();
+        if (itchFrame.contentWindow) itchFrame.contentWindow.focus();
+        updateLightboxVirtualCursorVisibilityAndPosition();
+      } catch (e) {}
+    };
+    if (externalBtn) {
+      externalBtn.href = item.embedUrl || item.fullSrc;
+      externalBtn.style.display = "inline-block";
+    }
+  } else if (item.type === "link") {
+    linkStage.style.display = "flex";
+    linkStage.appendChild(createRunLinkCard(item, item.keys));
+    if (externalBtn) {
+      externalBtn.href = item.targetUrl;
+      externalBtn.style.display = "inline-block";
+    }
+  } else if (item.type === "video") {
+    videoEl.style.display = "block";
+    loaderText.textContent = "LOADING VIDEO STREAM...";
+    loaderOverlay.style.display = "flex";
+
+    videoEl.onloadeddata = () => {
+      if (requestToken !== activeFullImageRequestToken) return;
+      loaderOverlay.style.display = "none";
+      videoEl.play().catch(() => {});
+    };
+
+    videoEl.onerror = () => {
+      if (requestToken !== activeFullImageRequestToken) return;
+      loaderOverlay.style.display = "none";
+      videoEl.style.display = "none";
+      showGenericFileFallback(
+        item,
+        "This video codec cannot be decoded directly by this browser."
+      );
+    };
+
+    videoEl.src = item.fullSrc;
+    videoEl.load();
+  } else if (item.type === "audio") {
+    audioStage.style.display = "flex";
+    document.getElementById("lightbox-audio-title").textContent = item.file || "AUDIO TRACK";
+    audioEl.src = item.fullSrc;
+    audioEl.load();
+    audioEl.play().catch(() => {});
   } else if (item.type === "pdf") {
     pdfFrame.style.display = "block";
     pdfFrame.src = item.fullSrc;
-  } else {
+  } else if (isImageAsset(item.type)) {
     imgEl.style.display = "block";
     const previewUrl = item.previewSrc || item.fullSrc;
     const fullUrl = item.fullSrc || item.previewSrc;
 
-    imgEl.src = previewUrl;
     imgEl.classList.add("loading-blur");
-    loaderText.textContent = "LOADING FULL-RESOLUTION IMAGE...";
+    loaderText.textContent =
+      item.type === "heic" ? "CONVERTING HEIC PHONE IMAGE..." : "LOADING FULL-RESOLUTION IMAGE...";
     loaderOverlay.style.display = "flex";
 
-    const highResLoader = new Image();
-    highResLoader.decoding = "async";
-    highResLoader.onload = () => {
+    loadImageSourceWithHeicSupport(previewUrl).then((resolvedPreview) => {
       if (requestToken !== activeFullImageRequestToken) return;
-      imgEl.src = fullUrl;
-      imgEl.classList.remove("loading-blur");
-      loaderOverlay.style.display = "none";
-    };
-    highResLoader.onerror = () => {
-      if (requestToken !== activeFullImageRequestToken) return;
-      imgEl.classList.remove("loading-blur");
-      loaderOverlay.style.display = "none";
-    };
-    highResLoader.src = fullUrl;
+      imgEl.src = resolvedPreview;
+    });
+
+    loadImageSourceWithHeicSupport(fullUrl)
+      .then((resolvedFull) => {
+        if (requestToken !== activeFullImageRequestToken) return;
+        const highResLoader = new Image();
+        highResLoader.decoding = "async";
+        highResLoader.onload = () => {
+          if (requestToken !== activeFullImageRequestToken) return;
+          imgEl.src = resolvedFull;
+          imgEl.classList.remove("loading-blur");
+          loaderOverlay.style.display = "none";
+        };
+        highResLoader.onerror = () => {
+          if (requestToken !== activeFullImageRequestToken) return;
+          imgEl.classList.remove("loading-blur");
+          loaderOverlay.style.display = "none";
+        };
+        highResLoader.src = resolvedFull;
+      })
+      .catch(() => {
+        if (requestToken !== activeFullImageRequestToken) return;
+        loaderOverlay.style.display = "none";
+        imgEl.style.display = "none";
+        showGenericFileFallback(item, "Browser could not decode this image format directly.");
+      });
+  } else {
+    showGenericFileFallback(item);
   }
 
   document.getElementById("lightbox-caption").textContent = item.caption || "";
@@ -1393,8 +2479,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("page-loader").classList.add("loaded");
     document.body.classList.add("page-ready");
 
-    // Only pre-load inactive tabs in the background on desktop!
-    // Mobile devices load Projects and Photography on-demand when the user taps the tab.
     if (!IS_MOBILE) {
       const startDeferredBackgroundLoading = async () => {
         await loadAndRenderProjects();
@@ -1409,7 +2493,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     }
   }, 300);
 
-  // Hamburger Menu Toggle (<= 600px)
   const mobileMenuBtn = document.getElementById("mobile-menu-btn");
   const mainTabNav = document.getElementById("main-tab-nav");
 
@@ -1435,7 +2518,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  // Top Tab Navigation
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
       if (btn.dataset.index !== undefined) {
@@ -1484,6 +2566,17 @@ window.addEventListener("DOMContentLoaded", async () => {
     e.stopPropagation();
     stepLightbox(1);
   });
+
+  const lbKeysBtn = document.getElementById("lightbox-keys-btn");
+  const lbKeysPopover = document.getElementById("lightbox-keys-popover");
+  if (lbKeysBtn && lbKeysPopover) {
+    lbKeysBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const isVisible = lbKeysPopover.style.display === "block";
+      lbKeysPopover.style.display = isVisible ? "none" : "block";
+    });
+    lbKeysPopover.addEventListener("click", (e) => e.stopPropagation());
+  }
 
   window.addEventListener("keydown", (e) => {
     if (lightboxModal.classList.contains("open")) {

@@ -1,0 +1,7 @@
+TITLE: Untitled Project
+CODE: PRJ // ARCHIVE
+MAIN_FILE: app:app/index.html
+APP: app/index.html
+ASSETS: app:app/index.html
+DESCRIPTION:
+Project description goes here.
