@@ -3,28 +3,34 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#1f2326" />
   <title>Alexander Zhuk</title>
-  <link rel="icon" type="image/png" href="azcore-favicon.png">
-  <meta name="description" content="Portfolio of Alexander Zhuk, Civil Engineering student at Illinois Institute of Technology specializing in structural design, 3D modeling, and photography.">
+  <link rel="icon" type="image/png" href="azcore-favicon.png" />
+  <meta name="description" content="Portfolio of Alexander Zhuk, Civil Engineering student at Illinois Institute of Technology specializing in structural design, 3D modeling, and photography." />
+
+  <!-- Preconnect to Font & Script CDNs -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+
   <!-- Google Fonts: Space Grotesk & JetBrains Mono -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 
-  <!-- Three.js + STLLoader + GLTFLoader + DRACOLoader + OrbitControls -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-  <!-- HEIC/HEIF Phone Photo Decoder -->
-  <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+  <!-- Deferred Three.js + Loaders + OrbitControls + HEIC Decoder -->
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+  <script defer src="script.js"></script>
 </head>
 <body class="cad-theme">
 
   <!-- INITIAL PAGE LOAD OVERLAY -->
-  <div id="page-loader" class="page-loader">
+  <div id="page-loader" class="page-loader" role="status" aria-live="polite">
     <div class="loader-inner">
       <div class="loader-logo">AZ<span>CORE</span></div>
       <div class="loader-bar-track">
@@ -35,7 +41,7 @@
   </div>
 
   <!-- DYNAMIC BACKGROUND LAYER -->
-  <div id="bg-canvas-layer" class="bg-canvas-layer">
+  <div id="bg-canvas-layer" class="bg-canvas-layer" aria-hidden="true">
     <div class="cad-grid-major"></div>
     <div class="cad-grid-minor"></div>
   </div>
@@ -48,20 +54,20 @@
     </div>
 
     <!-- Hamburger Menu Toggle Button (Only visible below 860px) -->
-    <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Toggle Navigation Menu" aria-expanded="false">
+    <button type="button" id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Toggle Navigation Menu" aria-expanded="false" aria-controls="main-tab-nav">
       <span class="ham-line"></span>
       <span class="ham-line"></span>
       <span class="ham-line"></span>
     </button>
 
     <nav id="main-tab-nav" class="tab-nav" aria-label="Main Navigation">
-      <button class="tab-btn active" data-tab="about" data-index="0">
+      <button type="button" class="tab-btn active" data-tab="about" data-index="0">
         <span class="tab-num">01</span> ABOUT ME
       </button>
-      <button class="tab-btn" data-tab="projects" data-index="1">
+      <button type="button" class="tab-btn" data-tab="projects" data-index="1">
         <span class="tab-num">02</span> PROJECTS
       </button>
-      <button class="tab-btn" data-tab="photography" data-index="2">
+      <button type="button" class="tab-btn" data-tab="photography" data-index="2">
         <span class="tab-num">03</span> PHOTOGRAPHY
       </button>
       <a id="nav-resume-tab" class="tab-btn" href="assets/about/resume.pdf" target="_blank" rel="noopener noreferrer">
@@ -75,14 +81,14 @@
   </header>
 
   <!-- FADED SIDE NAVIGATION BARS -->
-  <button id="side-nav-prev" class="side-nav-bar side-nav-left EntranceFade" style="--delay: 0.25s" aria-label="Previous Section">
+  <button type="button" id="side-nav-prev" class="side-nav-bar side-nav-left EntranceFade" style="--delay: 0.25s" aria-label="Previous Section">
     <div class="side-nav-inner">
       <span class="side-arrow">&#8592;</span>
       <span class="side-label" id="prev-tab-label">PHOTOGRAPHY</span>
     </div>
   </button>
 
-  <button id="side-nav-next" class="side-nav-bar side-nav-right EntranceFade" style="--delay: 0.25s" aria-label="Next Section">
+  <button type="button" id="side-nav-next" class="side-nav-bar side-nav-right EntranceFade" style="--delay: 0.25s" aria-label="Next Section">
     <div class="side-nav-inner">
       <span class="side-label" id="next-tab-label">PROJECTS</span>
       <span class="side-arrow">&#8594;</span>
@@ -106,7 +112,7 @@
             <span class="corner-tick tr"></span>
             <span class="corner-tick bl"></span>
             <span class="corner-tick br"></span>
-            <img id="about-profile-img" class="interactive-img" src="" alt="Profile Portrait" />
+            <img id="about-profile-img" class="interactive-img" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Profile Portrait" fetchpriority="high" decoding="async" />
             <div class="portrait-caption">
               <span id="about-name-caption">ALEXANDER ZHUK</span>
               <span class="accent-text">// Portrait</span>
@@ -119,9 +125,9 @@
         <div class="about-content-col">
           <div class="cad-panel">
             <div class="panel-header">
-              <span class="panel-title">// BIO & OVERVIEW</span>
+              <span class="panel-title">// BIO &amp; OVERVIEW</span>
             </div>
-            <div id="about-bio-content" class="bio-text" contenteditable="false"></div>
+            <div id="about-bio-content" class="bio-text"></div>
           </div>
 
           <div class="cad-panel">
@@ -133,7 +139,7 @@
 
           <div class="cad-panel">
             <div class="panel-header">
-              <span class="panel-title">// WAYS TO REACH ME & SOCIALS</span>
+              <span class="panel-title">// WAYS TO REACH ME &amp; SOCIALS</span>
             </div>
             <div id="about-socials-grid" class="socials-grid"></div>
           </div>
@@ -176,9 +182,9 @@
   </main>
 
   <!-- UNIVERSAL FULL-SCREEN LIGHTBOX -->
-  <div id="lightbox-modal" class="lightbox-modal" aria-hidden="true">
+  <div id="lightbox-modal" class="lightbox-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="lightbox-caption">
     <div class="lightbox-backdrop-hint">CLICK ANYWHERE OUTSIDE VIEWER TO CLOSE [ESC]</div>
-    <button class="lightbox-nav lightbox-prev" id="lightbox-prev" aria-label="Previous Item">&#8592;</button>
+    <button type="button" class="lightbox-nav lightbox-prev" id="lightbox-prev" aria-label="Previous Item">&#8592;</button>
 
     <div class="lightbox-content-wrapper" id="lightbox-content-wrapper">
       
@@ -186,10 +192,10 @@
       <div class="lightbox-caption-bar">
         <span id="lightbox-caption">PREVIEW</span>
         <div class="lightbox-caption-right">
-          <button id="lightbox-keys-btn" class="mini-action-btn" style="display:none;">&#9000; CONTROLS</button>
-          <button id="model-reset-btn" class="mini-action-btn" style="display:none;">RESET VIEW</button>
+          <button type="button" id="lightbox-keys-btn" class="mini-action-btn" style="display:none;">&#9000; CONTROLS</button>
+          <button type="button" id="model-reset-btn" class="mini-action-btn" style="display:none;">RESET VIEW</button>
           <a id="lightbox-external-btn" class="mini-action-btn" href="#" target="_blank" rel="noopener noreferrer" style="display:none; text-decoration:none;">OPEN TAB &#8599;</a>
-          <button id="lightbox-close" class="mini-action-btn lightbox-exit-btn" aria-label="Close Viewer">&#10005; EXIT</button>
+          <button type="button" id="lightbox-close" class="mini-action-btn lightbox-exit-btn" aria-label="Close Viewer">&#10005; EXIT</button>
         </div>
       </div>
 
@@ -198,18 +204,15 @@
 
       <!-- GAME CROSSHAIR VIRTUAL CURSOR FOR EMBEDDED APPS -->
       <div id="lightbox-virtual-cursor" class="virtual-cursor-overlay" style="display:none;" aria-label="Virtual Crosshair Cursor">
-        <svg class="vcursor-crosshair-svg" viewBox="0 0 32 32" width="32" height="32">
-          <!-- Outer Dark Halo for Visibility on Any Background -->
+        <svg class="vcursor-crosshair-svg" viewBox="0 0 32 32" width="32" height="32" aria-hidden="true">
           <line x1="16" y1="3" x2="16" y2="12" stroke="#000000" stroke-width="4" stroke-linecap="square" />
           <line x1="16" y1="20" x2="16" y2="29" stroke="#000000" stroke-width="4" stroke-linecap="square" />
           <line x1="3" y1="16" x2="12" y2="16" stroke="#000000" stroke-width="4" stroke-linecap="square" />
           <line x1="20" y1="16" x2="29" y2="16" stroke="#000000" stroke-width="4" stroke-linecap="square" />
-          <!-- Crisp Game Crosshair Arms -->
           <line x1="16" y1="4" x2="16" y2="11" stroke="#ffffff" stroke-width="2" stroke-linecap="square" />
           <line x1="16" y1="21" x2="16" y2="28" stroke="#ffffff" stroke-width="2" stroke-linecap="square" />
           <line x1="4" y1="16" x2="11" y2="16" stroke="#ffffff" stroke-width="2" stroke-linecap="square" />
           <line x1="21" y1="16" x2="28" y2="16" stroke="#ffffff" stroke-width="2" stroke-linecap="square" />
-          <!-- Center Reticle Dot -->
           <circle cx="16" cy="16" r="2" fill="#d92804" />
         </svg>
       </div>
@@ -219,7 +222,7 @@
         <div class="cad-loader-text" id="lightbox-loader-text">LOADING FULL-RESOLUTION ASSET...</div>
       </div>
 
-      <img id="lightbox-img" src="" alt="Full screen preview" />
+      <img id="lightbox-img" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Full screen preview" decoding="async" />
 
       <video id="lightbox-video" class="lightbox-video" controls controlsList="nodownload" playsinline preload="none" style="display:none;"></video>
 
@@ -248,10 +251,10 @@
 
     </div>
 
-    <button class="lightbox-nav lightbox-next" id="lightbox-next" aria-label="Next Item">&#8594;</button>
+    <button type="button" class="lightbox-nav lightbox-next" id="lightbox-next" aria-label="Next Item">&#8594;</button>
   </div>
-  <canvas id="color-sampler-canvas" width="24" height="24" style="display:none;"></canvas>
 
-  <script src="script.js"></script>
+  <canvas id="color-sampler-canvas" width="24" height="24" style="display:none;" aria-hidden="true"></canvas>
+
 </body>
 </html>

@@ -85,6 +85,51 @@ const PORTFOLIO_CONFIG = {
 const verifiedUrlCache = new Map();
 const heicBlobCache = new Map();
 
+const FALLBACK_RUN_SVG_URI = `data:image/svg+xml;utf8,${encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500">
+    <rect width="800" height="500" fill="#14181c"/>
+    <g stroke="rgba(255,255,255,0.06)" stroke-width="1">
+      <line x1="0" y1="100" x2="800" y2="100"/><line x1="0" y1="200" x2="800" y2="200"/>
+      <line x1="0" y1="300" x2="800" y2="300"/><line x1="0" y1="400" x2="800" y2="400"/>
+      <line x1="160" y1="0" x2="160" y2="500"/><line x1="320" y1="0" x2="320" y2="500"/>
+      <line x1="480" y1="0" x2="480" y2="500"/><line x1="640" y1="0" x2="640" y2="500"/>
+    </g>
+    <line x1="0" y1="250" x2="800" y2="250" stroke="rgba(217,40,4,0.35)" stroke-width="1" stroke-dasharray="6,6"/>
+    <line x1="400" y1="0" x2="400" y2="500" stroke="rgba(217,40,4,0.35)" stroke-width="1" stroke-dasharray="6,6"/>
+    <text x="28" y="468" fill="#9aa4ae" font-family="monospace" font-size="15">LAUNCH APPLICATION</text>
+  </svg>`
+)}`;
+
+const KEY_SPEC_MAP = {
+  CURSOR: { tokenName: "CURSOR", label: "CURSOR", key: "__CURSOR__", code: "VirtualCursor", keyCode: 0, isCursorToggle: true },
+  MOUSE: { tokenName: "CURSOR", label: "CURSOR", key: "__CURSOR__", code: "VirtualCursor", keyCode: 0, isCursorToggle: true },
+  POINTER: { tokenName: "CURSOR", label: "CURSOR", key: "__CURSOR__", code: "VirtualCursor", keyCode: 0, isCursorToggle: true },
+  CLICK: { tokenName: "CLICK", label: "L-CLICK", key: "__CLICK__", code: "MouseLeft", keyCode: 1, isMouseClick: true },
+  LMB: { tokenName: "CLICK", label: "L-CLICK", key: "__CLICK__", code: "MouseLeft", keyCode: 1, isMouseClick: true },
+  SPACE: { tokenName: "SPACE", label: "SPACE", key: " ", code: "Space", keyCode: 32 },
+  SPACEBAR: { tokenName: "SPACE", label: "SPACE", key: " ", code: "Space", keyCode: 32 },
+  UP: { tokenName: "UP", label: "↑", key: "ArrowUp", code: "ArrowUp", keyCode: 38 },
+  ARROWUP: { tokenName: "UP", label: "↑", key: "ArrowUp", code: "ArrowUp", keyCode: 38 },
+  "↑": { tokenName: "UP", label: "↑", key: "ArrowUp", code: "ArrowUp", keyCode: 38 },
+  DOWN: { tokenName: "DOWN", label: "↓", key: "ArrowDown", code: "ArrowDown", keyCode: 40 },
+  ARROWDOWN: { tokenName: "DOWN", label: "↓", key: "ArrowDown", code: "ArrowDown", keyCode: 40 },
+  "↓": { tokenName: "DOWN", label: "↓", key: "ArrowDown", code: "ArrowDown", keyCode: 40 },
+  LEFT: { tokenName: "LEFT", label: "←", key: "ArrowLeft", code: "ArrowLeft", keyCode: 37 },
+  ARROWLEFT: { tokenName: "LEFT", label: "←", key: "ArrowLeft", code: "ArrowLeft", keyCode: 37 },
+  "←": { tokenName: "LEFT", label: "←", key: "ArrowLeft", code: "ArrowLeft", keyCode: 37 },
+  RIGHT: { tokenName: "RIGHT", label: "→", key: "ArrowRight", code: "ArrowRight", keyCode: 39 },
+  ARROWRIGHT: { tokenName: "RIGHT", label: "→", key: "ArrowRight", code: "ArrowRight", keyCode: 39 },
+  "→": { tokenName: "RIGHT", label: "→", key: "ArrowRight", code: "ArrowRight", keyCode: 39 },
+  SHIFT: { tokenName: "SHIFT", label: "SHIFT", key: "Shift", code: "ShiftLeft", keyCode: 16 },
+  CTRL: { tokenName: "CTRL", label: "CTRL", key: "Control", code: "ControlLeft", keyCode: 17 },
+  CONTROL: { tokenName: "CTRL", label: "CTRL", key: "Control", code: "ControlLeft", keyCode: 17 },
+  ALT: { tokenName: "ALT", label: "ALT", key: "Alt", code: "AltLeft", keyCode: 18 },
+  ENTER: { tokenName: "ENTER", label: "ENTER", key: "Enter", code: "Enter", keyCode: 13 },
+  TAB: { tokenName: "TAB", label: "TAB", key: "Tab", code: "Tab", keyCode: 9 },
+  ESC: { tokenName: "ESC", label: "ESC", key: "Escape", code: "Escape", keyCode: 27 },
+  ESCAPE: { tokenName: "ESC", label: "ESC", key: "Escape", code: "Escape", keyCode: 27 }
+};
+
 // Runtime state for the Lightbox Virtual Crosshair Cursor (always starts OFF)
 const lightboxVirtualCursorState = {
   enabled: false,
@@ -133,48 +178,29 @@ function normalizeExternalUrl(rawUrl) {
   if (!rawUrl) return "#";
   const { baseToken } = splitAssetTokenAndThumb(rawUrl);
   const cleaned = baseToken.trim().replace(/^(run|link|url)\s*:\s*/i, "").trim();
-  if (/^(https?:\/\/|mailto:|tel:|\/|\.)/i.test(cleaned)) return cleaned;
-  return "https://" + cleaned;
+  return /^(https?:\/\/|mailto:|tel:|\/|\.)/i.test(cleaned) ? cleaned : "https://" + cleaned;
 }
 
 function getFallbackRunSvgDataUri() {
-  return `data:image/svg+xml;utf8,${encodeURIComponent(
-    `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="500" viewBox="0 0 800 500">
-      <rect width="800" height="500" fill="#14181c"/>
-      <g stroke="rgba(255,255,255,0.06)" stroke-width="1">
-        <line x1="0" y1="100" x2="800" y2="100"/><line x1="0" y1="200" x2="800" y2="200"/>
-        <line x1="0" y1="300" x2="800" y2="300"/><line x1="0" y1="400" x2="800" y2="400"/>
-        <line x1="160" y1="0" x2="160" y2="500"/><line x1="320" y1="0" x2="320" y2="500"/>
-        <line x1="480" y1="0" x2="480" y2="500"/><line x1="640" y1="0" x2="640" y2="500"/>
-      </g>
-      <line x1="0" y1="250" x2="800" y2="250" stroke="rgba(217,40,4,0.35)" stroke-width="1" stroke-dasharray="6,6"/>
-      <line x1="400" y1="0" x2="400" y2="500" stroke="rgba(217,40,4,0.35)" stroke-width="1" stroke-dasharray="6,6"/>
-      <text x="28" y="468" fill="#9aa4ae" font-family="monospace" font-size="15">LAUNCH APPLICATION</text>
-    </svg>`
-  )}`;
+  return FALLBACK_RUN_SVG_URI;
 }
 
 function getAssetType(filename) {
   if (!filename) return "file";
   const { baseToken } = splitAssetTokenAndThumb(filename);
   const trimmed = baseToken.trim();
-  if (/^(app|embed)\s*:/i.test(trimmed)) {
-    return "itch";
-  }
-  if (/^itch\s*:/i.test(trimmed) || /<iframe/i.test(trimmed) || /itch\.io\/embed/i.test(trimmed)) {
-    return "itch";
-  }
-  if (/^(run|link|url)\s*:/i.test(trimmed)) {
-    return "link";
-  }
+  if (/^(app|embed)\s*:/i.test(trimmed)) return "itch";
+  if (/^itch\s*:/i.test(trimmed) || /<iframe/i.test(trimmed) || /itch\.io\/embed/i.test(trimmed)) return "itch";
+  if (/^(run|link|url)\s*:/i.test(trimmed)) return "link";
+
   const ext = getFileExtension(trimmed);
-  if (["html", "htm"].includes(ext)) return "itch";
-  if (["glb", "gltf"].includes(ext)) return "glb";
+  if (ext === "html" || ext === "htm") return "itch";
+  if (ext === "glb" || ext === "gltf") return "glb";
   if (ext === "stl") return "stl";
   if (["mp4", "webm", "mov", "m4v", "ogg", "ogv", "mkv", "avi"].includes(ext)) return "video";
   if (["mp3", "wav", "m4a", "flac", "aac"].includes(ext)) return "audio";
   if (ext === "pdf") return "pdf";
-  if (["heic", "heif"].includes(ext)) return "heic";
+  if (ext === "heic" || ext === "heif") return "heic";
   if (["jpg", "jpeg", "png", "webp", "gif", "bmp", "svg", "avif"].includes(ext)) return "image";
   return "file";
 }
@@ -190,15 +216,18 @@ function isImageAsset(type) {
 async function loadImageSourceWithHeicSupport(url) {
   if (!/\.heic$|\.heif$/i.test(url)) return url;
   if (heicBlobCache.has(url)) return heicBlobCache.get(url);
-
   if (typeof heic2any === "undefined") return url;
-  const res = await fetch(url);
-  const blob = await res.blob();
-  const converted = await heic2any({ blob, toType: "image/jpeg", quality: 0.88 });
-  const finalBlob = Array.isArray(converted) ? converted[0] : converted;
-  const objectUrl = URL.createObjectURL(finalBlob);
-  heicBlobCache.set(url, objectUrl);
-  return objectUrl;
+
+  const promise = (async () => {
+    const res = await fetch(url);
+    const blob = await res.blob();
+    const converted = await heic2any({ blob, toType: "image/jpeg", quality: 0.88 });
+    const finalBlob = Array.isArray(converted) ? converted[0] : converted;
+    return URL.createObjectURL(finalBlob);
+  })();
+
+  heicBlobCache.set(url, promise);
+  return promise;
 }
 
 /**
@@ -206,46 +235,15 @@ async function loadImageSourceWithHeicSupport(url) {
  */
 function resolveKeySpec(rawToken) {
   const upper = String(rawToken || "").trim().toUpperCase();
-  const map = {
-    CURSOR: { tokenName: "CURSOR", label: "CURSOR", key: "__CURSOR__", code: "VirtualCursor", keyCode: 0, isCursorToggle: true },
-    MOUSE: { tokenName: "CURSOR", label: "CURSOR", key: "__CURSOR__", code: "VirtualCursor", keyCode: 0, isCursorToggle: true },
-    POINTER: { tokenName: "CURSOR", label: "CURSOR", key: "__CURSOR__", code: "VirtualCursor", keyCode: 0, isCursorToggle: true },
-    CLICK: { tokenName: "CLICK", label: "L-CLICK", key: "__CLICK__", code: "MouseLeft", keyCode: 1, isMouseClick: true },
-    LMB: { tokenName: "CLICK", label: "L-CLICK", key: "__CLICK__", code: "MouseLeft", keyCode: 1, isMouseClick: true },
-    SPACE: { tokenName: "SPACE", label: "SPACE", key: " ", code: "Space", keyCode: 32 },
-    SPACEBAR: { tokenName: "SPACE", label: "SPACE", key: " ", code: "Space", keyCode: 32 },
-    UP: { tokenName: "UP", label: "↑", key: "ArrowUp", code: "ArrowUp", keyCode: 38 },
-    ARROWUP: { tokenName: "UP", label: "↑", key: "ArrowUp", code: "ArrowUp", keyCode: 38 },
-    "↑": { tokenName: "UP", label: "↑", key: "ArrowUp", code: "ArrowUp", keyCode: 38 },
-    DOWN: { tokenName: "DOWN", label: "↓", key: "ArrowDown", code: "ArrowDown", keyCode: 40 },
-    ARROWDOWN: { tokenName: "DOWN", label: "↓", key: "ArrowDown", code: "ArrowDown", keyCode: 40 },
-    "↓": { tokenName: "DOWN", label: "↓", key: "ArrowDown", code: "ArrowDown", keyCode: 40 },
-    LEFT: { tokenName: "LEFT", label: "←", key: "ArrowLeft", code: "ArrowLeft", keyCode: 37 },
-    ARROWLEFT: { tokenName: "LEFT", label: "←", key: "ArrowLeft", code: "ArrowLeft", keyCode: 37 },
-    "←": { tokenName: "LEFT", label: "←", key: "ArrowLeft", code: "ArrowLeft", keyCode: 37 },
-    RIGHT: { tokenName: "RIGHT", label: "→", key: "ArrowRight", code: "ArrowRight", keyCode: 39 },
-    ARROWRIGHT: { tokenName: "RIGHT", label: "→", key: "ArrowRight", code: "ArrowRight", keyCode: 39 },
-    "→": { tokenName: "RIGHT", label: "→", key: "ArrowRight", code: "ArrowRight", keyCode: 39 },
-    SHIFT: { tokenName: "SHIFT", label: "SHIFT", key: "Shift", code: "ShiftLeft", keyCode: 16 },
-    CTRL: { tokenName: "CTRL", label: "CTRL", key: "Control", code: "ControlLeft", keyCode: 17 },
-    CONTROL: { tokenName: "CTRL", label: "CTRL", key: "Control", code: "ControlLeft", keyCode: 17 },
-    ALT: { tokenName: "ALT", label: "ALT", key: "Alt", code: "AltLeft", keyCode: 18 },
-    ENTER: { tokenName: "ENTER", label: "ENTER", key: "Enter", code: "Enter", keyCode: 13 },
-    TAB: { tokenName: "TAB", label: "TAB", key: "Tab", code: "Tab", keyCode: 9 },
-    ESC: { tokenName: "ESC", label: "ESC", key: "Escape", code: "Escape", keyCode: 27 },
-    ESCAPE: { tokenName: "ESC", label: "ESC", key: "Escape", code: "Escape", keyCode: 27 }
-  };
-
-  if (map[upper]) return map[upper];
+  if (KEY_SPEC_MAP[upper]) return KEY_SPEC_MAP[upper];
 
   if (upper.length === 1) {
     const codeNum = upper.charCodeAt(0);
-    const isDigit = /[0-9]/.test(upper);
     return {
       tokenName: upper,
       label: upper,
       key: upper.toLowerCase(),
-      code: isDigit ? `Digit${upper}` : `Key${upper}`,
+      code: /[0-9]/.test(upper) ? `Digit${upper}` : `Key${upper}`,
       keyCode: codeNum
     };
   }
@@ -264,11 +262,7 @@ function resolveKeySpec(rawToken) {
  */
 function expandVirtualKeysList(keysString) {
   if (!keysString || !keysString.trim()) return [];
-  const entries = keysString
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-
+  const entries = keysString.split(",").map((s) => s.trim()).filter(Boolean);
   const rawButtons = [];
 
   entries.forEach((entry) => {
@@ -289,34 +283,22 @@ function expandVirtualKeysList(keysString) {
     const upperKey = rawKeyPart.toUpperCase().replace(/\s+/g, "");
 
     if (upperKey === "WASD") {
-      const wasdDefaults = [
+      [
         { ch: "W", c: 2, r: 0 },
         { ch: "A", c: 1, r: 1 },
         { ch: "S", c: 2, r: 1 },
         { ch: "D", c: 3, r: 1 }
-      ];
-      wasdDefaults.forEach((item) => {
-        rawButtons.push({
-          ...resolveKeySpec(item.ch),
-          desc: actionDesc || "Move",
-          col: item.c,
-          row: item.r
-        });
+      ].forEach((item) => {
+        rawButtons.push({ ...resolveKeySpec(item.ch), desc: actionDesc || "Move", col: item.c, row: item.r });
       });
     } else if (upperKey === "ARROWS" || upperKey === "ARROWKEYS") {
-      const arrowDefaults = [
+      [
         { dir: "UP", c: 2, r: 0 },
         { dir: "LEFT", c: 1, r: 1 },
         { dir: "DOWN", c: 2, r: 1 },
         { dir: "RIGHT", c: 3, r: 1 }
-      ];
-      arrowDefaults.forEach((item) => {
-        rawButtons.push({
-          ...resolveKeySpec(item.dir),
-          desc: actionDesc || "Move",
-          col: item.c,
-          row: item.r
-        });
+      ].forEach((item) => {
+        rawButtons.push({ ...resolveKeySpec(item.dir), desc: actionDesc || "Move", col: item.c, row: item.r });
       });
     } else if (rawKeyPart.includes("/")) {
       rawKeyPart
@@ -336,12 +318,9 @@ function expandVirtualKeysList(keysString) {
     }
   });
 
-  // Assign non-colliding grid slots for any keys without explicit @col:row
   const occupied = new Set();
   rawButtons.forEach((b) => {
-    if (b.col !== null && b.row !== null) {
-      occupied.add(`${b.col}:${b.row}`);
-    }
+    if (b.col !== null && b.row !== null) occupied.add(`${b.col}:${b.row}`);
   });
 
   let nextCol = 0;
@@ -363,11 +342,6 @@ function expandVirtualKeysList(keysString) {
 
   return rawButtons;
 }
-
-/**
- * Dispatches virtual crosshair cursor coordinate events directly into iframe games
- */
-
 
 function setLightboxIframeVirtualCursorFlag(isActive) {
   const frame = document.getElementById("lightbox-itch-frame");
@@ -399,12 +373,11 @@ function installRealMouseBlockerInLightboxIframe() {
     };
 
     ["mousemove", "pointermove", "mousedown", "mouseup", "touchstart", "touchmove", "touchend"].forEach(
-      (evtName) => {
-        doc.addEventListener(evtName, blockRealPointerIfVirtualActive, true);
-      }
+      (evtName) => doc.addEventListener(evtName, blockRealPointerIfVirtualActive, true)
     );
   } catch (e) {}
 }
+
 /**
  * Dispatches virtual crosshair cursor coordinate events directly into iframe games
  */
@@ -421,7 +394,6 @@ function dispatchVirtualCursorToLightboxIframe(xRatio, yRatio, eventType = "mous
     const targetW = rect.width || frame.clientWidth || 800;
     const targetH = rect.height || frame.clientHeight || 600;
 
-    // Exact pixel inside the canvas/iframe corresponding to the center of the '+'
     const clientX = rect.left + xRatio * targetW;
     const clientY = rect.top + yRatio * targetH;
     const offsetX = xRatio * targetW;
@@ -491,7 +463,6 @@ function updateLightboxVirtualCursorVisibilityAndPosition() {
   }
 
   if (active) {
-    // Measure directly against the iframe so the top caption bar never offsets the '+'
     const wrapRect = stageWrap.getBoundingClientRect();
     const frameRect =
       frame && frame.style.display !== "none" ? frame.getBoundingClientRect() : wrapRect;
@@ -501,11 +472,8 @@ function updateLightboxVirtualCursorVisibilityAndPosition() {
     const w = frameRect.width || stageWrap.clientWidth || 800;
     const h = frameRect.height || stageWrap.clientHeight || 600;
 
-    const px = frameOffsetLeft + lightboxVirtualCursorState.xRatio * w;
-    const py = frameOffsetTop + lightboxVirtualCursorState.yRatio * h;
-
-    cursorEl.style.left = `${px}px`;
-    cursorEl.style.top = `${py}px`;
+    cursorEl.style.left = `${frameOffsetLeft + lightboxVirtualCursorState.xRatio * w}px`;
+    cursorEl.style.top = `${frameOffsetTop + lightboxVirtualCursorState.yRatio * h}px`;
 
     installRealMouseBlockerInLightboxIframe();
     dispatchVirtualCursorToLightboxIframe(
@@ -524,11 +492,7 @@ function setupLightboxVirtualCursorDrag() {
   if (!cursorEl || !stageWrap || cursorEl.dataset.bound === "true") return;
   cursorEl.dataset.bound = "true";
 
-  let startX = 0;
-  let startY = 0;
-  let grabOffsetX = 0;
-  let grabOffsetY = 0;
-  let moved = false;
+  let startX = 0, startY = 0, grabOffsetX = 0, grabOffsetY = 0, moved = false;
 
   const onPointerDown = (e) => {
     e.preventDefault();
@@ -539,12 +503,9 @@ function setupLightboxVirtualCursorDrag() {
     startX = pt.clientX;
     startY = pt.clientY;
 
-    // Preserve where on the crosshair you grabbed so the center of '+' never jumps
     const cursorRect = cursorEl.getBoundingClientRect();
-    const cursorCenterX = cursorRect.left + cursorRect.width / 2;
-    const cursorCenterY = cursorRect.top + cursorRect.height / 2;
-    grabOffsetX = pt.clientX - cursorCenterX;
-    grabOffsetY = pt.clientY - cursorCenterY;
+    grabOffsetX = pt.clientX - (cursorRect.left + cursorRect.width / 2);
+    grabOffsetY = pt.clientY - (cursorRect.top + cursorRect.height / 2);
 
     cursorEl.classList.add("dragging");
   };
@@ -553,9 +514,7 @@ function setupLightboxVirtualCursorDrag() {
     if (!lightboxVirtualCursorState.isDragging) return;
     e.preventDefault();
     const pt = e.touches ? e.touches[0] : e;
-    if (Math.hypot(pt.clientX - startX, pt.clientY - startY) > 5) {
-      moved = true;
-    }
+    if (Math.hypot(pt.clientX - startX, pt.clientY - startY) > 5) moved = true;
 
     const rect =
       frame && frame.style.display !== "none"
@@ -563,11 +522,8 @@ function setupLightboxVirtualCursorDrag() {
         : stageWrap.getBoundingClientRect();
     if (!rect.width || !rect.height) return;
 
-    const exactCenterX = pt.clientX - grabOffsetX;
-    const exactCenterY = pt.clientY - grabOffsetY;
-
-    lightboxVirtualCursorState.xRatio = Math.max(0, Math.min(1, (exactCenterX - rect.left) / rect.width));
-    lightboxVirtualCursorState.yRatio = Math.max(0, Math.min(1, (exactCenterY - rect.top) / rect.height));
+    lightboxVirtualCursorState.xRatio = Math.max(0, Math.min(1, (pt.clientX - grabOffsetX - rect.left) / rect.width));
+    lightboxVirtualCursorState.yRatio = Math.max(0, Math.min(1, (pt.clientY - grabOffsetY - rect.top) / rect.height));
     updateLightboxVirtualCursorVisibilityAndPosition();
   };
 
@@ -601,13 +557,10 @@ function makeHudPopoverDraggable(popoverEl) {
   if (!popoverEl || popoverEl.dataset.dragBound === "true") return;
   popoverEl.dataset.dragBound = "true";
 
-  let isDraggingHud = false;
-  let offsetX = 0;
-  let offsetY = 0;
+  let isDraggingHud = false, offsetX = 0, offsetY = 0;
 
   const onStart = (e) => {
-    const handle = e.target.closest(".keys-hud-drag-handle");
-    if (!handle) return;
+    if (!e.target.closest(".keys-hud-drag-handle")) return;
     e.preventDefault();
     e.stopPropagation();
     isDraggingHud = true;
@@ -635,19 +588,14 @@ function makeHudPopoverDraggable(popoverEl) {
       ? popoverEl.offsetParent.getBoundingClientRect()
       : { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
 
-    let newLeft = pt.clientX - parentRect.left - offsetX;
-    let newTop = pt.clientY - parentRect.top - offsetY;
-
-    newLeft = Math.max(4, Math.min(parentRect.width - popoverEl.offsetWidth - 4, newLeft));
-    newTop = Math.max(4, Math.min(parentRect.height - popoverEl.offsetHeight - 4, newTop));
+    const newLeft = Math.max(4, Math.min(parentRect.width - popoverEl.offsetWidth - 4, pt.clientX - parentRect.left - offsetX));
+    const newTop = Math.max(4, Math.min(parentRect.height - popoverEl.offsetHeight - 4, pt.clientY - parentRect.top - offsetY));
 
     popoverEl.style.left = `${Math.round(newLeft)}px`;
     popoverEl.style.top = `${Math.round(newTop)}px`;
   };
 
-  const onEnd = () => {
-    isDraggingHud = false;
-  };
+  const onEnd = () => { isDraggingHud = false; };
 
   popoverEl.addEventListener("mousedown", onStart);
   popoverEl.addEventListener("touchstart", onStart, { passive: false });
@@ -716,7 +664,7 @@ function triggerSyntheticKeyEvent(eventType, spec) {
 
 function buildKeysHudContentHtml(keysString) {
   const buttons = expandVirtualKeysList(keysString);
-  if (buttons.length === 0) return "";
+  if (!buttons.length) return "";
 
   const minCol = Math.min(...buttons.map((b) => b.col));
   const maxCol = Math.max(...buttons.map((b) => b.col));
@@ -770,16 +718,11 @@ function bindInteractiveVirtualKeys(containerEl) {
     { passive: false }
   );
 
-  const btns = containerEl.querySelectorAll(".virtual-key-btn");
-
-  btns.forEach((btn) => {
+  containerEl.querySelectorAll(".virtual-key-btn").forEach((btn) => {
     if (btn.dataset.bound === "true") return;
     btn.dataset.bound = "true";
 
-    const isCursorToggle = btn.dataset.cursorToggle === "true";
-    const isMouseClick = btn.dataset.mouseClick === "true";
-
-    if (isCursorToggle) {
+    if (btn.dataset.cursorToggle === "true") {
       const toggleCursor = (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -791,7 +734,7 @@ function bindInteractiveVirtualKeys(containerEl) {
       return;
     }
 
-    if (isMouseClick) {
+    if (btn.dataset.mouseClick === "true") {
       const downClick = (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -805,10 +748,7 @@ function bindInteractiveVirtualKeys(containerEl) {
         );
       };
       const upClick = (e) => {
-        if (e) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
+        if (e) { e.preventDefault(); e.stopPropagation(); }
         if (!btn.classList.contains("pressed")) return;
         btn.classList.remove("pressed");
         lightboxVirtualCursorState.isMouseDownHold = false;
@@ -846,18 +786,12 @@ function bindInteractiveVirtualKeys(containerEl) {
       e.stopPropagation();
       btn.classList.add("pressed");
       triggerSyntheticKeyEvent("keydown", spec);
-
       if (repeatTimer) clearInterval(repeatTimer);
-      repeatTimer = setInterval(() => {
-        triggerSyntheticKeyEvent("keydown", spec);
-      }, 65);
+      repeatTimer = setInterval(() => triggerSyntheticKeyEvent("keydown", spec), 65);
     };
 
     const endPress = (e) => {
-      if (e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
+      if (e) { e.preventDefault(); e.stopPropagation(); }
       if (!btn.classList.contains("pressed")) return;
       btn.classList.remove("pressed");
       if (repeatTimer) {
@@ -894,13 +828,10 @@ function attachKeysOverlayIfPresent(containerEl, keysString) {
   btn.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
-    const isVisible = popover.style.display === "block";
-    popover.style.display = isVisible ? "none" : "block";
+    popover.style.display = popover.style.display === "block" ? "none" : "block";
   });
 
-  popover.addEventListener("click", (e) => {
-    e.stopPropagation();
-  });
+  popover.addEventListener("click", (e) => e.stopPropagation());
 
   containerEl.appendChild(btn);
   containerEl.appendChild(popover);
@@ -944,15 +875,10 @@ function createRunLinkCard(asset, projectKeys = "", isStackItem = false) {
     linkEl.appendChild(badge);
   }
   linkEl.appendChild(overlay);
-
-  linkEl.addEventListener("click", (e) => {
-    e.stopPropagation();
-  });
+  linkEl.addEventListener("click", (e) => e.stopPropagation());
 
   outer.appendChild(linkEl);
-  if (!isStackItem) {
-    attachKeysOverlayIfPresent(outer, projectKeys);
-  }
+  if (!isStackItem) attachKeysOverlayIfPresent(outer, projectKeys);
   return outer;
 }
 
@@ -970,8 +896,7 @@ function createItchEmbedCard(asset, onOpenLightboxModal, projectKeys = "", isSta
   bgImg.decoding = "async";
   bgImg.alt = "Run Application";
 
-  const thumbToLoad = asset.previewSrc || getFallbackRunSvgDataUri();
-  loadImageSourceWithHeicSupport(thumbToLoad).then((url) => {
+  loadImageSourceWithHeicSupport(asset.previewSrc || getFallbackRunSvgDataUri()).then((url) => {
     bgImg.src = url;
   });
 
@@ -999,9 +924,7 @@ function createItchEmbedCard(asset, onOpenLightboxModal, projectKeys = "", isSta
   });
 
   outer.appendChild(card);
-  if (!isStackItem) {
-    attachKeysOverlayIfPresent(outer, projectKeys);
-  }
+  if (!isStackItem) attachKeysOverlayIfPresent(outer, projectKeys);
   return outer;
 }
 
@@ -1042,23 +965,32 @@ async function runInBatches(items, batchSize, asyncFn) {
   return results;
 }
 
-async function verifyFileExistsFast(url) {
+/**
+ * Deduplicated fast HEAD verification (prevents duplicate concurrent probes for the same URL)
+ */
+function verifyFileExistsFast(url) {
   if (verifiedUrlCache.has(url)) return verifiedUrlCache.get(url);
-  try {
-    const res = await fetch(url, { method: "HEAD", cache: "default" });
-    if (!res.ok) {
+
+  const probePromise = (async () => {
+    try {
+      const res = await fetch(url, { method: "HEAD", cache: "default" });
+      if (!res.ok) {
+        verifiedUrlCache.set(url, false);
+        return false;
+      }
+      const contentType = res.headers.get("content-type") || "";
+      const isHtmlFileRequest = /\.html?(\?|$)/i.test(url);
+      const isValid = isHtmlFileRequest ? true : !contentType.includes("text/html");
+      verifiedUrlCache.set(url, isValid);
+      return isValid;
+    } catch (e) {
       verifiedUrlCache.set(url, false);
       return false;
     }
-    const contentType = res.headers.get("content-type") || "";
-    const isHtmlFileRequest = /\.html?(\?|$)/i.test(url);
-    const isValid = isHtmlFileRequest ? true : !contentType.includes("text/html");
-    verifiedUrlCache.set(url, isValid);
-    return isValid;
-  } catch (e) {
-    verifiedUrlCache.set(url, false);
-    return false;
-  }
+  })();
+
+  verifiedUrlCache.set(url, probePromise);
+  return probePromise;
 }
 
 async function resolveValidUrlWithCaseFallback(baseFolder, fileName) {
@@ -1078,6 +1010,13 @@ async function resolveValidUrlWithCaseFallback(baseFolder, fileName) {
   return null;
 }
 
+async function resolveFirstExistingCandidate(candidates) {
+  for (const candidate of candidates) {
+    if (await verifyFileExistsFast(candidate)) return candidate;
+  }
+  return null;
+}
+
 async function resolveDualImageUrls(baseFolder, previewSub, fullSub, fileName) {
   const normBase = normalizeFolder(baseFolder);
   const normPrev = normalizeFolder(previewSub);
@@ -1088,24 +1027,13 @@ async function resolveDualImageUrls(baseFolder, previewSub, fullSub, fileName) {
   const originalExt = dotIdx !== -1 ? fileName.slice(dotIdx) : ".webp";
 
   const previewExts = [...new Set([".webp", originalExt, ".jpg", ".JPG", ".png", ".heic", ".HEIC"])];
-  let previewUrl = null;
-  for (const ext of previewExts) {
-    const candidate = `${normBase}${normPrev}${baseName}${ext}`;
-    if (await verifyFileExistsFast(candidate)) {
-      previewUrl = candidate;
-      break;
-    }
-  }
-
   const fullExts = [...new Set([".jpg", ".JPG", ".jpeg", originalExt, ".png", ".webp", ".heic", ".HEIC"])];
-  let fullUrl = null;
-  for (const ext of fullExts) {
-    const candidate = `${normBase}${normFull}${baseName}${ext}`;
-    if (await verifyFileExistsFast(candidate)) {
-      fullUrl = candidate;
-      break;
-    }
-  }
+
+  // Probe preview and full candidates concurrently
+  const [previewUrl, fullUrl] = await Promise.all([
+    resolveFirstExistingCandidate(previewExts.map((ext) => `${normBase}${normPrev}${baseName}${ext}`)),
+    resolveFirstExistingCandidate(fullExts.map((ext) => `${normBase}${normFull}${baseName}${ext}`))
+  ]);
 
   if (!previewUrl && !fullUrl) {
     const directUrl = await resolveValidUrlWithCaseFallback(normBase, fileName);
@@ -1169,14 +1097,13 @@ function load3DModelObject(url, type) {
           wrapper.scale.set(scale, scale, scale);
 
           if (IS_MOBILE && modelCache.size >= 2) {
-            const oldestKey = modelCache.keys().next().value;
-            modelCache.delete(oldestKey);
+            modelCache.delete(modelCache.keys().next().value);
           }
           modelCache.set(url, wrapper);
           resolve(wrapper.clone(true));
         },
         undefined,
-        (err) => reject(err)
+        reject
       );
     } else {
       if (typeof THREE === "undefined" || !THREE.STLLoader) {
@@ -1206,14 +1133,13 @@ function load3DModelObject(url, type) {
           wrapper.add(mesh);
 
           if (IS_MOBILE && modelCache.size >= 2) {
-            const oldestKey = modelCache.keys().next().value;
-            modelCache.delete(oldestKey);
+            modelCache.delete(modelCache.keys().next().value);
           }
           modelCache.set(url, wrapper);
           resolve(wrapper.clone(true));
         },
         undefined,
-        (err) => reject(err)
+        reject
       );
     }
   });
@@ -1225,13 +1151,13 @@ function mountAutoRotating3DPreview(container, modelUrl, type) {
   badge.textContent = `3D ${type.toUpperCase()} // TAP TO ORBIT`;
   container.appendChild(badge);
 
-  let scene = null;
-  let camera = null;
-  let renderer = null;
-  let modelGroup = null;
-  let isVisible = false;
-  let animFrameId = null;
-  let isLoadingModel = false;
+  let scene = null,
+    camera = null,
+    renderer = null,
+    modelGroup = null,
+    isVisible = false,
+    animFrameId = null,
+    isLoadingModel = false;
 
   function resizeRenderer() {
     if (!renderer || !camera) return;
@@ -1245,9 +1171,7 @@ function mountAutoRotating3DPreview(container, modelUrl, type) {
   function animate() {
     if (!isVisible || !renderer) return;
     animFrameId = requestAnimationFrame(animate);
-    if (modelGroup) {
-      modelGroup.rotation.y += 0.008;
-    }
+    if (modelGroup) modelGroup.rotation.y += 0.008;
     renderer.render(scene, camera);
   }
 
@@ -1319,13 +1243,11 @@ function mountAutoRotating3DPreview(container, modelUrl, type) {
         isVisible = entry.isIntersecting;
         if (isVisible) {
           initContext();
-        } else {
-          if (IS_MOBILE) {
-            destroyContext();
-          } else if (animFrameId) {
-            cancelAnimationFrame(animFrameId);
-            animFrameId = null;
-          }
+        } else if (IS_MOBILE) {
+          destroyContext();
+        } else if (animFrameId) {
+          cancelAnimationFrame(animFrameId);
+          animFrameId = null;
         }
       });
     },
@@ -1333,13 +1255,7 @@ function mountAutoRotating3DPreview(container, modelUrl, type) {
   );
   observer.observe(container);
 
-  window.addEventListener(
-    "resize",
-    () => {
-      if (isVisible) resizeRenderer();
-    },
-    { passive: true }
-  );
+  window.addEventListener("resize", () => { if (isVisible) resizeRenderer(); }, { passive: true });
 }
 
 /**
@@ -1348,7 +1264,7 @@ function mountAutoRotating3DPreview(container, modelUrl, type) {
  * ============================================================================
  */
 function backgroundPrewarmPreviewImages(previewUrls) {
-  if (IS_MOBILE || !previewUrls || previewUrls.length === 0) return;
+  if (IS_MOBILE || !previewUrls || !previewUrls.length) return;
 
   let currentIndex = 0;
   function loadNextChunk() {
@@ -1388,51 +1304,14 @@ async function renderAboutSection() {
     PORTFOLIO_CONFIG.photographyConfig.gridColumns || 5
   );
 
-  const profileImg = document.getElementById("about-profile-img");
+  // Render static DOM sections immediately before awaiting network checks
   const normAboutFolder = normalizeFolder(cfg.folder);
-  const resolvedProfile =
-    (await resolveValidUrlWithCaseFallback(normAboutFolder, cfg.profileImage)) ||
-    (await resolveValidUrlWithCaseFallback(normAboutFolder, "profile.jpg")) ||
-    (await resolveValidUrlWithCaseFallback(normAboutFolder, "profile.png")) ||
-    (await resolveValidUrlWithCaseFallback(normAboutFolder, "profile.heic"));
-
-  if (resolvedProfile) {
-    const finalProfileUrl = await loadImageSourceWithHeicSupport(resolvedProfile);
-    profileImg.src = finalProfileUrl;
-  } else {
-    profileImg.src = `data:image/svg+xml;utf8,${encodeURIComponent(
-      `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="750" viewBox="0 0 600 750">
-        <rect width="600" height="750" fill="#181b1e"/>
-        <line x1="0" y1="375" x2="600" y2="375" stroke="#d92804" stroke-width="1"/>
-        <line x1="300" y1="0" x2="300" y2="750" stroke="#d92804" stroke-width="1"/>
-        <text x="40" y="700" fill="#9aa4ae" font-family="monospace" font-size="16">PLACE IMAGE AT: ${normAboutFolder}${cfg.profileImage}</text>
-      </svg>`
-    )}`;
-  }
-
-  profileImg.addEventListener("click", () => {
-    openLightbox(
-      [
-        {
-          type: "image",
-          file: cfg.profileImage,
-          previewSrc: profileImg.src,
-          fullSrc: profileImg.src,
-          caption: `${cfg.name}`
-        }
-      ],
-      0
-    );
-  });
-
   const resumePath = cfg.resume.file.startsWith("http")
     ? cfg.resume.file
     : `${normAboutFolder}${cfg.resume.file}`;
 
   const navResumeTab = document.getElementById("nav-resume-tab");
-  if (navResumeTab) {
-    navResumeTab.href = resumePath;
-  }
+  if (navResumeTab) navResumeTab.href = resumePath;
 
   document.getElementById("about-specs-list").innerHTML = cfg.quickSpecs
     .map(
@@ -1457,12 +1336,11 @@ async function renderAboutSection() {
         <div class="skill-group-title">${group.category}</div>
         <div class="skill-tags">
           ${group.items
-            .map((item) => {
-              if (item === "new-row") {
-                return `<div class="skill-row-break"></div>`;
-              }
-              return `<span class="skill-tag">${item}</span>`;
-            })
+            .map((item) =>
+              item === "new-row"
+                ? `<div class="skill-row-break"></div>`
+                : `<span class="skill-tag">${item}</span>`
+            )
             .join("")}
         </div>
       </div>`
@@ -1478,11 +1356,46 @@ async function renderAboutSection() {
       </a>`
     )
     .join("");
+
+  const profileImg = document.getElementById("about-profile-img");
+  const resolvedProfile =
+    (await resolveValidUrlWithCaseFallback(normAboutFolder, cfg.profileImage)) ||
+    (await resolveValidUrlWithCaseFallback(normAboutFolder, "profile.jpg")) ||
+    (await resolveValidUrlWithCaseFallback(normAboutFolder, "profile.png")) ||
+    (await resolveValidUrlWithCaseFallback(normAboutFolder, "profile.heic"));
+
+  if (resolvedProfile) {
+    profileImg.src = await loadImageSourceWithHeicSupport(resolvedProfile);
+  } else {
+    profileImg.src = `data:image/svg+xml;utf8,${encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="750" viewBox="0 0 600 750">
+        <rect width="600" height="750" fill="#181b1e"/>
+        <line x1="0" y1="375" x2="600" y2="375" stroke="#d92804" stroke-width="1"/>
+        <line x1="300" y1="0" x2="300" y2="750" stroke="#d92804" stroke-width="1"/>
+        <text x="40" y="700" fill="#9aa4ae" font-family="monospace" font-size="16">PLACE IMAGE AT: ${normAboutFolder}${cfg.profileImage}</text>
+      </svg>`
+    )}`;
+  }
+
+  profileImg.addEventListener("click", () => {
+    openLightbox(
+      [
+        {
+          type: "image",
+          file: cfg.profileImage,
+          previewSrc: profileImg.src,
+          fullSrc: profileImg.src,
+          caption: cfg.name
+        }
+      ],
+      0
+    );
+  });
 }
 
 /**
  * ============================================================================
- * 6. TAB 2: PROJECT SYSTEM
+ * 6. TAB 2: PROJECT SYSTEM (PARALLELIZED DISCOVERY & BATCHED DOM)
  * ============================================================================
  */
 let projectsLoaded = false;
@@ -1510,9 +1423,7 @@ function parseProjectTextFile(rawText, folderPath) {
 
   function registerThumbIfPresent(rawToken) {
     const { thumbFile } = splitAssetTokenAndThumb(rawToken);
-    if (thumbFile) {
-      data.assignedThumbFiles.add(thumbFile.toLowerCase());
-    }
+    if (thumbFile) data.assignedThumbFiles.add(thumbFile.toLowerCase());
   }
 
   for (const rawLine of lines) {
@@ -1558,9 +1469,7 @@ function parseProjectTextFile(rawText, folderPath) {
       registerThumbIfPresent(rawLink);
       const { thumbFile } = splitAssetTokenAndThumb(rawLink);
       if (rawLink) {
-        data.runLinks.push(
-          `run:${normalizeExternalUrl(rawLink)}${thumbFile ? "|thumb=" + thumbFile : ""}`
-        );
+        data.runLinks.push(`run:${normalizeExternalUrl(rawLink)}${thumbFile ? "|thumb=" + thumbFile : ""}`);
       }
     } else if (/^MAIN(_IMAGE|_STL|_MODEL|_GLB|_VIDEO|_FILE|_ITCH|_LINK|_APP)?\s*:/i.test(line)) {
       inDescription = false;
@@ -1570,9 +1479,7 @@ function parseProjectTextFile(rawText, folderPath) {
       registerThumbIfPresent(rawMain);
       const { thumbFile } = splitAssetTokenAndThumb(rawMain);
       if (/^<iframe/i.test(rawMain) || /itch\.io\/embed/i.test(rawMain)) {
-        data.mainAsset = `itch:${extractItchEmbedUrl(rawMain)}${
-          thumbFile ? "|thumb=" + thumbFile : ""
-        }`;
+        data.mainAsset = `itch:${extractItchEmbedUrl(rawMain)}${thumbFile ? "|thumb=" + thumbFile : ""}`;
       } else {
         data.mainAsset = rawMain;
       }
@@ -1598,11 +1505,7 @@ function parseProjectTextFile(rawText, folderPath) {
 
   [...data.localApps, ...data.runLinks, ...data.itchEmbeds].forEach((token) => {
     const tBase = splitAssetTokenAndThumb(token).baseToken.toLowerCase();
-    if (
-      !data.assets.some(
-        (a) => splitAssetTokenAndThumb(a).baseToken.toLowerCase() === tBase
-      )
-    ) {
+    if (!data.assets.some((a) => splitAssetTokenAndThumb(a).baseToken.toLowerCase() === tBase)) {
       data.assets.push(token);
     }
   });
@@ -1611,9 +1514,7 @@ function parseProjectTextFile(rawText, folderPath) {
     const mainBase = splitAssetTokenAndThumb(data.mainAsset).baseToken.toLowerCase();
     data.assets = [
       data.mainAsset,
-      ...data.assets.filter(
-        (a) => splitAssetTokenAndThumb(a).baseToken.toLowerCase() !== mainBase
-      )
+      ...data.assets.filter((a) => splitAssetTokenAndThumb(a).baseToken.toLowerCase() !== mainBase)
     ];
   }
 
@@ -1633,30 +1534,37 @@ function parseProjectTextFile(rawText, folderPath) {
   return data;
 }
 
+async function resolveInteractiveCoverUrl(projFolder, thumbFile, fallbackNames) {
+  if (thumbFile) {
+    const customThumbUrl = await resolveValidUrlWithCaseFallback(projFolder, thumbFile);
+    if (customThumbUrl) return customThumbUrl;
+  }
+  for (const name of fallbackNames) {
+    const found = await resolveValidUrlWithCaseFallback(projFolder, name);
+    if (found) return found;
+  }
+  return getFallbackRunSvgDataUri();
+}
+
 async function resolveProjectAsset(projFolder, rawToken) {
   const { baseToken, thumbFile } = splitAssetTokenAndThumb(rawToken);
-  const isLocalHtmlApp =
-    /^(app|embed)\s*:/i.test(baseToken) || /\.html?$/i.test(baseToken);
+  const isLocalHtmlApp = /^(app|embed)\s*:/i.test(baseToken) || /\.html?$/i.test(baseToken);
   const assetType = getAssetType(baseToken);
 
   if (assetType === "link") {
     const targetUrl = normalizeExternalUrl(baseToken);
-    const customThumbUrl = thumbFile
-      ? await resolveValidUrlWithCaseFallback(projFolder, thumbFile)
-      : null;
-    const runImgUrl =
-      customThumbUrl ||
-      (await resolveValidUrlWithCaseFallback(projFolder, "run.webp")) ||
-      (await resolveValidUrlWithCaseFallback(projFolder, "run.png")) ||
-      (await resolveValidUrlWithCaseFallback(projFolder, "run.jpg")) ||
-      getFallbackRunSvgDataUri();
+    const runImgUrl = await resolveInteractiveCoverUrl(projFolder, thumbFile, [
+      "run.webp",
+      "run.png",
+      "run.jpg"
+    ]);
 
     return {
       type: "link",
       file: thumbFile || "WEB APP",
       previewSrc: runImgUrl,
       fullSrc: runImgUrl,
-      targetUrl: targetUrl
+      targetUrl
     };
   }
 
@@ -1670,22 +1578,18 @@ async function resolveProjectAsset(projFolder, rawToken) {
     }
     if (!embedUrl) return null;
 
-    const customThumbUrl = thumbFile
-      ? await resolveValidUrlWithCaseFallback(projFolder, thumbFile)
-      : null;
-    const optionalCover =
-      customThumbUrl ||
-      (await resolveValidUrlWithCaseFallback(projFolder, "run.webp")) ||
-      (await resolveValidUrlWithCaseFallback(projFolder, "itch.webp")) ||
-      (await resolveValidUrlWithCaseFallback(projFolder, "cover.webp")) ||
-      getFallbackRunSvgDataUri();
+    const optionalCover = await resolveInteractiveCoverUrl(projFolder, thumbFile, [
+      "run.webp",
+      "itch.webp",
+      "cover.webp"
+    ]);
 
     return {
       type: "itch",
       file: isLocalHtmlApp ? "WEB APP" : "ITCH.IO GAME",
       previewSrc: optionalCover,
       fullSrc: embedUrl,
-      embedUrl: embedUrl
+      embedUrl
     };
   }
 
@@ -1700,6 +1604,35 @@ async function resolveProjectAsset(projFolder, rawToken) {
   };
 }
 
+async function fetchSingleProjectFolder(normBase, folderName, textFileName) {
+  const projFolder = `${normBase}${folderName}/`;
+  const txtUrl = `${projFolder}${textFileName}`;
+
+  try {
+    const res = await fetch(txtUrl, { cache: "default" });
+    if (!res.ok) return null;
+    if ((res.headers.get("content-type") || "").includes("text/html")) return null;
+
+    const rawText = await res.text();
+    if (!rawText || !rawText.trim()) return null;
+
+    const parsed = parseProjectTextFile(rawText, projFolder);
+    if (!parsed.title && parsed.assets.length === 0) return null;
+
+    const resolvedList = await runInBatches(parsed.assets, 6, (file) =>
+      resolveProjectAsset(projFolder, file)
+    );
+
+    const verifiedAssets = resolvedList.filter(Boolean);
+    if (!verifiedAssets.length) return null;
+
+    parsed.verifiedAssets = verifiedAssets;
+    return parsed;
+  } catch (e) {
+    return null;
+  }
+}
+
 async function loadAndRenderProjects() {
   if (projectsLoaded) return;
   if (projectsLoadingPromise) return projectsLoadingPromise;
@@ -1710,34 +1643,13 @@ async function loadAndRenderProjects() {
     const { baseFolder, textFileName, foldersToCheck } = PORTFOLIO_CONFIG.projectsConfig;
     const normBase = normalizeFolder(baseFolder);
 
-    const loadedProjects = [];
-
-    for (const folderName of foldersToCheck) {
-      const projFolder = `${normBase}${folderName}/`;
-      const txtUrl = `${projFolder}${textFileName}`;
-
-      try {
-        const res = await fetch(txtUrl, { cache: "default" });
-        if (!res.ok) continue;
-        if ((res.headers.get("content-type") || "").includes("text/html")) continue;
-
-        const rawText = await res.text();
-        if (!rawText || !rawText.trim()) continue;
-
-        const parsed = parseProjectTextFile(rawText, projFolder);
-        if (!parsed.title && parsed.assets.length === 0) continue;
-
-        const resolvedList = await runInBatches(parsed.assets, 6, (file) =>
-          resolveProjectAsset(projFolder, file)
-        );
-
-        const verifiedAssets = resolvedList.filter(Boolean);
-        if (verifiedAssets.length > 0) {
-          parsed.verifiedAssets = verifiedAssets;
-          loadedProjects.push(parsed);
-        }
-      } catch (e) {}
-    }
+    // Fetch all configured project folders in parallel while preserving array order
+    const projectResults = await Promise.all(
+      foldersToCheck.map((folderName) =>
+        fetchSingleProjectFolder(normBase, folderName, textFileName)
+      )
+    );
+    const loadedProjects = projectResults.filter(Boolean);
 
     countBadge.textContent = `LOADED: ${loadedProjects.length} PROJECT${
       loadedProjects.length === 1 ? "" : "S"
@@ -1756,7 +1668,7 @@ async function loadAndRenderProjects() {
       return;
     }
 
-    container.innerHTML = "";
+    const fragment = document.createDocumentFragment();
 
     loadedProjects.forEach((proj, idx) => {
       const card = document.createElement("article");
@@ -1814,8 +1726,6 @@ async function loadAndRenderProjects() {
         </div>
       `;
 
-      container.appendChild(card);
-
       const lightboxList = proj.verifiedAssets.map((asset, i) => ({
         type: asset.type,
         file: asset.file,
@@ -1865,31 +1775,29 @@ async function loadAndRenderProjects() {
         if (drawerPopulated) return;
         drawerPopulated = true;
 
+        const drawerFrag = document.createDocumentFragment();
+
         proj.verifiedAssets.forEach((asset, assetIdx) => {
           const itemWrap = document.createElement("div");
           itemWrap.className = "project-gallery-item";
 
           if (is3DAsset(asset.type)) {
+            const box3d = document.createElement("div");
+            box3d.className = "stl-preview-container";
             if (IS_MOBILE) {
-              const box3d = document.createElement("div");
-              box3d.className = "stl-preview-container";
               box3d.style.display = "flex";
               box3d.style.alignItems = "center";
               box3d.style.justifyContent = "center";
               box3d.innerHTML = `<div class="stl-badge-overlay" style="position:static;">TAP TO OPEN 3D ${asset.type.toUpperCase()}</div>`;
               itemWrap.appendChild(box3d);
             } else {
-              const box3d = document.createElement("div");
-              box3d.className = "stl-preview-container";
               itemWrap.appendChild(box3d);
               mountAutoRotating3DPreview(box3d, asset.fullSrc, asset.type);
             }
             itemWrap.addEventListener("click", () => openLightbox(lightboxList, assetIdx));
           } else if (asset.type === "link") {
-            // Project Stack item: shows ONLY the Run button
             itemWrap.appendChild(createRunLinkCard(asset, proj.keys, true));
           } else if (asset.type === "itch") {
-            // Project Stack item: shows ONLY the Run button
             itemWrap.appendChild(
               createItchEmbedCard(
                 asset,
@@ -1914,8 +1822,10 @@ async function loadAndRenderProjects() {
             itemWrap.addEventListener("click", () => openLightbox(lightboxList, assetIdx));
           }
 
-          galleryGrid.appendChild(itemWrap);
+          drawerFrag.appendChild(itemWrap);
         });
+
+        galleryGrid.appendChild(drawerFrag);
       }
 
       const stackTrigger = card.querySelector(".photo-stack-trigger");
@@ -1927,8 +1837,11 @@ async function loadAndRenderProjects() {
           ? "Click stack to collapse project grid &#8593;"
           : "Click stack to reveal full project grid &#8595;";
       });
+
+      fragment.appendChild(card);
     });
 
+    container.replaceChildren(fragment);
     projectsLoaded = true;
   })();
 
@@ -1954,12 +1867,9 @@ async function discoverPhotographyDualAssets() {
     const txtRes = await fetch(`${normFolder}photos.txt`, { cache: "default" });
     if (txtRes.ok && !(txtRes.headers.get("content-type") || "").includes("text/html")) {
       const text = await txtRes.text();
-      const lines = text
-        .split(/\r?\n/)
-        .map((l) => l.trim())
-        .filter(Boolean);
+      const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
 
-      const resolvedBatch = await runInBatches(lines, 6, async (fileName) => {
+      const resolvedBatch = await runInBatches(lines, 8, async (fileName) => {
         const dual = await resolveDualImageUrls(
           normFolder,
           previewSubfolder,
@@ -1992,7 +1902,7 @@ async function discoverPhotographyDualAssets() {
       );
     }
 
-    const results = await runInBatches(candidates, 8, async (fileName) => {
+    const results = await runInBatches(candidates, 10, async (fileName) => {
       const dual = await resolveDualImageUrls(
         normFolder,
         previewSubfolder,
@@ -2013,20 +1923,21 @@ async function discoverPhotographyDualAssets() {
   return discoveredItems;
 }
 
+let sharedSamplerCtx = null;
+
 function cacheSingleImageColorOnce(img, card) {
   if (card.dataset.colorCached === "true") return;
   try {
-    const canvas = document.getElementById("color-sampler-canvas");
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    ctx.clearRect(0, 0, 24, 24);
-    ctx.drawImage(img, 0, 0, 24, 24);
-    const data = ctx.getImageData(0, 0, 24, 24).data;
+    if (!sharedSamplerCtx) {
+      const canvas = document.getElementById("color-sampler-canvas");
+      if (!canvas) return;
+      sharedSamplerCtx = canvas.getContext("2d", { willReadFrequently: true });
+    }
+    sharedSamplerCtx.clearRect(0, 0, 24, 24);
+    sharedSamplerCtx.drawImage(img, 0, 0, 24, 24);
+    const data = sharedSamplerCtx.getImageData(0, 0, 24, 24).data;
 
-    let r = 0,
-      g = 0,
-      b = 0,
-      count = 0;
+    let r = 0, g = 0, b = 0, count = 0;
     for (let i = 0; i < data.length; i += 16) {
       r += data[i];
       g += data[i + 1];
@@ -2078,7 +1989,6 @@ async function loadAndRenderPhotography() {
     }
 
     grid.style.display = "grid";
-    grid.innerHTML = "";
 
     const lightboxItems = photoItems.map((item, i) => ({
       type: getAssetType(item.fullUrl),
@@ -2107,6 +2017,8 @@ async function loadAndRenderPhotography() {
       { rootMargin: IS_MOBILE ? "180px 0px" : "400px 0px" }
     );
 
+    const gridFrag = document.createDocumentFragment();
+
     photoItems.forEach((item, idx) => {
       const card = document.createElement("div");
       card.className = "insta-card";
@@ -2133,15 +2045,13 @@ async function loadAndRenderPhotography() {
         </div>
       `;
       card.prepend(img);
-      grid.appendChild(card);
+      card.addEventListener("click", () => openLightbox(lightboxItems, idx));
 
+      gridFrag.appendChild(card);
       lazyObserver.observe(card);
-
-      card.addEventListener("click", () => {
-        openLightbox(lightboxItems, idx);
-      });
     });
 
+    grid.replaceChildren(gridFrag);
     photographyLoaded = true;
   })();
 
@@ -2169,22 +2079,15 @@ function resetToCadTheme() {
     bgLayer.style.backgroundColor = "#1f2326";
     bgLayer.style.backgroundImage = "none";
   }
-  const swatchDot = document.getElementById("swatch-dot");
-  const swatchHex = document.getElementById("swatch-hex");
-  if (swatchDot) swatchDot.style.backgroundColor = "#1f2326";
-  if (swatchHex) swatchHex.textContent = "#1F2326";
 }
 
 function updatePhotographyAverageColor() {
   if (currentTabIndex !== 2) return;
 
   const cards = document.querySelectorAll(".insta-card[data-color-cached='true']");
-  if (cards.length === 0) return;
+  if (!cards.length) return;
 
-  let totalR = 0,
-    totalG = 0,
-    totalB = 0,
-    counted = 0;
+  let totalR = 0, totalG = 0, totalB = 0, counted = 0;
   const viewportH = window.innerHeight;
 
   for (let i = 0; i < cards.length; i++) {
@@ -2203,13 +2106,6 @@ function updatePhotographyAverageColor() {
     const avgG = Math.round((totalG / counted) * 0.65);
     const avgB = Math.round((totalB / counted) * 0.65);
 
-    const hex =
-      "#" +
-      [avgR, avgG, avgB]
-        .map((x) => Math.max(0, Math.min(255, x)).toString(16).padStart(2, "0"))
-        .join("")
-        .toUpperCase();
-
     const bgLayer = document.getElementById("bg-canvas-layer");
     if (bgLayer) {
       bgLayer.style.backgroundColor = `rgb(${avgR}, ${avgG}, ${avgB})`;
@@ -2218,11 +2114,6 @@ function updatePhotographyAverageColor() {
         avgR + 45
       )}, ${Math.min(255, avgG + 45)}, ${Math.min(255, avgB + 45)}, 0.38), rgba(18, 21, 24, 0.88))`;
     }
-
-    const swatchDot = document.getElementById("swatch-dot");
-    const swatchHex = document.getElementById("swatch-hex");
-    if (swatchDot) swatchDot.style.backgroundColor = hex;
-    if (swatchHex) swatchHex.textContent = hex;
   }
 }
 
@@ -2326,8 +2217,7 @@ function initOrUpdateLightbox3D(modelUrl, type) {
     lbControls.enableDamping = true;
     lbControls.dampingFactor = 0.06;
 
-    const hemi = new THREE.HemisphereLight(0xffffff, 0x222830, 0.4);
-    lbScene.add(hemi);
+    lbScene.add(new THREE.HemisphereLight(0xffffff, 0x222830, 0.4));
 
     const dir1 = new THREE.DirectionalLight(0xffffff, 0.4);
     dir1.position.set(100, 140, 120);
@@ -2682,13 +2572,12 @@ window.addEventListener("DOMContentLoaded", async () => {
     document.body.classList.add("page-ready");
 
     if (!IS_MOBILE) {
-      const startDeferredBackgroundLoading = async () => {
-        await loadAndRenderProjects();
-        await loadAndRenderPhotography();
+      const startDeferredBackgroundLoading = () => {
+        Promise.all([loadAndRenderProjects(), loadAndRenderPhotography()]);
       };
 
       if ("requestIdleCallback" in window) {
-        requestIdleCallback(() => startDeferredBackgroundLoading(), { timeout: 2000 });
+        requestIdleCallback(startDeferredBackgroundLoading, { timeout: 2000 });
       } else {
         setTimeout(startDeferredBackgroundLoading, 1200);
       }
@@ -2714,9 +2603,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     });
 
     document.addEventListener("click", (e) => {
-      if (!e.target.closest(".site-header")) {
-        closeMobileMenu();
-      }
+      if (!e.target.closest(".site-header")) closeMobileMenu();
     });
   }
 
@@ -2739,16 +2626,12 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   window.addEventListener(
     "scroll",
-    () => {
-      if (currentTabIndex === 2) scheduleAverageColorUpdate();
-    },
+    () => { if (currentTabIndex === 2) scheduleAverageColorUpdate(); },
     { passive: true }
   );
   window.addEventListener(
     "resize",
-    () => {
-      if (currentTabIndex === 2) scheduleAverageColorUpdate();
-    },
+    () => { if (currentTabIndex === 2) scheduleAverageColorUpdate(); },
     { passive: true }
   );
 
@@ -2778,9 +2661,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       const nowOpen = lbKeysPopover.style.display !== "block";
       lbKeysPopover.style.display = nowOpen ? "block" : "none";
       lightboxVirtualCursorState.controlsActive = nowOpen;
-      if (!nowOpen) {
-        lightboxVirtualCursorState.enabled = false;
-      }
+      if (!nowOpen) lightboxVirtualCursorState.enabled = false;
       updateLightboxVirtualCursorVisibilityAndPosition();
     });
     lbKeysPopover.addEventListener("click", (e) => e.stopPropagation());

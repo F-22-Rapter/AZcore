@@ -9,7 +9,7 @@ let electronMass = 10; // Simplified mass
 let protonRadius = 30;
 let nuetronRadius = 25;
 let electronRadius = 10;
-let k = 2000; // Simplified electrostatic constant
+let k = 100000; // Simplified electrostatic constant
 let G = 1e-6; // Simplified gravitational constant
 let positiveForce = true; // Toggle for positive or negative force
 let mouseForceMagnitude = 10; // Adjustable force magnitude for mouse
@@ -302,14 +302,14 @@ class Particle {
             other.y - this.y
           ).normalize();
 
-          // Gravitational force
-          let gravForceMag = (G * (this.mass * other.mass)) / (r^2 + softeningFactor);
+          // Gravitational force (Fixed: r^2 changed to r ** 2)
+          let gravForceMag = (G * (this.mass * other.mass)) / (r ** 2 + softeningFactor);
           let gravForce = direction.copy().mult(gravForceMag);
           this.applyForce(gravForce);
 
-          // Electrostatic force
+          // Electrostatic force (Fixed: r^2 changed to r ** 2)
           if (simulateElectrostatic) {
-            let electroForceMag = (k * (this.charge * other.charge)) / (r^2 + softeningFactor);
+            let electroForceMag = (k * (this.charge * other.charge)) / (r ** 2 + softeningFactor);
             // Correct attraction/repulsion logic
             if (this.charge * other.charge < 0) electroForceMag = Math.abs(electroForceMag);
             else electroForceMag = -Math.abs(electroForceMag);
@@ -322,7 +322,7 @@ class Particle {
             (this instanceof Proton && other instanceof Neutron) ||
             (this instanceof Neutron && other instanceof Proton)
           ) {
-            let nuclearForceMag 
+            let nuclearForceMag = 0; // Fixed: Initialized to 0 to prevent undefined multiplication warnings
             if (r < nuclearMAX && r >nuclearMIN) {
               nuclearForceMag = strongnuclearConstant;
 
@@ -411,5 +411,3 @@ class Electron extends Particle {
     super(x, y, electronCharge, electronMass, color(0, 0, 255),freeze,electronRadius);
   }
 }
-
-

@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#1f2326" />
   <title>AZCORE // Localhost Project Studio</title>
-  <link rel="icon" type="image/png" href="azcore-favicon.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="azcore-favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <style>
     .dev-stage {
@@ -52,12 +53,18 @@
       box-shadow: 0 0 12px rgba(46, 204, 113, 0.8);
     }
 
-    .fs-controls {
+    .fs-controls,
+    .dev-inline-add,
+    .export-bar,
+    .quick-control-pills {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       flex-wrap: wrap;
     }
+
+    .export-bar { gap: 10px; margin-top: 14px; }
+    .quick-control-pills { gap: 6px; margin-top: 6px; }
 
     .dev-grid {
       display: grid;
@@ -89,9 +96,7 @@
       align-items: center;
     }
 
-    .dev-label span {
-      color: var(--accent);
-    }
+    .dev-label span { color: var(--accent); }
 
     .dev-input,
     .dev-textarea,
@@ -148,12 +153,6 @@
       font-weight: 700;
     }
 
-    .dev-inline-add {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
     .dev-btn {
       background: rgba(217, 40, 4, 0.18);
       color: var(--text-main);
@@ -168,29 +167,11 @@
       transition: all 0.2s ease;
     }
 
-    .dev-btn:hover {
-      background: var(--accent);
-    }
-
-    .dev-btn.success-btn {
-      background: rgba(46, 204, 113, 0.18);
-      border-color: #2ecc71;
-    }
-
-    .dev-btn.success-btn:hover {
-      background: #27ae60;
-      color: #fff;
-    }
-
-    .dev-btn.secondary {
-      background: rgba(255, 255, 255, 0.05);
-      border-color: var(--border-cad);
-    }
-
-    .dev-btn.secondary:hover {
-      border-color: var(--accent);
-      background: rgba(217, 40, 4, 0.15);
-    }
+    .dev-btn:hover { background: var(--accent); }
+    .dev-btn.success-btn { background: rgba(46, 204, 113, 0.18); border-color: #2ecc71; }
+    .dev-btn.success-btn:hover { background: #27ae60; color: #fff; }
+    .dev-btn.secondary { background: rgba(255, 255, 255, 0.05); border-color: var(--border-cad); }
+    .dev-btn.secondary:hover { border-color: var(--accent); background: rgba(217, 40, 4, 0.15); }
 
     /* --- 2D Grid Key Layout Designer --- */
     .key-grid-designer-wrap {
@@ -263,21 +244,13 @@
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
     }
 
-    .designer-key-item:active {
-      cursor: grabbing;
-    }
-
+    .designer-key-item:active { cursor: grabbing; }
     .designer-key-item.is-cursor-key {
       border-bottom-color: #f1c40f;
       background: rgba(241, 196, 15, 0.18);
     }
 
-    .designer-key-main {
-      font-size: 0.78rem;
-      font-weight: 700;
-      line-height: 1.1;
-    }
-
+    .designer-key-main { font-size: 0.78rem; font-weight: 700; line-height: 1.1; }
     .designer-key-sub {
       font-size: 0.52rem;
       color: var(--text-muted);
@@ -299,9 +272,7 @@
       line-height: 1;
     }
 
-    .designer-key-del:hover {
-      color: #ff5252;
-    }
+    .designer-key-del:hover { color: #ff5252; }
 
     .dev-dropzone {
       border: 1px dashed var(--accent);
@@ -344,19 +315,9 @@
       transition: border-color 0.2s ease, background 0.2s ease, transform 0.15s ease;
     }
 
-    .asset-row.is-main {
-      border-color: var(--accent);
-      background: rgba(217, 40, 4, 0.12);
-    }
-
-    .asset-row.draggable-img {
-      cursor: grab;
-    }
-
-    .asset-row.thumb-drop-target {
-      border-style: dashed;
-    }
-
+    .asset-row.is-main { border-color: var(--accent); background: rgba(217, 40, 4, 0.12); }
+    .asset-row.draggable-img { cursor: grab; }
+    .asset-row.thumb-drop-target { border-style: dashed; }
     .asset-row.drag-target-hover {
       border: 1px dashed #2ecc71 !important;
       background: rgba(46, 204, 113, 0.16) !important;
@@ -427,11 +388,7 @@
       max-width: 280px;
     }
 
-    .asset-row-actions {
-      display: flex;
-      gap: 4px;
-      flex-shrink: 0;
-    }
+    .asset-row-actions { display: flex; gap: 4px; flex-shrink: 0; }
 
     .icon-btn {
       background: rgba(255, 255, 255, 0.05);
@@ -464,13 +421,6 @@
       overflow-y: auto;
     }
 
-    .export-bar {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 14px;
-    }
-
     .fs-log-box {
       margin-top: 14px;
       padding: 12px;
@@ -483,9 +433,7 @@
       display: none;
     }
 
-    .fs-log-box.visible {
-      display: block;
-    }
+    .fs-log-box.visible { display: block; }
 
     .checkbox-row {
       display: flex;
@@ -505,27 +453,16 @@
       cursor: pointer;
     }
 
-    .quick-control-pills {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-      margin-top: 6px;
-    }
-
     @media (max-width: 1080px) {
-      .dev-grid {
-        grid-template-columns: 1fr;
-      }
-      .dev-stage {
-        padding: 88px 16px 60px;
-      }
+      .dev-grid { grid-template-columns: 1fr; }
+      .dev-stage { padding: 88px 16px 60px; }
     }
   </style>
 </head>
 <body class="cad-theme page-ready">
 
   <!-- AUTOCAD GRID BACKGROUND -->
-  <div class="bg-canvas-layer">
+  <div class="bg-canvas-layer" aria-hidden="true">
     <div class="cad-grid-major"></div>
     <div class="cad-grid-minor"></div>
   </div>
@@ -541,7 +478,7 @@
     <div style="display:flex; gap:10px; align-items:center;">
       <label class="dev-btn secondary" style="cursor:pointer;">
         IMPORT project.txt
-        <input type="file" id="import-txt-input" accept=".txt" style="display:none;" />
+        <input type="file" id="import-txt-input" accept=".txt" hidden />
       </label>
       <a href="index.html" class="tab-btn active">&#8592; OPEN LIVE SITE</a>
     </div>
@@ -582,28 +519,28 @@
 
         <div class="dev-row-2">
           <div class="dev-field-group">
-            <label class="dev-label">FOLDER NAME <span>assets/projects/&lt;folder&gt;/</span></label>
+            <label class="dev-label" for="dev-folder">FOLDER NAME <span>assets/projects/&lt;folder&gt;/</span></label>
             <input type="text" id="dev-folder" class="dev-input" placeholder="e.g. coin-hunter" value="new-project" />
           </div>
           <div class="dev-field-group">
-            <label class="dev-label">PROJECT CODE <span>HEADER TAG</span></label>
+            <label class="dev-label" for="dev-code">PROJECT CODE <span>HEADER TAG</span></label>
             <input type="text" id="dev-code" class="dev-input" placeholder="PRJ // 01 — ENGINEERING" value="PRJ // ARCHIVE" />
           </div>
         </div>
 
         <div class="dev-field-group">
-          <label class="dev-label">PROJECT TITLE <span>REQUIRED</span></label>
+          <label class="dev-label" for="dev-title">PROJECT TITLE <span>REQUIRED</span></label>
           <input type="text" id="dev-title" class="dev-input" placeholder="e.g. Coin Hunter 1.2 / Particle Simulator" />
         </div>
 
         <div class="dev-field-group">
-          <label class="dev-label">SKILL / TECH TAGS <span>COMMA SEPARATED</span></label>
+          <label class="dev-label" for="dev-tags">SKILL / TECH TAGS <span>COMMA SEPARATED</span></label>
           <input type="text" id="dev-tags" class="dev-input" placeholder="e.g. Unity, C#, WebGL, p5.js" />
         </div>
 
         <!-- INTERACTIVE CONTROLS + 2D SNAP GRID DESIGNER -->
         <div class="dev-field-group">
-          <label class="dev-label">
+          <label class="dev-label" for="dev-keys">
             INTERACTIVE CONTROLS &amp; 2D KEYPAD LAYOUT
             <span>DRAG KEYS ON THE GRID BELOW TO ARRANGE</span>
           </label>
@@ -628,7 +565,7 @@
         </div>
 
         <div class="dev-field-group">
-          <label class="dev-label">PROJECT DESCRIPTION <span>MULTILINE SUPPORTED</span></label>
+          <label class="dev-label" for="dev-desc">PROJECT DESCRIPTION <span>MULTILINE SUPPORTED</span></label>
           <textarea id="dev-desc" class="dev-textarea" placeholder="Describe the engineering design, architecture, or gameplay..."></textarea>
         </div>
 
@@ -642,13 +579,13 @@
           <div class="dev-inline-add">
             <label class="dev-btn" style="cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
               &#128194; SELECT GAME / APP FOLDER (e.g. Coin Hunter 1.2 or Particle-Simulation)
-              <input type="file" id="dev-app-folder-picker" webkitdirectory directory multiple style="display:none;" />
+              <input type="file" id="dev-app-folder-picker" webkitdirectory directory multiple hidden />
             </label>
             <span id="app-folder-status" style="font-family:var(--font-mono); font-size:0.74rem; color:#2ecc71; align-self:center;"></span>
           </div>
           <div style="font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted); margin-top:8px;">
-            • Copies <code>index.html</code>, <code>Build/</code>, <code>TemplateData/</code>, <code>sketch.js</code>, <code>p5.min.js</code>, etc. directly into <code>assets/projects/&lt;folder&gt;/app/</code>!<br>
-            • Automatically unpacks Unity <code>.gz</code> files on save so GitHub Pages &amp; Localhost run it with zero server errors.
+            &bull; Copies <code>index.html</code>, <code>Build/</code>, <code>TemplateData/</code>, <code>sketch.js</code>, <code>p5.min.js</code>, etc. directly into <code>assets/projects/&lt;folder&gt;/app/</code>!<br />
+            &bull; Automatically unpacks Unity <code>.gz</code> files on save so GitHub Pages &amp; Localhost run it with zero server errors.
           </div>
         </div>
 
@@ -676,7 +613,7 @@
           <div style="margin-top:4px; font-size:0.7rem;">
             Tip: Drag an image onto a <strong>LOCAL WEB APP</strong>, <strong>RUN LINK</strong>, or <strong>ITCH.IO</strong> row below to assign it as its Run thumbnail!
           </div>
-          <input type="file" id="dev-file-picker" multiple style="display:none;" />
+          <input type="file" id="dev-file-picker" multiple hidden />
         </div>
 
         <!-- MANUAL FILENAME INPUT -->
@@ -693,7 +630,7 @@
         <div id="asset-list-editor" class="asset-list-editor"></div>
       </div>
 
-      <!-- RIGHT COLUMN: LIVE CARD PREVIEW (WITH PROJECT STACK) & DIRECT DISK SAVE -->
+      <!-- RIGHT COLUMN: LIVE CARD PREVIEW & DIRECT DISK SAVE -->
       <div style="display:flex; flex-direction:column; gap:24px;">
         <div class="cad-panel">
           <div class="panel-header">
@@ -735,14 +672,14 @@
             </button>
           </div>
 
-          <div id="fs-log-box" class="fs-log-box"></div>
+          <div id="fs-log-box" class="fs-log-box" role="status" aria-live="polite"></div>
         </div>
       </div>
     </div>
   </main>
 
   <!-- DEV LIGHTBOX PREVIEW MODAL -->
-  <div id="dev-fullscreen-modal" class="lightbox-modal" aria-hidden="true">
+  <div id="dev-fullscreen-modal" class="lightbox-modal" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="lightbox-backdrop-hint">CLICK ANYWHERE OUTSIDE VIEWER TO CLOSE [ESC]</div>
     <div class="lightbox-content-wrapper" style="width:88vw; max-width:88vw;">
       <div class="lightbox-caption-bar">
@@ -758,7 +695,7 @@
 
         <!-- GAME CROSSHAIR VIRTUAL CURSOR IN DEV PREVIEW -->
         <div id="dev-fs-virtual-cursor" class="virtual-cursor-overlay" style="display:none;" aria-label="Virtual Crosshair Cursor">
-          <svg class="vcursor-crosshair-svg" viewBox="0 0 32 32" width="32" height="32">
+          <svg class="vcursor-crosshair-svg" viewBox="0 0 32 32" width="32" height="32" aria-hidden="true">
             <line x1="16" y1="3" x2="16" y2="12" stroke="#000000" stroke-width="4" stroke-linecap="square" />
             <line x1="16" y1="20" x2="16" y2="29" stroke="#000000" stroke-width="4" stroke-linecap="square" />
             <line x1="3" y1="16" x2="12" y2="16" stroke="#000000" stroke-width="4" stroke-linecap="square" />
@@ -771,7 +708,7 @@
           </svg>
         </div>
 
-        <iframe id="dev-fs-iframe" class="lightbox-itch-frame" style="width:100%; height:100%;" allow="autoplay; fullscreen; gamepad"></iframe>
+        <iframe id="dev-fs-iframe" class="lightbox-itch-frame" style="width:100%; height:100%;" allow="autoplay; fullscreen; gamepad" title="Interactive App Preview"></iframe>
       </div>
     </div>
   </div>
@@ -789,16 +726,15 @@
       tags: "",
       keys: "",
       desc: "",
-      assets: [], // { id, token, type, thumb }
+      assets: [],
       mainId: null,
       drawerOpen: false,
-      localFilesMap: new Map(),     // relativePathLower -> { relativePath, file }
-      localObjectUrls: new Map()    // lowercase filename -> blob URL (for live preview)
+      localFilesMap: new Map(),
+      localObjectUrls: new Map()
     };
 
     let draggedImageAssetId = null;
 
-    // Virtual Cursor runtime state for dev.html preview (always starts OFF)
     const devVirtualCursorState = {
       enabled: false,
       controlsActive: false,
@@ -807,6 +743,20 @@
       isDragging: false,
       isMouseDownHold: false
     };
+
+    function revokeAllObjectUrls() {
+      for (const url of state.localObjectUrls.values()) {
+        URL.revokeObjectURL(url);
+      }
+      state.localObjectUrls.clear();
+    }
+
+    function setLocalObjectUrl(key, fileObj) {
+      if (state.localObjectUrls.has(key)) {
+        URL.revokeObjectURL(state.localObjectUrls.get(key));
+      }
+      state.localObjectUrls.set(key, URL.createObjectURL(fileObj));
+    }
 
     function logFsMessage(msg, isError = false) {
       const box = document.getElementById("fs-log-box");
@@ -833,10 +783,9 @@
     }
 
     function formatAssetToken(item) {
-      if (isTargetableInteractiveType(item.type) && item.thumb) {
-        return `${item.token}|thumb=${item.thumb}`;
-      }
-      return item.token;
+      return isTargetableInteractiveType(item.type) && item.thumb
+        ? `${item.token}|thumb=${item.thumb}`
+        : item.token;
     }
 
     function extractItchSrc(raw) {
@@ -854,8 +803,7 @@
       if (!raw) return "";
       const { baseToken } = splitTokenAndThumb(raw);
       const c = baseToken.trim().replace(/^(run|link|url)\s*:\s*/i, "").trim();
-      if (/^(https?:\/\/|mailto:|tel:|\/|\.)/i.test(c)) return c;
-      return "https://" + c;
+      return /^(https?:\/\/|mailto:|tel:|\/|\.)/i.test(c) ? c : "https://" + c;
     }
 
     function detectTokenType(token) {
@@ -863,8 +811,7 @@
       if (/^itch:/i.test(token)) return "ITCH.IO";
       if (/^run:/i.test(token)) return "RUN LINK";
       const dot = token.lastIndexOf(".");
-      const ext = dot !== -1 ? token.slice(dot + 1).toUpperCase() : "FILE";
-      return ext;
+      return dot !== -1 ? token.slice(dot + 1).toUpperCase() : "FILE";
     }
 
     function getAssignedThumbSet() {
@@ -875,7 +822,18 @@
       return set;
     }
 
-    function addAssetToken(rawInputToken, explicitThumb = "") {
+    function removeStandaloneImageByFilename(filename) {
+      const lower = filename.toLowerCase();
+      const idx = state.assets.findIndex((a) => a.token.toLowerCase() === lower);
+      if (idx !== -1) {
+        const [removed] = state.assets.splice(idx, 1);
+        if (state.mainId === removed.id) {
+          state.mainId = state.assets[0] ? state.assets[0].id : null;
+        }
+      }
+    }
+
+    function addAssetToken(rawInputToken, explicitThumb = "", skipSync = false) {
       const { baseToken, thumb } = splitTokenAndThumb(rawInputToken);
       let clean = baseToken.trim();
       if (!clean) return;
@@ -885,47 +843,30 @@
       }
 
       const finalThumb = explicitThumb || thumb || "";
-
       const usedThumbs = getAssignedThumbSet();
       if (usedThumbs.has(clean.toLowerCase())) {
-        syncAll();
+        if (!skipSync) syncAll();
         return;
       }
 
       const existing = state.assets.find((a) => a.token.toLowerCase() === clean.toLowerCase());
       if (existing) {
         if (finalThumb) existing.thumb = finalThumb;
-        syncAll();
+        if (!skipSync) syncAll();
         return;
       }
 
       const id = "ast_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
-      const item = {
+      state.assets.push({
         id,
         token: clean,
         type: detectTokenType(clean),
         thumb: finalThumb
-      };
-      state.assets.push(item);
+      });
 
-      if (finalThumb) {
-        removeStandaloneImageByFilename(finalThumb);
-      }
-
+      if (finalThumb) removeStandaloneImageByFilename(finalThumb);
       if (!state.mainId) state.mainId = id;
-      syncAll();
-    }
-
-    function removeStandaloneImageByFilename(filename) {
-      const lower = filename.toLowerCase();
-      const idx = state.assets.findIndex((a) => a.token.toLowerCase() === lower);
-      if (idx !== -1) {
-        const removed = state.assets[idx];
-        state.assets.splice(idx, 1);
-        if (state.mainId === removed.id) {
-          state.mainId = state.assets[0] ? state.assets[0].id : null;
-        }
-      }
+      if (!skipSync) syncAll();
     }
 
     function assignThumbnailToTarget(targetItem, imageFilename, fileObj = null) {
@@ -934,7 +875,7 @@
       if (fileObj) {
         const lower = cleanName.toLowerCase();
         state.localFilesMap.set(lower, { relativePath: cleanName, file: fileObj });
-        state.localObjectUrls.set(lower, URL.createObjectURL(fileObj));
+        setLocalObjectUrl(lower, fileObj);
       }
       targetItem.thumb = cleanName;
       removeStandaloneImageByFilename(cleanName);
@@ -943,7 +884,7 @@
 
     function handleImportedAppFolderFiles(fileList) {
       const files = Array.from(fileList || []);
-      if (files.length === 0) return;
+      if (!files.length) return;
 
       let count = 0;
       let detectedEntryHtml = null;
@@ -958,7 +899,7 @@
 
         state.localFilesMap.set(targetRelPath.toLowerCase(), {
           relativePath: targetRelPath,
-          file: file
+          file
         });
         count++;
 
@@ -969,17 +910,13 @@
         }
       });
 
-      if (!detectedEntryHtml) {
-        detectedEntryHtml = "app/index.html";
-      }
+      if (!detectedEntryHtml) detectedEntryHtml = "app/index.html";
 
-      addAssetToken(`app:${detectedEntryHtml}`);
+      addAssetToken(`app:${detectedEntryHtml}`, "", true);
       const appAsset = state.assets.find(
         (a) => a.token.toLowerCase() === `app:${detectedEntryHtml.toLowerCase()}`
       );
-      if (appAsset) {
-        state.mainId = appAsset.id;
-      }
+      if (appAsset) state.mainId = appAsset.id;
 
       document.getElementById("app-folder-status").textContent =
         `✓ Queued ${count} files → assets/projects/${state.folder || "new-project"}/app/`;
@@ -992,10 +929,6 @@
       syncAll();
     }
 
-    document.getElementById("dev-app-folder-picker").addEventListener("change", (e) => {
-      handleImportedAppFolderFiles(e.target.files);
-    });
-
     async function maybeDecompressUnityGzFile(relativePath, fileObj) {
       const shouldUnpack = document.getElementById("auto-unpack-gz-cb").checked;
       if (!shouldUnpack) return { finalRelPath: relativePath, finalBlob: fileObj };
@@ -1005,8 +938,7 @@
           const ds = new DecompressionStream("gzip");
           const decompressedStream = fileObj.stream().pipeThrough(ds);
           const unpackedBlob = await new Response(decompressedStream).blob();
-          const newRelPath = relativePath.replace(/\.gz$/i, "");
-          return { finalRelPath: newRelPath, finalBlob: unpackedBlob };
+          return { finalRelPath: relativePath.replace(/\.gz$/i, ""), finalBlob: unpackedBlob };
         } catch (err) {
           return { finalRelPath: relativePath, finalBlob: fileObj };
         }
@@ -1034,80 +966,63 @@
       for (let i = 0; i < parts.length - 1; i++) {
         currentDir = await currentDir.getDirectoryHandle(parts[i], { create: true });
       }
-      const fileName = parts[parts.length - 1];
-      const fileHandle = await currentDir.getFileHandle(fileName, { create: true });
+      const fileHandle = await currentDir.getFileHandle(parts[parts.length - 1], { create: true });
       const writable = await fileHandle.createWritable();
       await writable.write(blobData);
       await writable.close();
     }
 
-    /**
-     * ========================================================================
-     * INTERACTIVE CONTROLS, 2D SNAP GRID & VIRTUAL CROSSHAIR ENGINE
-     * ========================================================================
-     */
+    const KEY_SPEC_MAP = {
+      CURSOR: { tokenName: "CURSOR", label: "CURSOR", key: "__CURSOR__", code: "VirtualCursor", keyCode: 0, isCursorToggle: true },
+      MOUSE: { tokenName: "CURSOR", label: "CURSOR", key: "__CURSOR__", code: "VirtualCursor", keyCode: 0, isCursorToggle: true },
+      POINTER: { tokenName: "CURSOR", label: "CURSOR", key: "__CURSOR__", code: "VirtualCursor", keyCode: 0, isCursorToggle: true },
+      CLICK: { tokenName: "CLICK", label: "L-CLICK", key: "__CLICK__", code: "MouseLeft", keyCode: 1, isMouseClick: true },
+      LMB: { tokenName: "CLICK", label: "L-CLICK", key: "__CLICK__", code: "MouseLeft", keyCode: 1, isMouseClick: true },
+      SPACE: { tokenName: "SPACE", label: "SPACE", key: " ", code: "Space", keyCode: 32 },
+      SPACEBAR: { tokenName: "SPACE", label: "SPACE", key: " ", code: "Space", keyCode: 32 },
+      UP: { tokenName: "UP", label: "↑", key: "ArrowUp", code: "ArrowUp", keyCode: 38 },
+      ARROWUP: { tokenName: "UP", label: "↑", key: "ArrowUp", code: "ArrowUp", keyCode: 38 },
+      "↑": { tokenName: "UP", label: "↑", key: "ArrowUp", code: "ArrowUp", keyCode: 38 },
+      DOWN: { tokenName: "DOWN", label: "↓", key: "ArrowDown", code: "ArrowDown", keyCode: 40 },
+      ARROWDOWN: { tokenName: "DOWN", label: "↓", key: "ArrowDown", code: "ArrowDown", keyCode: 40 },
+      "↓": { tokenName: "DOWN", label: "↓", key: "ArrowDown", code: "ArrowDown", keyCode: 40 },
+      LEFT: { tokenName: "LEFT", label: "←", key: "ArrowLeft", code: "ArrowLeft", keyCode: 37 },
+      ARROWLEFT: { tokenName: "LEFT", label: "←", key: "ArrowLeft", code: "ArrowLeft", keyCode: 37 },
+      "←": { tokenName: "LEFT", label: "←", key: "ArrowLeft", code: "ArrowLeft", keyCode: 37 },
+      RIGHT: { tokenName: "RIGHT", label: "→", key: "ArrowRight", code: "ArrowRight", keyCode: 39 },
+      ARROWRIGHT: { tokenName: "RIGHT", label: "→", key: "ArrowRight", code: "ArrowRight", keyCode: 39 },
+      "→": { tokenName: "RIGHT", label: "→", key: "ArrowRight", code: "ArrowRight", keyCode: 39 },
+      SHIFT: { tokenName: "SHIFT", label: "SHIFT", key: "Shift", code: "ShiftLeft", keyCode: 16 },
+      CTRL: { tokenName: "CTRL", label: "CTRL", key: "Control", code: "ControlLeft", keyCode: 17 },
+      CONTROL: { tokenName: "CTRL", label: "CTRL", key: "Control", keyCode: 17 },
+      ALT: { tokenName: "ALT", label: "ALT", key: "Alt", code: "AltLeft", keyCode: 18 },
+      ENTER: { tokenName: "ENTER", label: "ENTER", key: "Enter", code: "Enter", keyCode: 13 },
+      TAB: { tokenName: "TAB", label: "TAB", key: "Tab", code: "Tab", keyCode: 9 },
+      ESC: { tokenName: "ESC", label: "ESC", key: "Escape", code: "Escape", keyCode: 27 },
+      ESCAPE: { tokenName: "ESC", label: "ESC", key: "Escape", code: "Escape", keyCode: 27 }
+    };
+
     function resolveKeySpec(rawToken) {
       const upper = String(rawToken || "").trim().toUpperCase();
-      const map = {
-        CURSOR: { tokenName: "CURSOR", label: "CURSOR", key: "__CURSOR__", code: "VirtualCursor", keyCode: 0, isCursorToggle: true },
-        MOUSE: { tokenName: "CURSOR", label: "CURSOR", key: "__CURSOR__", code: "VirtualCursor", keyCode: 0, isCursorToggle: true },
-        POINTER: { tokenName: "CURSOR", label: "CURSOR", key: "__CURSOR__", code: "VirtualCursor", keyCode: 0, isCursorToggle: true },
-        CLICK: { tokenName: "CLICK", label: "L-CLICK", key: "__CLICK__", code: "MouseLeft", keyCode: 1, isMouseClick: true },
-        LMB: { tokenName: "CLICK", label: "L-CLICK", key: "__CLICK__", code: "MouseLeft", keyCode: 1, isMouseClick: true },
-        SPACE: { tokenName: "SPACE", label: "SPACE", key: " ", code: "Space", keyCode: 32 },
-        SPACEBAR: { tokenName: "SPACE", label: "SPACE", key: " ", code: "Space", keyCode: 32 },
-        UP: { tokenName: "UP", label: "↑", key: "ArrowUp", code: "ArrowUp", keyCode: 38 },
-        ARROWUP: { tokenName: "UP", label: "↑", key: "ArrowUp", code: "ArrowUp", keyCode: 38 },
-        "↑": { tokenName: "UP", label: "↑", key: "ArrowUp", code: "ArrowUp", keyCode: 38 },
-        DOWN: { tokenName: "DOWN", label: "↓", key: "ArrowDown", code: "ArrowDown", keyCode: 40 },
-        ARROWDOWN: { tokenName: "DOWN", label: "↓", key: "ArrowDown", code: "ArrowDown", keyCode: 40 },
-        "↓": { tokenName: "DOWN", label: "↓", key: "ArrowDown", code: "ArrowDown", keyCode: 40 },
-        LEFT: { tokenName: "LEFT", label: "←", key: "ArrowLeft", code: "ArrowLeft", keyCode: 37 },
-        ARROWLEFT: { tokenName: "LEFT", label: "←", key: "ArrowLeft", code: "ArrowLeft", keyCode: 37 },
-        "←": { tokenName: "LEFT", label: "←", key: "ArrowLeft", code: "ArrowLeft", keyCode: 37 },
-        RIGHT: { tokenName: "RIGHT", label: "→", key: "ArrowRight", code: "ArrowRight", keyCode: 39 },
-        ARROWRIGHT: { tokenName: "RIGHT", label: "→", key: "ArrowRight", code: "ArrowRight", keyCode: 39 },
-        "→": { tokenName: "RIGHT", label: "→", key: "ArrowRight", code: "ArrowRight", keyCode: 39 },
-        SHIFT: { tokenName: "SHIFT", label: "SHIFT", key: "Shift", code: "ShiftLeft", keyCode: 16 },
-        CTRL: { tokenName: "CTRL", label: "CTRL", key: "Control", code: "ControlLeft", keyCode: 17 },
-        CONTROL: { tokenName: "CTRL", label: "CTRL", key: "Control", code: "ControlLeft", keyCode: 17 },
-        ALT: { tokenName: "ALT", label: "ALT", key: "Alt", code: "AltLeft", keyCode: 18 },
-        ENTER: { tokenName: "ENTER", label: "ENTER", key: "Enter", code: "Enter", keyCode: 13 },
-        TAB: { tokenName: "TAB", label: "TAB", key: "Tab", code: "Tab", keyCode: 9 },
-        ESC: { tokenName: "ESC", label: "ESC", key: "Escape", code: "Escape", keyCode: 27 },
-        ESCAPE: { tokenName: "ESC", label: "ESC", key: "Escape", code: "Escape", keyCode: 27 }
-      };
-
-      if (map[upper]) return map[upper];
+      if (KEY_SPEC_MAP[upper]) return KEY_SPEC_MAP[upper];
 
       if (upper.length === 1) {
         const codeNum = upper.charCodeAt(0);
-        const isDigit = /[0-9]/.test(upper);
         return {
           tokenName: upper,
           label: upper,
           key: upper.toLowerCase(),
-          code: isDigit ? `Digit${upper}` : `Key${upper}`,
+          code: /[0-9]/.test(upper) ? `Digit${upper}` : `Key${upper}`,
           keyCode: codeNum
         };
       }
 
-      return {
-        tokenName: upper,
-        label: upper,
-        key: rawToken.trim(),
-        code: upper,
-        keyCode: 0
-      };
+      return { tokenName: upper, label: upper, key: rawToken.trim(), code: upper, keyCode: 0 };
     }
 
     function expandVirtualKeysList(keysString) {
       if (!keysString || !keysString.trim()) return [];
-      const entries = keysString
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean);
-
+      const entries = keysString.split(",").map((s) => s.trim()).filter(Boolean);
       const rawButtons = [];
 
       entries.forEach((entry) => {
@@ -1128,59 +1043,35 @@
         const upperKey = rawKeyPart.toUpperCase().replace(/\s+/g, "");
 
         if (upperKey === "WASD") {
-          const wasdDefaults = [
+          [
             { ch: "W", c: 2, r: 0 },
             { ch: "A", c: 1, r: 1 },
             { ch: "S", c: 2, r: 1 },
             { ch: "D", c: 3, r: 1 }
-          ];
-          wasdDefaults.forEach((item) => {
-            rawButtons.push({
-              ...resolveKeySpec(item.ch),
-              desc: actionDesc || "Move",
-              col: item.c,
-              row: item.r
-            });
+          ].forEach((item) => {
+            rawButtons.push({ ...resolveKeySpec(item.ch), desc: actionDesc || "Move", col: item.c, row: item.r });
           });
         } else if (upperKey === "ARROWS" || upperKey === "ARROWKEYS") {
-          const arrowDefaults = [
+          [
             { dir: "UP", c: 2, r: 0 },
             { dir: "LEFT", c: 1, r: 1 },
             { dir: "DOWN", c: 2, r: 1 },
             { dir: "RIGHT", c: 3, r: 1 }
-          ];
-          arrowDefaults.forEach((item) => {
-            rawButtons.push({
-              ...resolveKeySpec(item.dir),
-              desc: actionDesc || "Move",
-              col: item.c,
-              row: item.r
-            });
+          ].forEach((item) => {
+            rawButtons.push({ ...resolveKeySpec(item.dir), desc: actionDesc || "Move", col: item.c, row: item.r });
           });
         } else if (rawKeyPart.includes("/")) {
-          rawKeyPart
-            .split("/")
-            .map((k) => k.trim())
-            .filter(Boolean)
-            .forEach((k) => {
-              rawButtons.push({ ...resolveKeySpec(k), desc: actionDesc, col: null, row: null });
-            });
-        } else {
-          rawButtons.push({
-            ...resolveKeySpec(rawKeyPart),
-            desc: actionDesc,
-            col: coordCol,
-            row: coordRow
+          rawKeyPart.split("/").map((k) => k.trim()).filter(Boolean).forEach((k) => {
+            rawButtons.push({ ...resolveKeySpec(k), desc: actionDesc, col: null, row: null });
           });
+        } else {
+          rawButtons.push({ ...resolveKeySpec(rawKeyPart), desc: actionDesc, col: coordCol, row: coordRow });
         }
       });
 
-      // Assign non-colliding grid coordinates for any keys without explicit @col:row
       const occupied = new Set();
       rawButtons.forEach((b) => {
-        if (b.col !== null && b.row !== null) {
-          occupied.add(`${b.col}:${b.row}`);
-        }
+        if (b.col !== null && b.row !== null) occupied.add(`${b.col}:${b.row}`);
       });
 
       let nextCol = 0;
@@ -1205,10 +1096,7 @@
 
     function serializeButtonsToKeysString(buttons) {
       return buttons
-        .map((b) => {
-          const descPart = b.desc ? `:${b.desc}` : "";
-          return `${b.tokenName}${descPart}@${b.col}:${b.row}`;
-        })
+        .map((b) => `${b.tokenName}${b.desc ? `:${b.desc}` : ""}@${b.col}:${b.row}`)
         .join(", ");
     }
 
@@ -1217,7 +1105,7 @@
       if (!board) return;
 
       const buttons = expandVirtualKeysList(state.keys);
-      board.innerHTML = "";
+      const frag = document.createDocumentFragment();
 
       for (let r = 0; r < GRID_ROWS; r++) {
         for (let c = 0; c < GRID_COLS; c++) {
@@ -1230,8 +1118,7 @@
           if (matchIdx !== -1) {
             const b = buttons[matchIdx];
             const keyEl = document.createElement("div");
-            keyEl.className =
-              "designer-key-item" + (b.isCursorToggle ? " is-cursor-key" : "");
+            keyEl.className = "designer-key-item" + (b.isCursorToggle ? " is-cursor-key" : "");
             keyEl.draggable = true;
             keyEl.innerHTML = `
               <button type="button" class="designer-key-del" title="Remove Key">&times;</button>
@@ -1271,10 +1158,8 @@
             const draggedIdx = parseInt(e.dataTransfer.getData("text/plain"), 10);
             if (isNaN(draggedIdx) || !buttons[draggedIdx]) return;
 
-            const targetCol = c;
-            const targetRow = r;
             const existingAtTarget = buttons.find(
-              (item, idx) => idx !== draggedIdx && item.col === targetCol && item.row === targetRow
+              (item, idx) => idx !== draggedIdx && item.col === c && item.row === r
             );
 
             if (existingAtTarget) {
@@ -1282,17 +1167,19 @@
               existingAtTarget.row = buttons[draggedIdx].row;
             }
 
-            buttons[draggedIdx].col = targetCol;
-            buttons[draggedIdx].row = targetRow;
+            buttons[draggedIdx].col = c;
+            buttons[draggedIdx].row = r;
 
             state.keys = serializeButtonsToKeysString(buttons);
             document.getElementById("dev-keys").value = state.keys;
             syncAll();
           });
 
-          board.appendChild(cell);
+          frag.appendChild(cell);
         }
       }
+
+      board.replaceChildren(frag);
     }
 
     function dispatchVirtualCursorToIframe(frame, xRatio, yRatio, eventType = "mousemove", isPressed = false) {
@@ -1304,10 +1191,12 @@
         if (!target) return;
 
         const rect = target.getBoundingClientRect();
-        const clientX = rect.left + xRatio * (rect.width || frame.clientWidth || 800);
-        const clientY = rect.top + yRatio * (rect.height || frame.clientHeight || 600);
-        const offsetX = xRatio * (rect.width || 800);
-        const offsetY = yRatio * (rect.height || 600);
+        const w = rect.width || frame.clientWidth || 800;
+        const h = rect.height || frame.clientHeight || 600;
+        const clientX = rect.left + xRatio * w;
+        const clientY = rect.top + yRatio * h;
+        const offsetX = xRatio * w;
+        const offsetY = yRatio * h;
 
         win.__azcoreVirtualCursorActive = true;
         if (typeof win.mouseX === "number") win.mouseX = offsetX;
@@ -1355,13 +1244,6 @@
       } catch (e) {}
     }
 
-    function setIframeVirtualCursorFlag(frame, isActive) {
-      if (!frame || !frame.contentWindow) return;
-      try {
-        frame.contentWindow.__azcoreVirtualCursorActive = Boolean(isActive);
-      } catch (e) {}
-    }
-
     function installRealMouseBlockerInIframe(frame) {
       if (!frame || !frame.contentDocument) return;
       try {
@@ -1383,14 +1265,12 @@
         };
 
         ["mousemove", "pointermove", "mousedown", "mouseup", "touchstart", "touchmove", "touchend"].forEach(
-          (evtName) => {
-            doc.addEventListener(evtName, blockRealPointerIfVirtualActive, true);
-          }
+          (evtName) => doc.addEventListener(evtName, blockRealPointerIfVirtualActive, true)
         );
       } catch (e) {}
     }
 
-  function updateDevVirtualCursorVisibilityAndPosition() {
+    function updateDevVirtualCursorVisibilityAndPosition() {
       const cursorEl = document.getElementById("dev-fs-virtual-cursor");
       const stageWrap = document.getElementById("dev-fs-stage-wrap");
       const frame = document.getElementById("dev-fs-iframe");
@@ -1399,7 +1279,9 @@
       const active = Boolean(devVirtualCursorState.controlsActive && devVirtualCursorState.enabled);
       cursorEl.style.display = active ? "flex" : "none";
       stageWrap.classList.toggle("virtual-cursor-priority", active);
-      setIframeVirtualCursorFlag(frame, active);
+      if (frame && frame.contentWindow) {
+        try { frame.contentWindow.__azcoreVirtualCursorActive = active; } catch (e) {}
+      }
 
       const pop = document.getElementById("dev-fs-keys-popover");
       if (pop) {
@@ -1410,16 +1292,11 @@
       if (active) {
         const wrapRect = stageWrap.getBoundingClientRect();
         const frameRect = frame ? frame.getBoundingClientRect() : wrapRect;
-
-        const frameOffsetLeft = frameRect.left - wrapRect.left;
-        const frameOffsetTop = frameRect.top - wrapRect.top;
         const w = frameRect.width || stageWrap.clientWidth || 800;
         const h = frameRect.height || stageWrap.clientHeight || 600;
 
-        const px = frameOffsetLeft + devVirtualCursorState.xRatio * w;
-        const py = frameOffsetTop + devVirtualCursorState.yRatio * h;
-        cursorEl.style.left = `${px}px`;
-        cursorEl.style.top = `${py}px`;
+        cursorEl.style.left = `${frameRect.left - wrapRect.left + devVirtualCursorState.xRatio * w}px`;
+        cursorEl.style.top = `${frameRect.top - wrapRect.top + devVirtualCursorState.yRatio * h}px`;
 
         installRealMouseBlockerInIframe(frame);
         dispatchVirtualCursorToIframe(
@@ -1439,11 +1316,7 @@
       if (!cursorEl || !stageWrap || cursorEl.dataset.bound === "true") return;
       cursorEl.dataset.bound = "true";
 
-      let startX = 0;
-      let startY = 0;
-      let grabOffsetX = 0;
-      let grabOffsetY = 0;
-      let moved = false;
+      let startX = 0, startY = 0, grabOffsetX = 0, grabOffsetY = 0, moved = false;
 
       const onPointerDown = (e) => {
         e.preventDefault();
@@ -1455,11 +1328,8 @@
         startY = pt.clientY;
 
         const cursorRect = cursorEl.getBoundingClientRect();
-        const cursorCenterX = cursorRect.left + cursorRect.width / 2;
-        const cursorCenterY = cursorRect.top + cursorRect.height / 2;
-        grabOffsetX = pt.clientX - cursorCenterX;
-        grabOffsetY = pt.clientY - cursorCenterY;
-
+        grabOffsetX = pt.clientX - (cursorRect.left + cursorRect.width / 2);
+        grabOffsetY = pt.clientY - (cursorRect.top + cursorRect.height / 2);
         cursorEl.classList.add("dragging");
       };
 
@@ -1467,17 +1337,13 @@
         if (!devVirtualCursorState.isDragging) return;
         e.preventDefault();
         const pt = e.touches ? e.touches[0] : e;
-        if (Math.hypot(pt.clientX - startX, pt.clientY - startY) > 5) {
-          moved = true;
-        }
+        if (Math.hypot(pt.clientX - startX, pt.clientY - startY) > 5) moved = true;
+
         const rect = frame ? frame.getBoundingClientRect() : stageWrap.getBoundingClientRect();
         if (!rect.width || !rect.height) return;
 
-        const exactCenterX = pt.clientX - grabOffsetX;
-        const exactCenterY = pt.clientY - grabOffsetY;
-
-        devVirtualCursorState.xRatio = Math.max(0, Math.min(1, (exactCenterX - rect.left) / rect.width));
-        devVirtualCursorState.yRatio = Math.max(0, Math.min(1, (exactCenterY - rect.top) / rect.height));
+        devVirtualCursorState.xRatio = Math.max(0, Math.min(1, (pt.clientX - grabOffsetX - rect.left) / rect.width));
+        devVirtualCursorState.yRatio = Math.max(0, Math.min(1, (pt.clientY - grabOffsetY - rect.top) / rect.height));
         updateDevVirtualCursorVisibilityAndPosition();
       };
 
@@ -1503,17 +1369,15 @@
       window.addEventListener("mouseup", onPointerUp);
       window.addEventListener("touchend", onPointerUp);
     }
+
     function makeHudPopoverDraggable(popoverEl) {
       if (!popoverEl || popoverEl.dataset.dragBound === "true") return;
       popoverEl.dataset.dragBound = "true";
 
-      let isDraggingHud = false;
-      let offsetX = 0;
-      let offsetY = 0;
+      let isDraggingHud = false, offsetX = 0, offsetY = 0;
 
       const onStart = (e) => {
-        const handle = e.target.closest(".keys-hud-drag-handle");
-        if (!handle) return;
+        if (!e.target.closest(".keys-hud-drag-handle")) return;
         e.preventDefault();
         e.stopPropagation();
         isDraggingHud = true;
@@ -1541,19 +1405,14 @@
           ? popoverEl.offsetParent.getBoundingClientRect()
           : { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
 
-        let newLeft = pt.clientX - parentRect.left - offsetX;
-        let newTop = pt.clientY - parentRect.top - offsetY;
-
-        newLeft = Math.max(4, Math.min(parentRect.width - popoverEl.offsetWidth - 4, newLeft));
-        newTop = Math.max(4, Math.min(parentRect.height - popoverEl.offsetHeight - 4, newTop));
+        const newLeft = Math.max(4, Math.min(parentRect.width - popoverEl.offsetWidth - 4, pt.clientX - parentRect.left - offsetX));
+        const newTop = Math.max(4, Math.min(parentRect.height - popoverEl.offsetHeight - 4, pt.clientY - parentRect.top - offsetY));
 
         popoverEl.style.left = `${Math.round(newLeft)}px`;
         popoverEl.style.top = `${Math.round(newTop)}px`;
       };
 
-      const onEnd = () => {
-        isDraggingHud = false;
-      };
+      const onEnd = () => { isDraggingHud = false; };
 
       popoverEl.addEventListener("mousedown", onStart);
       popoverEl.addEventListener("touchstart", onStart, { passive: false });
@@ -1605,7 +1464,7 @@
 
     function renderKeysBadgesHtml(keysString) {
       const buttons = expandVirtualKeysList(keysString);
-      if (buttons.length === 0) return "";
+      if (!buttons.length) return "";
 
       const minCol = Math.min(...buttons.map((b) => b.col));
       const maxCol = Math.max(...buttons.map((b) => b.col));
@@ -1659,16 +1518,11 @@
         { passive: false }
       );
 
-      const btns = containerEl.querySelectorAll(".virtual-key-btn");
-
-      btns.forEach((btn) => {
+      containerEl.querySelectorAll(".virtual-key-btn").forEach((btn) => {
         if (btn.dataset.bound === "true") return;
         btn.dataset.bound = "true";
 
-        const isCursorToggle = btn.dataset.cursorToggle === "true";
-        const isMouseClick = btn.dataset.mouseClick === "true";
-
-        if (isCursorToggle) {
+        if (btn.dataset.cursorToggle === "true") {
           const toggleCursor = (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -1680,7 +1534,7 @@
           return;
         }
 
-        if (isMouseClick) {
+        if (btn.dataset.mouseClick === "true") {
           const frame = document.getElementById("dev-fs-iframe");
           const downClick = (e) => {
             e.preventDefault();
@@ -1690,10 +1544,7 @@
             dispatchVirtualCursorToIframe(frame, devVirtualCursorState.xRatio, devVirtualCursorState.yRatio, "mousedown", true);
           };
           const upClick = (e) => {
-            if (e) {
-              e.preventDefault();
-              e.stopPropagation();
-            }
+            if (e) { e.preventDefault(); e.stopPropagation(); }
             if (!btn.classList.contains("pressed")) return;
             btn.classList.remove("pressed");
             devVirtualCursorState.isMouseDownHold = false;
@@ -1721,18 +1572,12 @@
           e.stopPropagation();
           btn.classList.add("pressed");
           triggerSyntheticKeyEvent("keydown", spec);
-
           if (repeatTimer) clearInterval(repeatTimer);
-          repeatTimer = setInterval(() => {
-            triggerSyntheticKeyEvent("keydown", spec);
-          }, 65);
+          repeatTimer = setInterval(() => triggerSyntheticKeyEvent("keydown", spec), 65);
         };
 
         const endPress = (e) => {
-          if (e) {
-            e.preventDefault();
-            e.stopPropagation();
-          }
+          if (e) { e.preventDefault(); e.stopPropagation(); }
           if (!btn.classList.contains("pressed")) return;
           btn.classList.remove("pressed");
           if (repeatTimer) {
@@ -1752,20 +1597,9 @@
       });
     }
 
-    function buildProjectTxtString() {
-      const lines = [];
-      lines.push(`TITLE: ${state.title || "Untitled Project"}`);
-      lines.push(`CODE: ${state.code || "PRJ // ARCHIVE"}`);
-      if (state.tags.trim()) {
-        lines.push(`TAGS: ${state.tags.trim()}`);
-      }
-      if (state.keys.trim()) {
-        lines.push(`CONTROLS: ${state.keys.trim()}`);
-      }
-
+    function getOrderedVisibleAssets() {
       const usedThumbs = getAssignedThumbSet();
       const ordered = state.assets.filter((a) => !usedThumbs.has(a.token.toLowerCase()));
-
       if (state.mainId) {
         const idx = ordered.findIndex((a) => a.id === state.mainId);
         if (idx > 0) {
@@ -1773,6 +1607,18 @@
           ordered.unshift(mainItem);
         }
       }
+      return ordered;
+    }
+
+    function buildProjectTxtString() {
+      const lines = [
+        `TITLE: ${state.title || "Untitled Project"}`,
+        `CODE: ${state.code || "PRJ // ARCHIVE"}`
+      ];
+      if (state.tags.trim()) lines.push(`TAGS: ${state.tags.trim()}`);
+      if (state.keys.trim()) lines.push(`CONTROLS: ${state.keys.trim()}`);
+
+      const ordered = getOrderedVisibleAssets();
 
       if (ordered.length > 0) {
         lines.push(`MAIN_FILE: ${formatAssetToken(ordered[0])}`);
@@ -1780,23 +1626,19 @@
 
       ordered.forEach((a) => {
         if (/^app:/i.test(a.token)) {
-          const rawApp = a.token.replace(/^app:/i, "");
-          lines.push(`APP: ${rawApp}${a.thumb ? "|thumb=" + a.thumb : ""}`);
+          lines.push(`APP: ${a.token.replace(/^app:/i, "")}${a.thumb ? "|thumb=" + a.thumb : ""}`);
         } else if (/^run:/i.test(a.token)) {
-          const rawUrl = a.token.replace(/^run:/i, "");
-          lines.push(`LINK: ${rawUrl}${a.thumb ? "|thumb=" + a.thumb : ""}`);
+          lines.push(`LINK: ${a.token.replace(/^run:/i, "")}${a.thumb ? "|thumb=" + a.thumb : ""}`);
         } else if (/^itch:/i.test(a.token)) {
-          const rawItch = a.token.replace(/^itch:/i, "");
-          lines.push(`ITCH: ${rawItch}${a.thumb ? "|thumb=" + a.thumb : ""}`);
+          lines.push(`ITCH: ${a.token.replace(/^itch:/i, "")}${a.thumb ? "|thumb=" + a.thumb : ""}`);
         }
       });
 
       if (ordered.length > 0) {
-        lines.push(`ASSETS: ${ordered.map((a) => formatAssetToken(a)).join(", ")}`);
+        lines.push(`ASSETS: ${ordered.map(formatAssetToken).join(", ")}`);
       }
 
-      lines.push("DESCRIPTION:");
-      lines.push(state.desc || "Project description goes here.");
+      lines.push("DESCRIPTION:", state.desc || "Project description goes here.");
       return lines.join("\n");
     }
 
@@ -1806,7 +1648,7 @@
       const visibleAssets = state.assets.filter((a) => !usedThumbs.has(a.token.toLowerCase()));
       document.getElementById("asset-count-label").textContent = visibleAssets.length;
 
-      if (visibleAssets.length === 0) {
+      if (!visibleAssets.length) {
         listEl.innerHTML = `
           <div style="padding:18px; border:1px dashed var(--border-cad); text-align:center; font-family:var(--font-mono); font-size:0.75rem; color:var(--text-muted);">
             No assets added yet. Import a Local Game/App Folder, or drop files above.
@@ -1815,7 +1657,8 @@
         return;
       }
 
-      listEl.innerHTML = "";
+      const frag = document.createDocumentFragment();
+
       visibleAssets.forEach((item) => {
         const isMain = item.id === state.mainId;
         const isTargetable = isTargetableInteractiveType(item.type);
@@ -1834,14 +1677,12 @@
           (isTargetable ? " thumb-drop-target" : "");
 
         if (isDraggableImg) {
-          row.setAttribute("draggable", "true");
+          row.draggable = true;
           row.addEventListener("dragstart", (e) => {
             draggedImageAssetId = item.id;
             e.dataTransfer.setData("text/plain", item.token);
           });
-          row.addEventListener("dragend", () => {
-            draggedImageAssetId = null;
-          });
+          row.addEventListener("dragend", () => { draggedImageAssetId = null; });
         }
 
         if (isTargetable) {
@@ -1849,9 +1690,7 @@
             e.preventDefault();
             row.classList.add("drag-target-hover");
           });
-          row.addEventListener("dragleave", () => {
-            row.classList.remove("drag-target-hover");
-          });
+          row.addEventListener("dragleave", () => row.classList.remove("drag-target-hover"));
           row.addEventListener("drop", (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -1879,9 +1718,7 @@
           <div class="asset-row-left">
             <span class="asset-type-pill">${item.type}</span>
             ${hasQueuedFile ? `<span class="asset-file-status">READY TO COPY</span>` : ""}
-            <span class="asset-token-text" title="${item.token}">${
-              isDraggableImg ? "&#9776; " : ""
-            }${item.token}</span>
+            <span class="asset-token-text" title="${item.token}">${isDraggableImg ? "&#9776; " : ""}${item.token}</span>
             ${
               isTargetable
                 ? item.thumb
@@ -1914,17 +1751,13 @@
         row.querySelector('[data-act="up"]').addEventListener("click", () => {
           const realIdx = state.assets.findIndex((a) => a.id === item.id);
           if (realIdx <= 0) return;
-          const tmp = state.assets[realIdx - 1];
-          state.assets[realIdx - 1] = state.assets[realIdx];
-          state.assets[realIdx] = tmp;
+          [state.assets[realIdx - 1], state.assets[realIdx]] = [state.assets[realIdx], state.assets[realIdx - 1]];
           syncAll();
         });
         row.querySelector('[data-act="down"]').addEventListener("click", () => {
           const realIdx = state.assets.findIndex((a) => a.id === item.id);
           if (realIdx === -1 || realIdx >= state.assets.length - 1) return;
-          const tmp = state.assets[realIdx + 1];
-          state.assets[realIdx + 1] = state.assets[realIdx];
-          state.assets[realIdx] = tmp;
+          [state.assets[realIdx + 1], state.assets[realIdx]] = [state.assets[realIdx], state.assets[realIdx + 1]];
           syncAll();
         });
         row.querySelector('[data-act="del"]').addEventListener("click", () => {
@@ -1936,16 +1769,16 @@
           syncAll();
         });
 
-        listEl.appendChild(row);
+        frag.appendChild(row);
       });
+
+      listEl.replaceChildren(frag);
     }
 
     function resolvePreviewThumbUrl(item) {
       if (item && item.thumb) {
         const lower = item.thumb.toLowerCase();
-        if (state.localObjectUrls.has(lower)) {
-          return state.localObjectUrls.get(lower);
-        }
+        if (state.localObjectUrls.has(lower)) return state.localObjectUrls.get(lower);
       }
       return (
         state.localObjectUrls.get("run.webp") ||
@@ -1957,9 +1790,7 @@
             <line x1="0" y1="250" x2="800" y2="250" stroke="rgba(217,40,4,0.35)" stroke-width="1" stroke-dasharray="6,6"/>
             <line x1="400" y1="0" x2="400" y2="500" stroke="rgba(217,40,4,0.35)" stroke-width="1" stroke-dasharray="6,6"/>
             <text x="28" y="468" fill="#9aa4ae" font-family="monospace" font-size="15">${
-              item && item.thumb
-                ? "THUMBNAIL: " + item.thumb
-                : "DRAG ANY IMAGE ONTO THIS ITEM TO SET THUMBNAIL"
+              item && item.thumb ? "THUMBNAIL: " + item.thumb : "DRAG ANY IMAGE ONTO THIS ITEM TO SET THUMBNAIL"
             }</text>
           </svg>`
         )}`
@@ -1978,7 +1809,6 @@
       openTabBtn.href = embedUrl;
       iframe.src = embedUrl;
 
-      // Controls & Virtual Cursor ALWAYS start turned OFF when opening
       devVirtualCursorState.xRatio = 0.5;
       devVirtualCursorState.yRatio = 0.5;
       devVirtualCursorState.controlsActive = false;
@@ -2008,6 +1838,19 @@
       updateDevVirtualCursorVisibilityAndPosition();
     }
 
+    function bindKeysToggleInContainer(container) {
+      const btn = container.querySelector('[data-act="toggle-keys"]');
+      const pop = container.querySelector(".keys-hud-popover");
+      if (btn && pop) {
+        bindInteractiveVirtualKeys(pop);
+        btn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          pop.style.display = pop.style.display === "block" ? "none" : "block";
+        });
+      }
+    }
+
     function createDevMediaElement(item, isStackItem = false) {
       const hasKeys = !isStackItem && Boolean(state.keys && state.keys.trim());
       const keysOverlayHtml = hasKeys
@@ -2027,7 +1870,7 @@
         wrap.innerHTML = `
           ${keysOverlayHtml}
           <a class="run-link-card" href="${url}" target="_blank" rel="noopener noreferrer" style="min-height:100%;">
-            <img class="run-base-img" src="${thumbSrc}" alt="Run thumbnail" />
+            <img class="run-base-img" src="${thumbSrc}" alt="Run thumbnail" decoding="async" />
             ${isStackItem ? "" : `<div class="stl-badge-overlay">WEB APPLICATION // CLICK TO LAUNCH &#8599;</div>`}
             <div class="run-overlay">
               <div class="run-btn-pill">
@@ -2045,9 +1888,7 @@
         const isLocalApp = /^app:/i.test(item.token);
         const folderClean = (state.folder || "new-project").trim().replace(/^\/+|\/+$/g, "");
         const rawTarget = item.token.replace(/^(itch|app):/i, "");
-        const embedUrl = isLocalApp
-          ? `assets/projects/${folderClean}/${rawTarget}`
-          : rawTarget;
+        const embedUrl = isLocalApp ? `assets/projects/${folderClean}/${rawTarget}` : rawTarget;
 
         const thumbSrc = resolvePreviewThumbUrl(item);
         const wrap = document.createElement("div");
@@ -2055,14 +1896,12 @@
         wrap.innerHTML = `
           ${keysOverlayHtml}
           <div class="run-link-card" data-act="run-itch-fs" style="min-height:100%;">
-            <img class="run-base-img" src="${thumbSrc}" alt="Run Thumbnail" />
+            <img class="run-base-img" src="${thumbSrc}" alt="Run Thumbnail" decoding="async" />
             ${
               isStackItem
                 ? ""
                 : `<div class="stl-badge-overlay">${
-                    isLocalApp
-                      ? "LOCAL EMBEDDED APP // CLICK RUN TO PLAY"
-                      : "INTERACTIVE GAME // CLICK RUN TO PLAY"
+                    isLocalApp ? "LOCAL EMBEDDED APP // CLICK RUN TO PLAY" : "INTERACTIVE GAME // CLICK RUN TO PLAY"
                   }</div>`
             }
             <div class="run-overlay">
@@ -2081,16 +1920,12 @@
         return wrap;
       }
 
-      if (
-        state.localObjectUrls.has(item.token.toLowerCase()) &&
-        isImageFileName(item.token)
-      ) {
+      if (state.localObjectUrls.has(item.token.toLowerCase()) && isImageFileName(item.token)) {
         const img = document.createElement("img");
         img.src = state.localObjectUrls.get(item.token.toLowerCase());
         img.alt = item.token;
-        img.style.width = "100%";
-        img.style.height = "100%";
-        img.style.objectFit = "contain";
+        img.decoding = "async";
+        img.style.cssText = "width:100%;height:100%;object-fit:contain;";
         return img;
       }
 
@@ -2105,57 +1940,24 @@
       return card;
     }
 
-    function bindKeysToggleInContainer(container) {
-      const btn = container.querySelector('[data-act="toggle-keys"]');
-      const pop = container.querySelector(".keys-hud-popover");
-      if (btn && pop) {
-        bindInteractiveVirtualKeys(pop);
-        btn.addEventListener("click", (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          const isOpen = pop.style.display === "block";
-          pop.style.display = isOpen ? "none" : "block";
-        });
-      }
-    }
-
     function renderLivePreview() {
       const container = document.getElementById("dev-live-card-preview");
-      const usedThumbs = getAssignedThumbSet();
-
-      const ordered = state.assets.filter((a) => !usedThumbs.has(a.token.toLowerCase()));
-      if (state.mainId) {
-        const idx = ordered.findIndex((a) => a.id === state.mainId);
-        if (idx > 0) {
-          const [mainItem] = ordered.splice(idx, 1);
-          ordered.unshift(mainItem);
-        }
-      }
-
+      const ordered = getOrderedVisibleAssets();
       const mainItem = ordered[0] || null;
+
       document.getElementById("preview-main-badge").textContent = mainItem
         ? `MAIN: ${mainItem.type}`
         : "MAIN: NONE";
 
-      const tagsList = state.tags
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean);
-
-      const stackPreview = ordered.slice(0, 3);
-      const stackVisualHtml = stackPreview
+      const tagsList = state.tags.split(",").map((t) => t.trim()).filter(Boolean);
+      const stackVisualHtml = ordered
+        .slice(0, 3)
         .map((item) => {
           if (isTargetableInteractiveType(item.type)) {
-            const tUrl = resolvePreviewThumbUrl(item);
-            return `<img class="stack-card-img" src="${tUrl}" alt="Run stack preview" />`;
+            return `<img class="stack-card-img" src="${resolvePreviewThumbUrl(item)}" alt="Run stack preview" decoding="async" />`;
           }
-          if (
-            state.localObjectUrls.has(item.token.toLowerCase()) &&
-            isImageFileName(item.token)
-          ) {
-            return `<img class="stack-card-img" src="${state.localObjectUrls.get(
-              item.token.toLowerCase()
-            )}" alt="Stack preview" />`;
+          if (state.localObjectUrls.has(item.token.toLowerCase()) && isImageFileName(item.token)) {
+            return `<img class="stack-card-img" src="${state.localObjectUrls.get(item.token.toLowerCase())}" alt="Stack preview" decoding="async" />`;
           }
           return `<div class="stack-card-badge">[${item.type}]</div>`;
         })
@@ -2178,9 +1980,7 @@
               </div>
 
               <div class="photo-stack-trigger" id="dev-stack-trigger">
-                <div class="stack-visual">${
-                  stackVisualHtml || `<div class="stack-card-badge">[EMPTY]</div>`
-                }</div>
+                <div class="stack-visual">${stackVisualHtml || `<div class="stack-card-badge">[EMPTY]</div>`}</div>
                 <div class="stack-meta">
                   <span class="stack-title">PROJECT STACK (${ordered.length} LINKED)</span>
                   <span class="stack-subtitle" id="dev-stack-subtitle">
@@ -2195,9 +1995,7 @@
             </div>
           </div>
 
-          <div id="dev-preview-drawer" class="project-expanded-drawer ${
-            state.drawerOpen ? "open" : ""
-          }">
+          <div id="dev-preview-drawer" class="project-expanded-drawer ${state.drawerOpen ? "open" : ""}">
             <div class="drawer-header">
               <span>// LINKED FROM assets/projects/${folderClean}/project.txt (${ordered.length} ITEMS)</span>
               <span>STACK ITEMS SHOW ONLY THE RUN BUTTON</span>
@@ -2220,19 +2018,19 @@
       }
 
       const galleryGrid = document.getElementById("dev-preview-gallery-grid");
+      const galleryFrag = document.createDocumentFragment();
       ordered.forEach((asset) => {
         const cell = document.createElement("div");
         cell.className = "project-gallery-item";
         cell.appendChild(createDevMediaElement(asset, true));
-        galleryGrid.appendChild(cell);
+        galleryFrag.appendChild(cell);
       });
+      galleryGrid.appendChild(galleryFrag);
 
       document.getElementById("dev-stack-trigger").addEventListener("click", () => {
         state.drawerOpen = !state.drawerOpen;
-        const drawer = document.getElementById("dev-preview-drawer");
-        const sub = document.getElementById("dev-stack-subtitle");
-        drawer.classList.toggle("open", state.drawerOpen);
-        sub.innerHTML = state.drawerOpen
+        document.getElementById("dev-preview-drawer").classList.toggle("open", state.drawerOpen);
+        document.getElementById("dev-stack-subtitle").innerHTML = state.drawerOpen
           ? "Click stack to collapse project grid &#8593;"
           : "Click stack to reveal full project grid &#8595;";
       });
@@ -2241,7 +2039,6 @@
     function syncAll() {
       const folderClean = (state.folder || "new-project").trim().replace(/^\/+|\/+$/g, "");
       document.getElementById("target-path-readout").textContent = `assets/projects/${folderClean}/project.txt`;
-
       renderKeyGridDesigner();
       renderAssetListEditor();
       renderLivePreview();
@@ -2287,26 +2084,24 @@
           const rawVal = line.replace(/^(APP|LOCAL_APP|WEB_APP)\s*:\s*/i, "").trim();
           const { baseToken, thumb } = splitTokenAndThumb(rawVal);
           const cleanPath = baseToken.replace(/^app\s*:\s*/i, "").trim();
-          if (cleanPath) addAssetToken(`app:${cleanPath}`, thumb);
+          if (cleanPath) addAssetToken(`app:${cleanPath}`, thumb, true);
         } else if (/^ITCH(_EMBED|_GAME|_URL)?\s*:/i.test(line)) {
           inDesc = false;
           const rawVal = line.replace(/^ITCH(_EMBED|_GAME|_URL)?\s*:\s*/i, "").trim();
           const { baseToken, thumb } = splitTokenAndThumb(rawVal);
           const src = extractItchSrc(baseToken);
-          if (src) addAssetToken(`itch:${src}`, thumb);
+          if (src) addAssetToken(`itch:${src}`, thumb, true);
         } else if (/^(LINK|RUN|RUN_LINK|URL|WEBSITE)\s*:/i.test(line)) {
           inDesc = false;
           const rawVal = line.replace(/^(LINK|RUN|RUN_LINK|URL|WEBSITE)\s*:\s*/i, "").trim();
           const { baseToken, thumb } = splitTokenAndThumb(rawVal);
           const lnk = normalizeLink(baseToken);
-          if (lnk) addAssetToken(`run:${lnk}`, thumb);
+          if (lnk) addAssetToken(`run:${lnk}`, thumb, true);
         } else if (/^MAIN(_IMAGE|_STL|_MODEL|_GLB|_VIDEO|_FILE|_ITCH|_LINK|_APP)?\s*:/i.test(line)) {
           inDesc = false;
-          rawMain = line
-            .replace(/^MAIN(_IMAGE|_STL|_MODEL|_GLB|_VIDEO|_FILE|_ITCH|_LINK|_APP)?\s*:\s*/i, "")
-            .trim();
+          rawMain = line.replace(/^MAIN(_IMAGE|_STL|_MODEL|_GLB|_VIDEO|_FILE|_ITCH|_LINK|_APP)?\s*:\s*/i, "").trim();
           const { baseToken, thumb } = splitTokenAndThumb(rawMain);
-          addAssetToken(baseToken, thumb);
+          addAssetToken(baseToken, thumb, true);
         } else if (/^(IMAGES|FILES|ASSETS|MODELS|VIDEOS)\s*:/i.test(line)) {
           inDesc = false;
           line
@@ -2316,7 +2111,7 @@
             .filter(Boolean)
             .forEach((rawToken) => {
               const { baseToken, thumb } = splitTokenAndThumb(rawToken);
-              addAssetToken(baseToken, thumb);
+              addAssetToken(baseToken, thumb, true);
             });
         } else if (/^DESCRIPTION\s*:/i.test(line)) {
           inDesc = true;
@@ -2340,10 +2135,7 @@
 
     async function mountRepositoryFolder() {
       if (!("showDirectoryPicker" in window)) {
-        logFsMessage(
-          "Your browser does not support the File System Access API. Use Chrome, Edge, or Brave on desktop.",
-          true
-        );
+        logFsMessage("Your browser does not support the File System Access API. Use Chrome, Edge, or Brave on desktop.", true);
         return false;
       }
 
@@ -2359,19 +2151,15 @@
         }
 
         document.getElementById("fs-dot").classList.add("connected");
-        document.getElementById("fs-status-title").textContent =
-          `CONNECTED TO WORKSPACE: /${handle.name}`;
-        document.getElementById("fs-status-sub").textContent =
-          `Direct read/write active for assets/projects/ (including nested Unity & p5.js folders) and script.js`;
+        document.getElementById("fs-status-title").textContent = `CONNECTED TO WORKSPACE: /${handle.name}`;
+        document.getElementById("fs-status-sub").textContent = `Direct read/write active for assets/projects/ (including nested Unity & p5.js folders) and script.js`;
         document.getElementById("mount-repo-btn").innerHTML = "&#128193; CHANGE REPO FOLDER";
 
         await refreshExistingProjectsDropdown();
         logFsMessage(`Mounted workspace "/${handle.name}" successfully.`);
         return true;
       } catch (err) {
-        if (err.name !== "AbortError") {
-          logFsMessage(`Failed to mount folder: ${err.message}`, true);
-        }
+        if (err.name !== "AbortError") logFsMessage(`Failed to mount folder: ${err.message}`, true);
         return false;
       }
     }
@@ -2383,9 +2171,7 @@
 
       const folderNames = [];
       for await (const [name, entry] of state.projectsDirHandle.entries()) {
-        if (entry.kind === "directory") {
-          folderNames.push(name);
-        }
+        if (entry.kind === "directory") folderNames.push(name);
       }
 
       folderNames.sort().forEach((name) => {
@@ -2403,20 +2189,19 @@
       try {
         const projDir = await state.projectsDirHandle.getDirectoryHandle(folderName);
         state.localFilesMap.clear();
-        state.localObjectUrls.clear();
+        revokeAllObjectUrls();
         document.getElementById("app-folder-status").textContent = "";
 
         for await (const [entryName, entry] of projDir.entries()) {
           if (entry.kind === "file" && entryName.toLowerCase() !== "project.txt") {
             const fileObj = await entry.getFile();
-            state.localObjectUrls.set(entryName.toLowerCase(), URL.createObjectURL(fileObj));
+            setLocalObjectUrl(entryName.toLowerCase(), fileObj);
           }
         }
 
         const txtHandle = await projDir.getFileHandle("project.txt");
         const txtFile = await txtHandle.getFile();
-        const rawText = await txtFile.text();
-        parseProjectTextIntoEditor(rawText, folderName);
+        parseProjectTextIntoEditor(await txtFile.text(), folderName);
         logFsMessage(`Loaded existing project from assets/projects/${folderName}/project.txt`);
       } catch (err) {
         logFsMessage(`Could not read project.txt in ${folderName}: ${err.message}`, true);
@@ -2437,9 +2222,7 @@
 
       try {
         logFsMessage("Writing project.txt and copying/unpacking project files...");
-        const projDir = await state.projectsDirHandle.getDirectoryHandle(folderClean, {
-          create: true
-        });
+        const projDir = await state.projectsDirHandle.getDirectoryHandle(folderClean, { create: true });
 
         const txtHandle = await projDir.getFileHandle("project.txt", { create: true });
         const txtWritable = await txtHandle.createWritable();
@@ -2450,18 +2233,14 @@
         let unpackedGzCount = 0;
 
         for (const [, entry] of state.localFilesMap.entries()) {
-          const { finalRelPath, finalBlob } = await maybeDecompressUnityGzFile(
-            entry.relativePath,
-            entry.file
-          );
+          const { finalRelPath, finalBlob } = await maybeDecompressUnityGzFile(entry.relativePath, entry.file);
           if (finalRelPath !== entry.relativePath) unpackedGzCount++;
           await writeNestedFileToProjDir(projDir, finalRelPath, finalBlob);
           copiedCount++;
         }
 
         let scriptStatus = "";
-        const shouldUpdateScript = document.getElementById("auto-register-script-cb").checked;
-        if (shouldUpdateScript && state.rootDirHandle) {
+        if (document.getElementById("auto-register-script-cb").checked && state.rootDirHandle) {
           try {
             const scriptHandle = await state.rootDirHandle.getFileHandle("script.js");
             const scriptFile = await scriptHandle.getFile();
@@ -2509,12 +2288,6 @@
       }
     }
 
-    document.getElementById("mount-repo-btn").addEventListener("click", mountRepositoryFolder);
-    document.getElementById("existing-projects-select").addEventListener("change", (e) => {
-      if (e.target.value) loadProjectFromDiskFolder(e.target.value);
-    });
-    document.getElementById("save-disk-btn").addEventListener("click", saveProjectDirectlyToDisk);
-
     function appendQuickControlToken(tokenSnippet) {
       const input = document.getElementById("dev-keys");
       const current = input.value.trim();
@@ -2523,101 +2296,16 @@
       syncAll();
     }
 
-    document.getElementById("quick-add-wasd-layout-btn").addEventListener("click", () => {
-      const preset = "E:Interact@0:0, W:Move@2:0, SPACE:Jump@4:0, A:Move@1:1, S:Move@2:1, D:Move@3:1";
-      const input = document.getElementById("dev-keys");
-      input.value = input.value.trim() ? `${input.value.trim()}, ${preset}` : preset;
-      state.keys = input.value;
-      syncAll();
-    });
-    document.getElementById("quick-add-cursor-btn").addEventListener("click", () => {
-      appendQuickControlToken("CURSOR:Crosshair");
-    });
-    document.getElementById("quick-add-click-btn").addEventListener("click", () => {
-      appendQuickControlToken("CLICK:Fire");
-    });
-    document.getElementById("quick-add-key-prompt-btn").addEventListener("click", () => {
-      const k = prompt("Enter Key (e.g. Q, E, R, 1, 2, SHIFT, SPACE):", "E");
-      if (!k) return;
-      const desc = prompt("Optional short label (e.g. Interact, Spawn, Boost):", "");
-      appendQuickControlToken(desc ? `${k.trim()}:${desc.trim()}` : k.trim());
-    });
-    document.getElementById("quick-clear-keys-btn").addEventListener("click", () => {
-      state.keys = "";
-      document.getElementById("dev-keys").value = "";
-      syncAll();
-    });
-
-    // Input Listeners
-    document.getElementById("dev-folder").addEventListener("input", (e) => {
-      state.folder = e.target.value;
-      syncAll();
-    });
-    document.getElementById("dev-code").addEventListener("input", (e) => {
-      state.code = e.target.value;
-      syncAll();
-    });
-    document.getElementById("dev-title").addEventListener("input", (e) => {
-      state.title = e.target.value;
-      syncAll();
-    });
-    document.getElementById("dev-tags").addEventListener("input", (e) => {
-      state.tags = e.target.value;
-      syncAll();
-    });
-    document.getElementById("dev-keys").addEventListener("input", (e) => {
-      state.keys = e.target.value;
-      syncAll();
-    });
-    document.getElementById("dev-desc").addEventListener("input", (e) => {
-      state.desc = e.target.value;
-      syncAll();
-    });
-
-    document.getElementById("add-link-btn").addEventListener("click", () => {
-      const input = document.getElementById("dev-link-url");
-      const url = normalizeLink(input.value);
-      if (!url) return;
-      addAssetToken(`run:${url}`);
-      input.value = "";
-    });
-
-    document.getElementById("add-itch-btn").addEventListener("click", () => {
-      const input = document.getElementById("dev-itch-input");
-      const src = extractItchSrc(input.value);
-      if (!src) return;
-      addAssetToken(`itch:${src}`);
-      input.value = "";
-    });
-
-    document.getElementById("add-manual-btn").addEventListener("click", () => {
-      const input = document.getElementById("dev-manual-file");
-      if (!input.value.trim()) return;
-      input.value
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean)
-        .forEach((t) => addAssetToken(t));
-      input.value = "";
-    });
-
-    const dropzone = document.getElementById("dev-dropzone");
-    const filePicker = document.getElementById("dev-file-picker");
-
     function handleFiles(fileList) {
       const usedThumbs = getAssignedThumbSet();
       Array.from(fileList).forEach((file) => {
         if (file.name.toLowerCase() === "project.txt") return;
         const lower = file.name.toLowerCase();
         state.localFilesMap.set(lower, { relativePath: file.name, file });
-        state.localObjectUrls.set(lower, URL.createObjectURL(file));
-
-        if (usedThumbs.has(lower)) {
-          syncAll();
-          return;
-        }
-        addAssetToken(file.name);
+        setLocalObjectUrl(lower, file);
+        if (!usedThumbs.has(lower)) addAssetToken(file.name, "", true);
       });
+      syncAll();
     }
 
     async function readDroppedDirectoryEntry(dirEntry, basePath = "") {
@@ -2639,10 +2327,7 @@
                 });
                 collected.push(file);
               } else if (entry.isDirectory) {
-                const subFiles = await readDroppedDirectoryEntry(
-                  entry,
-                  `${basePath}${entry.name}/`
-                );
+                const subFiles = await readDroppedDirectoryEntry(entry, `${basePath}${entry.name}/`);
                 collected.push(...subFiles);
               }
             }
@@ -2655,110 +2340,169 @@
       return collected;
     }
 
-    dropzone.addEventListener("click", () => filePicker.click());
-    filePicker.addEventListener("change", (e) => handleFiles(e.target.files));
-    dropzone.addEventListener("dragover", (e) => {
-      e.preventDefault();
-      dropzone.classList.add("dragover");
-    });
-    dropzone.addEventListener("dragleave", () => dropzone.classList.remove("dragover"));
-    dropzone.addEventListener("drop", async (e) => {
-      e.preventDefault();
-      dropzone.classList.remove("dragover");
+    window.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("dev-app-folder-picker").addEventListener("change", (e) => {
+        handleImportedAppFolderFiles(e.target.files);
+      });
 
-      if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
-        const firstEntry =
-          e.dataTransfer.items[0].webkitGetAsEntry &&
-          e.dataTransfer.items[0].webkitGetAsEntry();
-        if (firstEntry && firstEntry.isDirectory) {
-          const allFolderFiles = await readDroppedDirectoryEntry(firstEntry);
-          handleImportedAppFolderFiles(allFolderFiles);
-          return;
+      document.getElementById("mount-repo-btn").addEventListener("click", mountRepositoryFolder);
+      document.getElementById("existing-projects-select").addEventListener("change", (e) => {
+        if (e.target.value) loadProjectFromDiskFolder(e.target.value);
+      });
+      document.getElementById("save-disk-btn").addEventListener("click", saveProjectDirectlyToDisk);
+
+      document.getElementById("quick-add-wasd-layout-btn").addEventListener("click", () => {
+        appendQuickControlToken("E:Interact@0:0, W:Move@2:0, SPACE:Jump@4:0, A:Move@1:1, S:Move@2:1, D:Move@3:1");
+      });
+      document.getElementById("quick-add-cursor-btn").addEventListener("click", () => {
+        appendQuickControlToken("CURSOR:Crosshair");
+      });
+      document.getElementById("quick-add-click-btn").addEventListener("click", () => {
+        appendQuickControlToken("CLICK:Fire");
+      });
+      document.getElementById("quick-add-key-prompt-btn").addEventListener("click", () => {
+        const k = prompt("Enter Key (e.g. Q, E, R, 1, 2, SHIFT, SPACE):", "E");
+        if (!k) return;
+        const desc = prompt("Optional short label (e.g. Interact, Spawn, Boost):", "");
+        appendQuickControlToken(desc ? `${k.trim()}:${desc.trim()}` : k.trim());
+      });
+      document.getElementById("quick-clear-keys-btn").addEventListener("click", () => {
+        state.keys = "";
+        document.getElementById("dev-keys").value = "";
+        syncAll();
+      });
+
+      ["folder", "code", "title", "tags", "keys", "desc"].forEach((key) => {
+        document.getElementById(`dev-${key}`).addEventListener("input", (e) => {
+          state[key] = e.target.value;
+          syncAll();
+        });
+      });
+
+      document.getElementById("add-link-btn").addEventListener("click", () => {
+        const input = document.getElementById("dev-link-url");
+        const url = normalizeLink(input.value);
+        if (!url) return;
+        addAssetToken(`run:${url}`);
+        input.value = "";
+      });
+
+      document.getElementById("add-itch-btn").addEventListener("click", () => {
+        const input = document.getElementById("dev-itch-input");
+        const src = extractItchSrc(input.value);
+        if (!src) return;
+        addAssetToken(`itch:${src}`);
+        input.value = "";
+      });
+
+      document.getElementById("add-manual-btn").addEventListener("click", () => {
+        const input = document.getElementById("dev-manual-file");
+        if (!input.value.trim()) return;
+        input.value.split(",").map((s) => s.trim()).filter(Boolean).forEach((t) => addAssetToken(t, "", true));
+        input.value = "";
+        syncAll();
+      });
+
+      const dropzone = document.getElementById("dev-dropzone");
+      const filePicker = document.getElementById("dev-file-picker");
+
+      dropzone.addEventListener("click", () => filePicker.click());
+      filePicker.addEventListener("change", (e) => handleFiles(e.target.files));
+      dropzone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropzone.classList.add("dragover");
+      });
+      dropzone.addEventListener("dragleave", () => dropzone.classList.remove("dragover"));
+      dropzone.addEventListener("drop", async (e) => {
+        e.preventDefault();
+        dropzone.classList.remove("dragover");
+
+        if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+          const firstEntry =
+            e.dataTransfer.items[0].webkitGetAsEntry && e.dataTransfer.items[0].webkitGetAsEntry();
+          if (firstEntry && firstEntry.isDirectory) {
+            const allFolderFiles = await readDroppedDirectoryEntry(firstEntry);
+            handleImportedAppFolderFiles(allFolderFiles);
+            return;
+          }
         }
-      }
 
-      if (e.dataTransfer.files) handleFiles(e.dataTransfer.files);
-    });
+        if (e.dataTransfer.files) handleFiles(e.dataTransfer.files);
+      });
 
-    document.getElementById("import-txt-input").addEventListener("change", async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const text = await file.text();
-      parseProjectTextIntoEditor(text);
-    });
+      document.getElementById("import-txt-input").addEventListener("change", async (e) => {
+        const file = e.target.files[0];
+        if (file) parseProjectTextIntoEditor(await file.text());
+      });
 
-    document.getElementById("reset-form-btn").addEventListener("click", () => {
-      state.title = "";
-      state.code = "PRJ // ARCHIVE";
-      state.tags = "";
-      state.keys = "";
-      state.desc = "";
-      state.assets = [];
-      state.mainId = null;
-      state.localFilesMap.clear();
-      state.localObjectUrls.clear();
-      document.getElementById("dev-title").value = "";
-      document.getElementById("dev-code").value = state.code;
-      document.getElementById("dev-tags").value = "";
-      document.getElementById("dev-keys").value = "";
-      document.getElementById("dev-desc").value = "";
-      document.getElementById("app-folder-status").textContent = "";
+      document.getElementById("reset-form-btn").addEventListener("click", () => {
+        state.title = "";
+        state.code = "PRJ // ARCHIVE";
+        state.tags = "";
+        state.keys = "";
+        state.desc = "";
+        state.assets = [];
+        state.mainId = null;
+        state.localFilesMap.clear();
+        revokeAllObjectUrls();
+        document.getElementById("dev-title").value = "";
+        document.getElementById("dev-code").value = state.code;
+        document.getElementById("dev-tags").value = "";
+        document.getElementById("dev-keys").value = "";
+        document.getElementById("dev-desc").value = "";
+        document.getElementById("app-folder-status").textContent = "";
+        syncAll();
+      });
+
+      const devFsModal = document.getElementById("dev-fullscreen-modal");
+      const closeDevFs = () => {
+        devFsModal.classList.remove("open");
+        devFsModal.setAttribute("aria-hidden", "true");
+        document.getElementById("dev-fs-iframe").src = "";
+        devVirtualCursorState.controlsActive = false;
+        devVirtualCursorState.enabled = false;
+        updateDevVirtualCursorVisibilityAndPosition();
+      };
+      document.getElementById("dev-fs-close").addEventListener("click", closeDevFs);
+      devFsModal.addEventListener("click", (e) => {
+        if (e.target === devFsModal) closeDevFs();
+      });
+      document.getElementById("dev-fs-keys-btn").addEventListener("click", (e) => {
+        e.stopPropagation();
+        const pop = document.getElementById("dev-fs-keys-popover");
+        const nowOpen = pop.style.display !== "block";
+        pop.style.display = nowOpen ? "block" : "none";
+        devVirtualCursorState.controlsActive = nowOpen;
+        if (!nowOpen) devVirtualCursorState.enabled = false;
+        updateDevVirtualCursorVisibilityAndPosition();
+      });
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && devFsModal.classList.contains("open")) closeDevFs();
+      });
+
+      document.getElementById("download-txt-btn").addEventListener("click", () => {
+        const blob = new Blob([buildProjectTxtString()], { type: "text/plain;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "project.txt";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      });
+
+      document.getElementById("copy-txt-btn").addEventListener("click", (e) => {
+        navigator.clipboard.writeText(buildProjectTxtString()).then(() => {
+          const btn = e.target;
+          const orig = btn.textContent;
+          btn.textContent = "COPIED!";
+          setTimeout(() => (btn.textContent = orig), 1500);
+        });
+      });
+
       syncAll();
     });
-
-    const devFsModal = document.getElementById("dev-fullscreen-modal");
-    const closeDevFs = () => {
-      devFsModal.classList.remove("open");
-      devFsModal.setAttribute("aria-hidden", "true");
-      document.getElementById("dev-fs-iframe").src = "";
-      devVirtualCursorState.controlsActive = false;
-      devVirtualCursorState.enabled = false;
-      updateDevVirtualCursorVisibilityAndPosition();
-    };
-    document.getElementById("dev-fs-close").addEventListener("click", closeDevFs);
-    devFsModal.addEventListener("click", (e) => {
-      if (e.target === devFsModal) closeDevFs();
-    });
-    document.getElementById("dev-fs-keys-btn").addEventListener("click", (e) => {
-      e.stopPropagation();
-      const pop = document.getElementById("dev-fs-keys-popover");
-      const nowOpen = pop.style.display !== "block";
-      pop.style.display = nowOpen ? "block" : "none";
-      devVirtualCursorState.controlsActive = nowOpen;
-      if (!nowOpen) {
-        devVirtualCursorState.enabled = false;
-      }
-      updateDevVirtualCursorVisibilityAndPosition();
-    });
-    window.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && devFsModal.classList.contains("open")) {
-        closeDevFs();
-      }
-    });
-
-    document.getElementById("download-txt-btn").addEventListener("click", () => {
-      const content = buildProjectTxtString();
-      const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "project.txt";
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    });
-
-    document.getElementById("copy-txt-btn").addEventListener("click", (e) => {
-      navigator.clipboard.writeText(buildProjectTxtString()).then(() => {
-        const btn = e.target;
-        const orig = btn.textContent;
-        btn.textContent = "COPIED!";
-        setTimeout(() => (btn.textContent = orig), 1500);
-      });
-    });
-
-    syncAll();
   </script>
 </body>
 </html>
