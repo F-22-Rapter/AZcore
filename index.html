@@ -47,7 +47,7 @@
   </div>
 
   <!-- TOP NAVIGATION BAR -->
-  <header class="site-header EntranceFade" style="--delay: 0.1s">
+  <header class="site-header EntranceFade" style="--delay: 0.05s">
     <div class="brand" id="brand-logo">
       <span class="brand-mark"></span>
       <span class="brand-name" id="nav-brand-name">AZCORE</span>
@@ -81,14 +81,14 @@
   </header>
 
   <!-- FADED SIDE NAVIGATION BARS -->
-  <button type="button" id="side-nav-prev" class="side-nav-bar side-nav-left EntranceFade" style="--delay: 0.25s" aria-label="Previous Section">
+  <button type="button" id="side-nav-prev" class="side-nav-bar side-nav-left EntranceFade" style="--delay: 0.12s" aria-label="Previous Section">
     <div class="side-nav-inner">
       <span class="side-arrow">&#8592;</span>
       <span class="side-label" id="prev-tab-label">PHOTOGRAPHY</span>
     </div>
   </button>
 
-  <button type="button" id="side-nav-next" class="side-nav-bar side-nav-right EntranceFade" style="--delay: 0.25s" aria-label="Next Section">
+  <button type="button" id="side-nav-next" class="side-nav-bar side-nav-right EntranceFade" style="--delay: 0.12s" aria-label="Next Section">
     <div class="side-nav-inner">
       <span class="side-label" id="next-tab-label">PROJECTS</span>
       <span class="side-arrow">&#8594;</span>
@@ -96,7 +96,7 @@
   </button>
 
   <!-- MAIN VIEWPORT STAGE -->
-  <main class="stage-container EntranceFade" style="--delay: 0.35s">
+  <main class="stage-container EntranceFade" style="--delay: 0.18s">
 
     <!-- TAB 1: ABOUT ME -->
     <section id="tab-about" class="tab-section active-section" data-tab-index="0">
@@ -156,7 +156,7 @@
             <h1 class="section-title">PROJECTS</h1>
             <p class="section-subtitle"></p>
           </div>
-          <div id="projects-count-badge" class="telemetry-badge">QUEUED FOR IDLE LOAD...</div>
+          <div id="projects-count-badge" class="telemetry-badge">QUEUED FOR STREAM LOAD...</div>
         </div>
       </div>
 
@@ -172,7 +172,7 @@
             <h1 class="section-title">PHOTOGRAPHY</h1>
             <p class="section-subtitle"></p>
           </div>
-          <div id="photo-count-badge" class="telemetry-badge">QUEUED FOR IDLE LOAD...</div>
+          <div id="photo-count-badge" class="telemetry-badge">QUEUED FOR STREAM LOAD...</div>
         </div>
       </div>
 
@@ -182,16 +182,20 @@
   </main>
 
   <!-- UNIVERSAL FULL-SCREEN LIGHTBOX -->
-  <div id="lightbox-modal" class="lightbox-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="lightbox-caption">
-    <div class="lightbox-backdrop-hint">CLICK ANYWHERE OUTSIDE VIEWER TO CLOSE [ESC]</div>
+  <div id="lightbox-modal" class="lightbox-modal" role="dialog" aria-modal="true" aria-hidden="true" aria-label="Media Viewer">
+    <div class="lightbox-backdrop-hint">SCROLL / PINCH TO ZOOM // CLICK OUTSIDE TO CLOSE [ESC]</div>
     <button type="button" class="lightbox-nav lightbox-prev" id="lightbox-prev" aria-label="Previous Item">&#8592;</button>
 
     <div class="lightbox-content-wrapper" id="lightbox-content-wrapper">
       
-      <!-- LIGHTBOX CAPTION / HEADER BAR -->
+      <!-- LIGHTBOX HEADER BAR (NO TOP-LEFT TEXT, EXIT ALWAYS PINNED TOP-RIGHT) -->
       <div class="lightbox-caption-bar">
-        <span id="lightbox-caption">PREVIEW</span>
         <div class="lightbox-caption-right">
+          <div id="lightbox-zoom-controls" class="lightbox-zoom-controls" style="display:none;">
+            <button type="button" id="lightbox-zoom-out-btn" class="mini-action-btn" title="Zoom Out (-)">&#8722;</button>
+            <button type="button" id="lightbox-zoom-reset-btn" class="mini-action-btn" title="Reset Zoom (0)">100%</button>
+            <button type="button" id="lightbox-zoom-in-btn" class="mini-action-btn" title="Zoom In (+)">&#43;</button>
+          </div>
           <button type="button" id="lightbox-keys-btn" class="mini-action-btn" style="display:none;">&#9000; CONTROLS</button>
           <button type="button" id="model-reset-btn" class="mini-action-btn" style="display:none;">RESET VIEW</button>
           <a id="lightbox-external-btn" class="mini-action-btn" href="#" target="_blank" rel="noopener noreferrer" style="display:none; text-decoration:none;">OPEN TAB &#8599;</a>
@@ -199,7 +203,7 @@
         </div>
       </div>
 
-      <!-- INTERACTIVE ON-SCREEN CONTROLS POPOVER OVERLAY (DRAGGABLE & GRID-SNAPPED) -->
+      <!-- INTERACTIVE ON-SCREEN CONTROLS POPOVER OVERLAY -->
       <div id="lightbox-keys-popover" class="keys-hud-popover" style="display:none;"></div>
 
       <!-- GAME CROSSHAIR VIRTUAL CURSOR FOR EMBEDDED APPS -->
@@ -217,36 +221,39 @@
         </svg>
       </div>
 
-      <div id="lightbox-loader" class="lightbox-loader" style="display:none;">
-        <div class="cad-spinner"></div>
-        <div class="cad-loader-text" id="lightbox-loader-text">LOADING FULL-RESOLUTION ASSET...</div>
-      </div>
-
-      <img id="lightbox-img" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Full screen preview" decoding="async" />
-
-      <video id="lightbox-video" class="lightbox-video" controls controlsList="nodownload" playsinline preload="none" style="display:none;"></video>
-
-      <div id="lightbox-audio-stage" class="lightbox-generic-stage" style="display:none;">
-        <div class="generic-file-ext" id="lightbox-audio-title">AUDIO</div>
-        <audio id="lightbox-audio" controls controlsList="nodownload" preload="none" style="width: min(420px, 80vw);"></audio>
-      </div>
-
-      <div id="lightbox-3d-stage" class="lightbox-stl-stage" style="display:none;">
-        <div class="stl-controls-hint">
-          LEFT DRAG: ORBIT // RIGHT DRAG: PAN // SCROLL: ZOOM
+      <!-- STAGE VIEWPORT -->
+      <div id="lightbox-stage-viewport" class="lightbox-stage-viewport">
+        <div id="lightbox-loader" class="lightbox-loader" style="display:none;">
+          <div class="cad-spinner"></div>
+          <div class="cad-loader-text" id="lightbox-loader-text">LOADING FULL-RESOLUTION ASSET...</div>
         </div>
-      </div>
 
-      <iframe id="lightbox-itch-frame" class="lightbox-itch-frame" style="display:none;" allow="autoplay; fullscreen; gamepad" title="Embedded Interactive App"></iframe>
+        <img id="lightbox-img" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="Full screen preview" decoding="async" />
 
-      <div id="lightbox-link-stage" class="lightbox-link-stage" style="display:none;"></div>
+        <video id="lightbox-video" class="lightbox-video" controls controlsList="nodownload" playsinline preload="none" style="display:none;"></video>
 
-      <iframe id="lightbox-pdf-frame" class="lightbox-pdf-frame" style="display:none;" title="Document Preview"></iframe>
+        <div id="lightbox-audio-stage" class="lightbox-generic-stage" style="display:none;">
+          <div class="generic-file-ext" id="lightbox-audio-title">AUDIO</div>
+          <audio id="lightbox-audio" controls controlsList="nodownload" preload="none" style="width: min(420px, 80vw);"></audio>
+        </div>
 
-      <div id="lightbox-generic-stage" class="lightbox-generic-stage" style="display:none;">
-        <div class="generic-file-ext" id="lightbox-generic-ext">.FILE</div>
-        <div class="generic-file-name" id="lightbox-generic-name">filename.ext</div>
-        <p class="generic-file-desc" id="lightbox-generic-desc">Project file details.</p>
+        <div id="lightbox-3d-stage" class="lightbox-stl-stage" style="display:none;">
+          <div class="stl-controls-hint">
+            LEFT DRAG: ORBIT // RIGHT DRAG: PAN // SCROLL: ZOOM
+          </div>
+        </div>
+
+        <iframe id="lightbox-itch-frame" class="lightbox-itch-frame" style="display:none;" allow="autoplay; fullscreen; gamepad" title="Embedded Interactive App"></iframe>
+
+        <div id="lightbox-link-stage" class="lightbox-link-stage" style="display:none;"></div>
+
+        <iframe id="lightbox-pdf-frame" class="lightbox-pdf-frame" style="display:none;" title="Document Preview"></iframe>
+
+        <div id="lightbox-generic-stage" class="lightbox-generic-stage" style="display:none;">
+          <div class="generic-file-ext" id="lightbox-generic-ext">.FILE</div>
+          <div class="generic-file-name" id="lightbox-generic-name">filename.ext</div>
+          <p class="generic-file-desc" id="lightbox-generic-desc">Project file details.</p>
+        </div>
       </div>
 
     </div>

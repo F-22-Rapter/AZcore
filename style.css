@@ -47,7 +47,7 @@ code {
 }
 
 /* ==========================================================================
-   2. INITIAL PAGE LOAD ANIMATION & STAGGERED FADE-IN
+   2. INITIAL PAGE LOAD ANIMATION & STREAMING ITEM ENTRANCE
    ========================================================================== */
 .page-loader {
   position: fixed;
@@ -57,8 +57,8 @@ code {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
-              visibility 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+              visibility 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .page-loader.loaded {
@@ -94,7 +94,7 @@ code {
   width: 0%;
   height: 100%;
   background: var(--accent);
-  animation: loadProgress 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: loadProgress 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes loadProgress {
@@ -110,16 +110,35 @@ code {
 
 .EntranceFade {
   opacity: 0;
-  transform: translateY(18px);
+  transform: translateY(14px);
   will-change: opacity, transform;
-  transition: opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1),
-              transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
   transition-delay: var(--delay, 0s);
 }
 
 body.page-ready .EntranceFade {
   opacity: 1;
   transform: translateY(0);
+}
+
+.stream-in-item {
+  animation: streamItemFadeIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes streamItemFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.project-stream-slot:empty {
+  display: none;
 }
 
 /* ==========================================================================
@@ -257,7 +276,7 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
 }
 
 /* ==========================================================================
-   5. FADED SIDE NAVIGATION BARS
+   5. FADED SIDE NAVIGATION BARS (FIXED STICKY RED HOVER ON MOBILE)
    ========================================================================== */
 .side-nav-bar {
   position: fixed;
@@ -270,10 +289,12 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   color: var(--text-muted);
   cursor: pointer;
   opacity: 0.38;
-  transition: opacity 0.3s ease, background 0.3s ease, color 0.3s ease;
+  transition: opacity 0.25s ease, background 0.25s ease, color 0.25s ease;
   display: flex;
   align-items: center;
   justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
 }
 
 .side-nav-left {
@@ -288,11 +309,21 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   background: linear-gradient(to left, rgba(217, 40, 4, 0.08), transparent);
 }
 
-.side-nav-bar:hover {
-  opacity: 1;
+@media (hover: hover) and (pointer: fine) {
+  .side-nav-bar:hover {
+    opacity: 1;
+    color: var(--text-main);
+    background-color: rgba(217, 40, 4, 0.16);
+    border-color: var(--accent);
+  }
+  .side-nav-left:hover .side-arrow { transform: translateX(-4px); }
+  .side-nav-right:hover .side-arrow { transform: translateX(4px); }
+}
+
+.side-nav-bar:active {
+  opacity: 0.85;
   color: var(--text-main);
-  background-color: rgba(217, 40, 4, 0.16);
-  border-color: var(--accent);
+  background-color: rgba(217, 40, 4, 0.2);
 }
 
 .side-nav-inner {
@@ -316,9 +347,6 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   color: var(--accent);
   transition: transform 0.25s ease;
 }
-
-.side-nav-left:hover .side-arrow { transform: translateX(-4px); }
-.side-nav-right:hover .side-arrow { transform: translateX(4px); }
 
 /* ==========================================================================
    6. STAGE CONTAINER & SLIDE TRANSITIONS
@@ -494,12 +522,14 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   display: flex;
   flex-direction: column;
   gap: 24px;
+  min-width: 0;
 }
 
 .cad-panel {
   background: var(--bg-panel);
   border: 1px solid var(--border-cad);
   padding: 24px;
+  min-width: 0;
 }
 
 .panel-header {
@@ -522,7 +552,7 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   background: rgba(217, 40, 4, 0.15);
   color: var(--text-main);
   border: 1px solid var(--accent);
-  padding: 4px 12px;
+  padding: 5px 12px;
   font-family: var(--font-mono);
   font-size: 0.72rem;
   cursor: pointer;
@@ -601,46 +631,85 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
 .social-handle { font-weight: 600; font-size: 0.95rem; margin-top: 2px; }
 
 /* ==========================================================================
-   8. TAB 2: PROJECTS, 3D VIEWS, RUN CARDS, 2D GRID KEYS & CROSSHAIR CURSOR
+   8. TAB 2: PROJECTS (FIXED 3D GLB GRID OVERFLOW, IMAGE WRAPPING & STACK)
    ========================================================================== */
 .projects-list {
   display: flex;
   flex-direction: column;
   gap: 36px;
+  width: 100%;
+  min-width: 0;
 }
 
 .project-card {
   background: var(--bg-panel);
   border: 1px solid var(--border-cad);
   padding: 28px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .project-top-layout {
   display: grid;
-  grid-template-columns: 1.35fr 1fr;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
   gap: 28px;
-  align-items: stretch;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
 }
 
+.project-top-layout > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.project-main-stage-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* Base interactive/3D holder */
 .project-main-img-wrap {
   position: relative;
   overflow: hidden;
   border: 1px solid var(--border-cad);
   background: #121417;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   min-height: 340px;
-  max-height: 410px;
+  max-height: 420px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: zoom-in;
 }
 
-.project-main-img-wrap img {
-  width: 100%;
-  height: 100%;
+/* Tight wrapper when main asset is an image: wraps the image cleanly with no black bars */
+.project-main-img-wrap.is-image-wrap {
+  width: fit-content;
+  max-width: 100%;
+  min-height: 0;
+  height: auto;
+  max-height: none;
+  margin: 0 auto;
+  background: transparent;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55);
+}
+
+.project-main-img-wrap.is-image-wrap img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
   max-height: 410px;
   object-fit: contain;
-  display: block;
 }
 
 .run-card-outer-wrap {
@@ -657,7 +726,6 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   min-height: 100%;
 }
 
-/* Project Stack / Gallery Items: ONLY show the Run Button */
 .project-gallery-item .keys-trigger-badge,
 .project-gallery-item .keys-hud-popover,
 .project-gallery-item .run-link-card .stl-badge-overlay,
@@ -667,7 +735,6 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   display: none !important;
 }
 
-/* Main Project Image on Mobile: ONLY show the Run Button */
 @media (max-width: 768px) {
   .project-main-img-wrap .keys-trigger-badge,
   .project-main-img-wrap .keys-hud-popover,
@@ -943,38 +1010,55 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   pointer-events: none;
 }
 
+/* Fixed 3D GLB Preview Container so canvas never stretches card wider than mobile screen */
 .stl-preview-container {
   width: 100%;
-  height: 100%;
-  min-height: 340px;
+  max-width: 100%;
+  height: 360px;
+  min-height: 300px;
   position: relative;
+  overflow: hidden;
   background: radial-gradient(circle at center, #1e2429 0%, #111417 100%);
   cursor: grab;
   transition: filter 0.3s ease;
+}
+
+.stl-preview-container canvas {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  display: block;
 }
 
 .stl-preview-container:hover { filter: brightness(1.16); }
 
 .stl-badge-overlay {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 10px;
+  right: 10px;
+  max-width: calc(100% - 20px);
   background: rgba(217, 40, 4, 0.88);
   color: #fff;
   font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
   padding: 4px 10px;
   letter-spacing: 0.08em;
   pointer-events: none;
   z-index: 5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .project-info-col {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  gap: 20px;
+  gap: 22px;
+  height: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .project-code {
@@ -984,31 +1068,67 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   letter-spacing: 0.1em;
 }
 
-.project-title { font-size: 1.55rem; font-weight: 700; margin: 4px 0 10px; }
-.project-desc { color: #d5dbe0; font-size: 0.95rem; margin-bottom: 14px; white-space: pre-line; }
+.project-title {
+  font-size: 1.55rem;
+  font-weight: 700;
+  margin: 4px 0 10px;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
 
+.project-desc {
+  color: #d5dbe0;
+  font-size: 0.95rem;
+  margin-bottom: 14px;
+  white-space: pre-line;
+  overflow-wrap: break-word;
+}
+
+/* Centered & Tied-in Project Stack Trigger */
 .photo-stack-trigger {
+  position: relative;
   margin-top: auto;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 22px;
-  padding: 16px;
-  background: rgba(255, 255, 255, 0.03);
+  justify-content: center;
+  text-align: center;
+  gap: 12px;
+  padding: 20px 24px;
+  width: 100%;
+  max-width: 100%;
+  background:
+    radial-gradient(circle at center, rgba(217, 40, 4, 0.08) 0%, rgba(18, 21, 24, 0.65) 100%),
+    repeating-linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0.02) 0px,
+      rgba(255, 255, 255, 0.02) 1px,
+      transparent 1px,
+      transparent 20px
+    );
   border: 1px solid var(--border-cad);
   cursor: pointer;
-  transition: border-color 0.25s ease, background 0.25s ease;
+  transition: border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
 }
 
 .photo-stack-trigger:hover {
   border-color: var(--accent);
-  background: rgba(217, 40, 4, 0.08);
+  box-shadow: inset 0 0 24px rgba(217, 40, 4, 0.12);
 }
 
 .stack-visual {
   position: relative;
-  width: 110px;
-  height: 76px;
+  width: 128px;
+  height: 84px;
+  margin: 4px auto;
   flex-shrink: 0;
+}
+
+.stack-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
 }
 
 .stack-card-img,
@@ -1019,9 +1139,9 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.55);
-  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), filter 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.65);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), filter 0.3s ease, border-color 0.3s ease;
   background: #181c20;
   display: flex;
   align-items: center;
@@ -1034,17 +1154,40 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   padding: 4px;
 }
 
-.stack-visual > *:nth-child(1) { transform: rotate(-6deg) translate(-6px, 3px); z-index: 1; }
-.stack-visual > *:nth-child(2) { transform: rotate(5deg) translate(6px, -2px); z-index: 2; }
+.stack-visual > *:nth-child(1) { transform: rotate(-7deg) translate(-10px, 3px); z-index: 1; }
+.stack-visual > *:nth-child(2) { transform: rotate(7deg) translate(10px, 2px); z-index: 2; }
 .stack-visual > *:nth-child(3) { transform: rotate(0deg); z-index: 3; }
 
-.photo-stack-trigger:hover .stack-visual > *:nth-child(1) { transform: rotate(-14deg) translate(-16px, 4px); filter: brightness(1.15); }
-.photo-stack-trigger:hover .stack-visual > *:nth-child(2) { transform: rotate(12deg) translate(16px, -4px); filter: brightness(1.15); }
-.photo-stack-trigger:hover .stack-visual > *:nth-child(3) { transform: scale(1.06); filter: brightness(1.2); }
+.photo-stack-trigger:hover .stack-visual > *:nth-child(1) {
+  transform: rotate(-14deg) translate(-20px, 4px);
+  filter: brightness(1.15);
+  border-color: var(--accent);
+}
+.photo-stack-trigger:hover .stack-visual > *:nth-child(2) {
+  transform: rotate(14deg) translate(20px, 4px);
+  filter: brightness(1.15);
+  border-color: var(--accent);
+}
+.photo-stack-trigger:hover .stack-visual > *:nth-child(3) {
+  transform: scale(1.07);
+  filter: brightness(1.2);
+  border-color: #ffffff;
+}
 
-.stack-meta { display: flex; flex-direction: column; gap: 4px; }
-.stack-title { font-family: var(--font-mono); font-size: 0.82rem; font-weight: 700; }
-.stack-subtitle { font-size: 0.8rem; color: var(--text-muted); }
+.stack-title {
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: 0.08em;
+}
+
+.stack-subtitle {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--accent);
+  letter-spacing: 0.06em;
+}
 
 .project-expanded-drawer {
   max-height: 0;
@@ -1061,16 +1204,6 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   margin-top: 24px;
   padding-top: 22px;
   border-top: 1px dashed var(--border-cad);
-}
-
-.drawer-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 14px;
-  font-family: var(--font-mono);
-  font-size: 0.76rem;
-  color: var(--text-muted);
 }
 
 .project-gallery-grid {
@@ -1166,7 +1299,7 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
 .insta-title { font-weight: 600; font-size: 0.76rem; font-family: var(--font-mono); }
 
 /* ==========================================================================
-   10. UNIVERSAL FULL-SCREEN LIGHTBOX & FULL-RES LOADING SPINNER
+   10. UNIVERSAL FULL-SCREEN LIGHTBOX, FULL-SCREEN GAME STAGE & IMAGE ZOOM
    ========================================================================== */
 .lightbox-modal {
   position: fixed;
@@ -1178,7 +1311,7 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 4vh 5vw;
+  padding: 2vh 2vw;
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.3s ease, visibility 0.3s ease;
@@ -1193,10 +1326,10 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
 
 .lightbox-backdrop-hint {
   position: absolute;
-  top: 16px;
-  right: 28px;
+  top: 14px;
+  left: 24px;
   font-family: var(--font-mono);
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
   letter-spacing: 0.08em;
   pointer-events: none;
@@ -1204,10 +1337,10 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
 
 .lightbox-content-wrapper {
   position: relative;
-  min-width: 340px;
-  min-height: 260px;
-  max-width: 90vw;
-  max-height: 90vh;
+  min-width: 300px;
+  min-height: 220px;
+  max-width: 94vw;
+  max-height: 92vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -1216,12 +1349,82 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   border: 1px solid var(--border-cad);
   background: #101214;
   box-shadow: 0 28px 70px rgba(0, 0, 0, 0.85);
+  overflow: hidden;
+}
+
+/* When running games, sims, or 3D models, expand wrapper to fill the screen cleanly */
+.lightbox-content-wrapper.is-app-mode {
+  width: 96vw;
+  height: 92vh;
+  max-width: 96vw;
+  max-height: 92vh;
+}
+
+.lightbox-caption-bar {
+  width: 100%;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #16191c;
+  border-bottom: 1px solid var(--border-cad);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  z-index: 30;
+}
+
+.lightbox-caption-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: nowrap;
+  margin-left: auto;
+}
+
+.lightbox-zoom-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.lightbox-exit-btn {
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.lightbox-exit-btn:hover {
+  background: #f2330c;
+  box-shadow: 0 0 12px rgba(217, 40, 4, 0.5);
+}
+
+.lightbox-stage-viewport {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  max-width: 94vw;
+  max-height: calc(92vh - 48px);
+}
+
+.lightbox-content-wrapper.is-app-mode .lightbox-stage-viewport {
+  width: 100%;
+  height: calc(100% - 48px);
+  max-width: 100%;
+  max-height: calc(100% - 48px);
+  flex: 1;
+  background: #08090b;
 }
 
 .lightbox-loader {
   position: absolute;
-  inset: 45px 0 0 0;
-  background: rgba(16, 18, 20, 0.86);
+  inset: 0;
+  background: rgba(16, 18, 20, 0.88);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1252,27 +1455,49 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
 }
 
 .lightbox-content-wrapper img {
-  max-width: 86vw;
-  max-height: 80vh;
+  max-width: 90vw;
+  max-height: calc(88vh - 52px);
   width: auto;
   height: auto;
   object-fit: contain;
   display: block;
-  transition: opacity 0.35s ease, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  cursor: zoom-in;
+  transform-origin: center center;
+  transition: opacity 0.3s ease, transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.lightbox-content-wrapper img.is-zoomed {
+  cursor: grab;
+}
+
+.lightbox-content-wrapper img.is-panning {
+  cursor: grabbing;
+  transition: opacity 0.3s ease;
 }
 
 .lightbox-content-wrapper img.loading-blur {
   opacity: 0.25;
-  transform: scale(0.985);
   filter: blur(4px);
 }
 
 .lightbox-stl-stage {
-  width: 84vw;
-  height: 78vh;
+  width: 100%;
+  height: 100%;
+  min-width: 80vw;
+  min-height: 75vh;
   position: relative;
+  overflow: hidden;
   background: radial-gradient(circle at center, #1f2429 0%, #0f1214 100%);
   cursor: grab;
+}
+
+.lightbox-stl-stage canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
 }
 
 .lightbox-stl-stage:active { cursor: grabbing; }
@@ -1292,69 +1517,27 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
 }
 
 .lightbox-itch-frame {
-  width: 88vw;
-  height: 82vh;
+  width: 100%;
+  height: 100%;
   border: none;
-  background: #0b0d0f;
-}
-
-.lightbox-content-wrapper:fullscreen {
-  width: 100vw;
-  height: 100vh;
-  max-width: 100vw;
-  max-height: 100vh;
-}
-
-.lightbox-content-wrapper:fullscreen .lightbox-itch-frame {
-  width: 100vw;
-  height: calc(100vh - 46px);
+  background: #08090b;
+  display: block;
+  flex-shrink: 0;
 }
 
 .lightbox-link-stage {
-  width: min(760px, 80vw);
-  height: min(460px, 70vh);
+  width: min(760px, 84vw);
+  height: min(460px, 72vh);
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .lightbox-pdf-frame {
-  width: 84vw;
-  height: 80vh;
+  width: 100%;
+  height: 100%;
   border: none;
   background: #1a1d20;
-}
-
-.lightbox-caption-bar {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  padding: 12px 18px;
-  background: #16191c;
-  border-bottom: 1px solid var(--border-cad);
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-}
-
-.lightbox-caption-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.lightbox-exit-btn {
-  background: var(--accent);
-  color: #fff;
-  font-weight: 700;
-  margin-left: auto;
-}
-
-.lightbox-exit-btn:hover {
-  background: #f2330c;
-  box-shadow: 0 0 12px rgba(217, 40, 4, 0.5);
 }
 
 .lightbox-nav {
@@ -1369,6 +1552,7 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   font-size: 1.3rem;
   cursor: pointer;
   transition: all 0.2s ease;
+  z-index: 25;
 }
 
 .lightbox-nav:hover {
@@ -1376,8 +1560,8 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   background: var(--accent);
 }
 
-.lightbox-prev { left: 24px; }
-.lightbox-next { right: 24px; }
+.lightbox-prev { left: 18px; }
+.lightbox-next { right: 18px; }
 
 /* ==========================================================================
    11. UNIVERSAL ASSET CARDS (VIDEO, AUDIO, PDF, CAD & GENERIC FILES)
@@ -1436,8 +1620,8 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
 }
 
 .lightbox-video {
-  max-width: 82vw;
-  max-height: 76vh;
+  max-width: 88vw;
+  max-height: 78vh;
   width: auto;
   height: auto;
   display: block;
@@ -1491,7 +1675,7 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
 
 @media (max-width: 1024px) {
   .about-grid,
-  .project-top-layout { grid-template-columns: 1fr; }
+  .project-top-layout { grid-template-columns: minmax(0, 1fr); }
   .insta-grid { grid-template-columns: repeat(2, 1fr); }
   .header-telemetry { display: none; }
 }
@@ -1500,51 +1684,71 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   :root { --side-bar-width: 34px; }
   .site-header { padding: 0 14px; }
   .brand-tag { display: none; }
-  .stage-container { padding: 92px calc(var(--side-bar-width) + 14px) 60px; }
+  .stage-container { padding: 92px calc(var(--side-bar-width) + 12px) 60px; }
+  .project-card { padding: 16px; }
+  .stl-preview-container { height: 280px; min-height: 240px; }
   .insta-grid { grid-template-columns: 1fr; }
 
   .lightbox-modal {
-    padding: 2vh 3vw;
+    padding: 1vh 2vw;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
   .lightbox-backdrop-hint { display: none; }
   .lightbox-content-wrapper {
     min-width: unset;
-    width: 94vw;
-    max-width: 94vw;
-    max-height: 86vh;
+    width: 96vw;
+    max-width: 96vw;
+    max-height: 92vh;
+  }
+  .lightbox-content-wrapper.is-app-mode {
+    width: 96vw;
+    height: 88vh;
+    max-width: 96vw;
+    max-height: 88vh;
+  }
+  .lightbox-stage-viewport {
+    width: 100%;
+    max-width: 96vw;
+    max-height: calc(88vh - 46px);
   }
   .lightbox-content-wrapper img,
   .lightbox-video {
-    max-width: 94vw;
-    max-height: 70vh;
+    max-width: 96vw;
+    max-height: calc(84vh - 46px);
   }
-  .lightbox-stl-stage,
-  .lightbox-pdf-frame,
-  .lightbox-itch-frame {
-    width: 94vw;
-    height: 68vh;
+  .lightbox-stl-stage {
+    min-width: unset;
+    min-height: unset;
+    width: 100%;
+    height: 100%;
   }
   .lightbox-caption-bar {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 8px 10px;
     font-size: 0.72rem;
   }
   .lightbox-caption-right {
-    width: 100%;
-    justify-content: flex-start;
+    width: auto;
+    justify-content: flex-end;
+    margin-left: auto;
+    gap: 6px;
+  }
+  .mini-action-btn {
+    padding: 4px 9px;
+    font-size: 0.68rem;
   }
   .lightbox-nav {
     width: 38px;
     height: 48px;
     top: auto;
-    bottom: 14px;
+    bottom: 12px;
     transform: none;
   }
-  .lightbox-prev { left: 14px; }
-  .lightbox-next { right: 14px; }
+  .lightbox-prev { left: 12px; }
+  .lightbox-next { right: 12px; }
 }
 
 .mobile-menu-btn {

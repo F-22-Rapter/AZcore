@@ -31,8 +31,8 @@ const PORTFOLIO_CONFIG = {
     ],
     quickSpecs: [
       { label: "DISCIPLINE", value: "Civil & Structural Engineering" },
-      { label: "LOCATION", value: "IIT - Chicago, IL" },
-      { label: "FOCUS", value: "CAD / CFD / Fabrication" },
+      { label: "LOCATION", value: "Illinois Institute of Technology" },
+      { label: "FOCUS", value: "CAD / Fabrication / Photography" },
       { label: "CAMERA SYSTEM", value: "Canon EOS 90D <br> Canon 17-55mm f/2.8" }
     ],
     skills: [
@@ -124,13 +124,12 @@ const KEY_SPEC_MAP = {
   CTRL: { tokenName: "CTRL", label: "CTRL", key: "Control", code: "ControlLeft", keyCode: 17 },
   CONTROL: { tokenName: "CTRL", label: "CTRL", key: "Control", code: "ControlLeft", keyCode: 17 },
   ALT: { tokenName: "ALT", label: "ALT", key: "Alt", code: "AltLeft", keyCode: 18 },
-  ENTER: { tokenName: "ENTER", label: "ENTER", key: "Enter", code: "Enter", keyCode: 13 },
+  ENTER: { tokenName: "ENTER", label: "ENTER", key: "Enter", keyCode: 13 },
   TAB: { tokenName: "TAB", label: "TAB", key: "Tab", code: "Tab", keyCode: 9 },
   ESC: { tokenName: "ESC", label: "ESC", key: "Escape", code: "Escape", keyCode: 27 },
   ESCAPE: { tokenName: "ESC", label: "ESC", key: "Escape", code: "Escape", keyCode: 27 }
 };
 
-// Runtime state for the Lightbox Virtual Crosshair Cursor (always starts OFF)
 const lightboxVirtualCursorState = {
   enabled: false,
   controlsActive: false,
@@ -138,6 +137,20 @@ const lightboxVirtualCursorState = {
   yRatio: 0.5,
   isDragging: false,
   isMouseDownHold: false
+};
+
+const lightboxZoomState = {
+  scale: 1,
+  minScale: 1,
+  maxScale: 5,
+  panX: 0,
+  panY: 0,
+  isPanning: false,
+  startX: 0,
+  startY: 0,
+  initialPinchDist: 0,
+  initialPinchScale: 1,
+  lastTapTime: 0
 };
 
 function normalizeFolder(path) {
@@ -230,9 +243,6 @@ async function loadImageSourceWithHeicSupport(url) {
   return promise;
 }
 
-/**
- * Maps control tokens to key specs or virtual crosshair cursor / click actions
- */
 function resolveKeySpec(rawToken) {
   const upper = String(rawToken || "").trim().toUpperCase();
   if (KEY_SPEC_MAP[upper]) return KEY_SPEC_MAP[upper];
@@ -257,9 +267,6 @@ function resolveKeySpec(rawToken) {
   };
 }
 
-/**
- * Expands CONTROLS strings including optional @col:row 2D grid coordinates
- */
 function expandVirtualKeysList(keysString) {
   if (!keysString || !keysString.trim()) return [];
   const entries = keysString.split(",").map((s) => s.trim()).filter(Boolean);
@@ -343,6 +350,45 @@ function expandVirtualKeysList(keysString) {
   return rawButtons;
 }
 
+/**
+ * ============================================================================
+ * PROPORTIONAL GAME & SIM VIEWPORT SCALER
+ * Prevents Unity & p5.js apps from squishing horizontally or clipping text on mobile/portrait
+ * ============================================================================
+ */
+function fitEmbeddedAppToStage() {
+  const frame = document.getElementById("lightbox-itch-frame");
+  const viewport = document.getElementById("lightbox-stage-viewport");
+  if (!frame || !viewport || frame.style.display === "none") return;
+
+  const availW = viewport.clientWidth || window.innerWidth * 0.94;
+  const availH = viewport.clientHeight || window.innerHeight * 0.82;
+
+  // On narrow screens (< 920px), render the iframe at a standard landscape resolution (1280x720)
+  // and scale it down proportionally to fit the width/height without squishing or clipping HUD text.
+  if (availW < 920) {
+    const baseW = 1280;
+    const baseH = 720;
+    const scale = Math.min(availW / baseW, availH / baseH);
+
+    frame.style.width = `${baseW}px`;
+    frame.style.height = `${baseH}px`;
+    frame.style.transform = `scale(${scale})`;
+    frame.style.transformOrigin = "center center";
+  } else {
+    frame.style.width = "100%";
+    frame.style.height = "100%";
+    frame.style.transform = "none";
+  }
+
+  // Trigger resize inside same-origin apps (like p5.js windowResized)
+  try {
+    if (frame.contentWindow) {
+      frame.contentWindow.dispatchEvent(new Event("resize"));
+    }
+  } catch (e) {}
+}
+
 function setLightboxIframeVirtualCursorFlag(isActive) {
   const frame = document.getElementById("lightbox-itch-frame");
   if (!frame || !frame.contentWindow) return;
@@ -378,9 +424,6 @@ function installRealMouseBlockerInLightboxIframe() {
   } catch (e) {}
 }
 
-/**
- * Dispatches virtual crosshair cursor coordinate events directly into iframe games
- */
 function dispatchVirtualCursorToLightboxIframe(xRatio, yRatio, eventType = "mousemove", isPressed = false) {
   const frame = document.getElementById("lightbox-itch-frame");
   if (!frame || !frame.contentWindow) return;
@@ -390,20 +433,17 @@ function dispatchVirtualCursorToLightboxIframe(xRatio, yRatio, eventType = "mous
     const target = (doc && (doc.querySelector("canvas") || doc.body || doc.documentElement)) || null;
     if (!target) return;
 
-    const rect = target.getBoundingClientRect();
-    const targetW = rect.width || frame.clientWidth || 800;
-    const targetH = rect.height || frame.clientHeight || 600;
+    const targetW = target.clientWidth || frame.clientWidth || 1280;
+    const targetH = target.clientHeight || frame.clientHeight || 720;
 
-    const clientX = rect.left + xRatio * targetW;
-    const clientY = rect.top + yRatio * targetH;
-    const offsetX = xRatio * targetW;
-    const offsetY = yRatio * targetH;
+    const clientX = xRatio * targetW;
+    const clientY = yRatio * targetH;
 
     win.__azcoreVirtualCursorActive = true;
-    if (typeof win.mouseX === "number") win.mouseX = offsetX;
-    if (typeof win.mouseY === "number") win.mouseY = offsetY;
-    if (typeof win.pmouseX === "number") win.pmouseX = offsetX;
-    if (typeof win.pmouseY === "number") win.pmouseY = offsetY;
+    if (typeof win.mouseX === "number") win.mouseX = clientX;
+    if (typeof win.mouseY === "number") win.mouseY = clientY;
+    if (typeof win.pmouseX === "number") win.pmouseX = clientX;
+    if (typeof win.pmouseY === "number") win.pmouseY = clientY;
     if (eventType === "mousedown") win.mouseIsPressed = true;
     if (eventType === "mouseup") win.mouseIsPressed = false;
 
@@ -550,9 +590,6 @@ function setupLightboxVirtualCursorDrag() {
   window.addEventListener("touchend", onPointerUp);
 }
 
-/**
- * Makes any Controls HUD Popover box freely draggable via its header bar
- */
 function makeHudPopoverDraggable(popoverEl) {
   if (!popoverEl || popoverEl.dataset.dragBound === "true") return;
   popoverEl.dataset.dragBound = "true";
@@ -965,9 +1002,6 @@ async function runInBatches(items, batchSize, asyncFn) {
   return results;
 }
 
-/**
- * Deduplicated fast HEAD verification (prevents duplicate concurrent probes for the same URL)
- */
 function verifyFileExistsFast(url) {
   if (verifiedUrlCache.has(url)) return verifiedUrlCache.get(url);
 
@@ -1029,7 +1063,6 @@ async function resolveDualImageUrls(baseFolder, previewSub, fullSub, fileName) {
   const previewExts = [...new Set([".webp", originalExt, ".jpg", ".JPG", ".png", ".heic", ".HEIC"])];
   const fullExts = [...new Set([".jpg", ".JPG", ".jpeg", originalExt, ".png", ".webp", ".heic", ".HEIC"])];
 
-  // Probe preview and full candidates concurrently
   const [previewUrl, fullUrl] = await Promise.all([
     resolveFirstExistingCandidate(previewExts.map((ext) => `${normBase}${normPrev}${baseName}${ext}`)),
     resolveFirstExistingCandidate(fullExts.map((ext) => `${normBase}${normFull}${baseName}${ext}`))
@@ -1049,7 +1082,7 @@ async function resolveDualImageUrls(baseFolder, previewSub, fullSub, fileName) {
 
 /**
  * ============================================================================
- * 3. UNIFIED 3D ENGINE
+ * 3. UNIFIED 3D ENGINE (FIXED CONTAINER SIZING & MOBILE OVERFLOW)
  * ============================================================================
  */
 const modelCache = new Map();
@@ -1161,11 +1194,13 @@ function mountAutoRotating3DPreview(container, modelUrl, type) {
 
   function resizeRenderer() {
     if (!renderer || !camera) return;
-    const w = container.clientWidth || 320;
-    const h = container.clientHeight || 240;
+    const rect = container.getBoundingClientRect();
+    const w = Math.max(100, Math.floor(rect.width || container.clientWidth || 300));
+    const h = Math.max(100, Math.floor(rect.height || container.clientHeight || 260));
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
-    renderer.setSize(w, h);
+    // Pass false to updateStyle so Three.js doesn't force fixed pixel widths that overflow CSS Grid on mobile
+    renderer.setSize(w, h, false);
   }
 
   function animate() {
@@ -1193,11 +1228,14 @@ function mountAutoRotating3DPreview(container, modelUrl, type) {
         });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, IS_MOBILE ? 1.25 : 2));
         renderer.outputEncoding = THREE.sRGBEncoding;
+        renderer.domElement.style.width = "100%";
+        renderer.domElement.style.height = "100%";
+        renderer.domElement.style.display = "block";
         container.appendChild(renderer.domElement);
 
-        scene.add(new THREE.HemisphereLight(0xffffff, 0x222830, 0.35));
+        scene.add(new THREE.HemisphereLight(0xffffff, 0x222830, 0.45));
 
-        const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.35);
+        const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.45);
         dirLight1.position.set(65, 90, 75);
         scene.add(dirLight1);
 
@@ -1207,7 +1245,7 @@ function mountAutoRotating3DPreview(container, modelUrl, type) {
 
         modelGroup = obj;
         scene.add(modelGroup);
-        camera.position.set(55, 38, 75);
+        camera.position.set(58, 40, 80);
         camera.lookAt(0, 0, 0);
 
         resizeRenderer();
@@ -1255,42 +1293,19 @@ function mountAutoRotating3DPreview(container, modelUrl, type) {
   );
   observer.observe(container);
 
-  window.addEventListener("resize", () => { if (isVisible) resizeRenderer(); }, { passive: true });
-}
-
-/**
- * ============================================================================
- * 4. POST-BOOT DEFERRED BACKGROUND PRE-WARM
- * ============================================================================
- */
-function backgroundPrewarmPreviewImages(previewUrls) {
-  if (IS_MOBILE || !previewUrls || !previewUrls.length) return;
-
-  let currentIndex = 0;
-  function loadNextChunk() {
-    if (currentIndex >= previewUrls.length) return;
-    const chunkLimit = Math.min(currentIndex + 3, previewUrls.length);
-
-    for (let i = currentIndex; i < chunkLimit; i++) {
-      if (/\.heic$|\.heif$/i.test(previewUrls[i])) continue;
-      const bgImg = new Image();
-      bgImg.crossOrigin = "anonymous";
-      bgImg.decoding = "async";
-      bgImg.src = previewUrls[i];
-    }
-
-    currentIndex = chunkLimit;
-    if (currentIndex < previewUrls.length) {
-      setTimeout(loadNextChunk, 350);
-    }
+  if (typeof ResizeObserver !== "undefined") {
+    const ro = new ResizeObserver(() => {
+      if (isVisible) resizeRenderer();
+    });
+    ro.observe(container);
+  } else {
+    window.addEventListener("resize", () => { if (isVisible) resizeRenderer(); }, { passive: true });
   }
-
-  loadNextChunk();
 }
 
 /**
  * ============================================================================
- * 5. TAB 1: RENDER ABOUT ME
+ * 4. TAB 1: RENDER ABOUT ME
  * ============================================================================
  */
 async function renderAboutSection() {
@@ -1304,7 +1319,6 @@ async function renderAboutSection() {
     PORTFOLIO_CONFIG.photographyConfig.gridColumns || 5
   );
 
-  // Render static DOM sections immediately before awaiting network checks
   const normAboutFolder = normalizeFolder(cfg.folder);
   const resumePath = cfg.resume.file.startsWith("http")
     ? cfg.resume.file
@@ -1358,24 +1372,27 @@ async function renderAboutSection() {
     .join("");
 
   const profileImg = document.getElementById("about-profile-img");
-  const resolvedProfile =
-    (await resolveValidUrlWithCaseFallback(normAboutFolder, cfg.profileImage)) ||
-    (await resolveValidUrlWithCaseFallback(normAboutFolder, "profile.jpg")) ||
-    (await resolveValidUrlWithCaseFallback(normAboutFolder, "profile.png")) ||
-    (await resolveValidUrlWithCaseFallback(normAboutFolder, "profile.heic"));
 
-  if (resolvedProfile) {
-    profileImg.src = await loadImageSourceWithHeicSupport(resolvedProfile);
-  } else {
-    profileImg.src = `data:image/svg+xml;utf8,${encodeURIComponent(
-      `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="750" viewBox="0 0 600 750">
-        <rect width="600" height="750" fill="#181b1e"/>
-        <line x1="0" y1="375" x2="600" y2="375" stroke="#d92804" stroke-width="1"/>
-        <line x1="300" y1="0" x2="300" y2="750" stroke="#d92804" stroke-width="1"/>
-        <text x="40" y="700" fill="#9aa4ae" font-family="monospace" font-size="16">PLACE IMAGE AT: ${normAboutFolder}${cfg.profileImage}</text>
-      </svg>`
-    )}`;
-  }
+  (async () => {
+    const resolvedProfile =
+      (await resolveValidUrlWithCaseFallback(normAboutFolder, cfg.profileImage)) ||
+      (await resolveValidUrlWithCaseFallback(normAboutFolder, "profile.jpg")) ||
+      (await resolveValidUrlWithCaseFallback(normAboutFolder, "profile.png")) ||
+      (await resolveValidUrlWithCaseFallback(normAboutFolder, "profile.heic"));
+
+    if (resolvedProfile) {
+      profileImg.src = await loadImageSourceWithHeicSupport(resolvedProfile);
+    } else {
+      profileImg.src = `data:image/svg+xml;utf8,${encodeURIComponent(
+        `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="750" viewBox="0 0 600 750">
+          <rect width="600" height="750" fill="#181b1e"/>
+          <line x1="0" y1="375" x2="600" y2="375" stroke="#d92804" stroke-width="1"/>
+          <line x1="300" y1="0" x2="300" y2="750" stroke="#d92804" stroke-width="1"/>
+          <text x="40" y="700" fill="#9aa4ae" font-family="monospace" font-size="16">PLACE IMAGE AT: ${normAboutFolder}${cfg.profileImage}</text>
+        </svg>`
+      )}`;
+    }
+  })();
 
   profileImg.addEventListener("click", () => {
     openLightbox(
@@ -1395,7 +1412,7 @@ async function renderAboutSection() {
 
 /**
  * ============================================================================
- * 6. TAB 2: PROJECT SYSTEM (PARALLELIZED DISCOVERY & BATCHED DOM)
+ * 5. TAB 2: STREAMING / INCREMENTAL PROJECT SYSTEM
  * ============================================================================
  */
 let projectsLoaded = false;
@@ -1633,6 +1650,184 @@ async function fetchSingleProjectFolder(normBase, folderName, textFileName) {
   }
 }
 
+function createProjectCardElement(proj, idx) {
+  const card = document.createElement("article");
+  card.className = "project-card stream-in-item";
+  const drawerId = `drawer-proj-${idx}`;
+  const mainAsset = proj.verifiedAssets[0];
+  const stackPreview = proj.verifiedAssets.slice(0, 3);
+  const isImageMain = isImageAsset(mainAsset.type);
+
+  const stackVisualHtml = stackPreview
+    .map((item) => {
+      if (is3DAsset(item.type)) {
+        return `<div class="stack-card-3d">[3D ${item.type.toUpperCase()}]</div>`;
+      }
+      if (item.type === "itch" || item.type === "link") {
+        return `<img class="stack-card-img" src="${item.previewSrc}" loading="lazy" decoding="async" alt="Run preview" />`;
+      }
+      if (item.type === "image" || item.type === "heic") {
+        return `<img class="stack-card-img" src="${item.previewSrc}" loading="lazy" decoding="async" alt="Stack preview" />`;
+      }
+      const ext = getFileExtension(item.file).toUpperCase() || item.type.toUpperCase();
+      return `<div class="stack-card-badge">[${ext}]</div>`;
+    })
+    .join("");
+
+  card.innerHTML = `
+    <div class="project-top-layout">
+      <div class="project-main-stage-cell">
+        <div class="project-main-img-wrap ${isImageMain ? "is-image-wrap" : "is-interactive-wrap"}" id="main-wrap-${idx}"></div>
+      </div>
+
+      <div class="project-info-col">
+        <div>
+          <div class="project-code">${proj.code}</div>
+          <h2 class="project-title">${proj.title}</h2>
+          <p class="project-desc">${proj.description}</p>
+          <div class="project-tags">
+            ${proj.tags.map((t) => `<span class="skill-tag">${t}</span>`).join("")}
+          </div>
+        </div>
+
+        <div class="photo-stack-trigger" role="button" tabindex="0" aria-expanded="false">
+          <span class="corner-tick tl"></span>
+          <span class="corner-tick tr"></span>
+          <span class="corner-tick bl"></span>
+          <span class="corner-tick br"></span>
+          <div class="stack-visual">${stackVisualHtml}</div>
+          <div class="stack-meta">
+            <span class="stack-title">// PROJECT MEDIA STACK [${proj.verifiedAssets.length}]</span>
+            <span class="stack-subtitle">TAP TO EXPAND GALLERY &#8595;</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="${drawerId}" class="project-expanded-drawer">
+      <div class="project-gallery-grid"></div>
+    </div>
+  `;
+
+  const lightboxList = proj.verifiedAssets.map((asset) => ({
+    type: asset.type,
+    file: asset.file,
+    previewSrc: asset.previewSrc,
+    fullSrc: asset.fullSrc,
+    embedUrl: asset.embedUrl,
+    targetUrl: asset.targetUrl,
+    keys: proj.keys
+  }));
+
+  const mainWrap = card.querySelector(`#main-wrap-${idx}`);
+  if (is3DAsset(mainAsset.type)) {
+    const stage3d = document.createElement("div");
+    stage3d.className = "stl-preview-container";
+    mainWrap.prepend(stage3d);
+    mountAutoRotating3DPreview(stage3d, mainAsset.fullSrc, mainAsset.type);
+    mainWrap.addEventListener("click", () => openLightbox(lightboxList, 0));
+  } else if (mainAsset.type === "link") {
+    mainWrap.style.cursor = "pointer";
+    mainWrap.prepend(createRunLinkCard(mainAsset, proj.keys, false));
+  } else if (mainAsset.type === "itch") {
+    mainWrap.style.cursor = "pointer";
+    mainWrap.prepend(
+      createItchEmbedCard(mainAsset, () => openLightbox(lightboxList, 0), proj.keys, false)
+    );
+  } else if (isImageAsset(mainAsset.type)) {
+    const mainImg = document.createElement("img");
+    mainImg.className = "interactive-img project-main-img";
+    mainImg.loading = "lazy";
+    mainImg.decoding = "async";
+    mainImg.alt = proj.title;
+    mainWrap.prepend(mainImg);
+    loadImageSourceWithHeicSupport(mainAsset.previewSrc).then((url) => {
+      mainImg.src = url;
+    });
+    mainWrap.addEventListener("click", () => openLightbox(lightboxList, 0));
+  } else {
+    mainWrap.prepend(createUniversalAssetCard(mainAsset));
+    mainWrap.addEventListener("click", () => openLightbox(lightboxList, 0));
+  }
+
+  const galleryGrid = card.querySelector(".project-gallery-grid");
+  let drawerPopulated = false;
+
+  function populateDrawerGrid() {
+    if (drawerPopulated) return;
+    drawerPopulated = true;
+
+    const drawerFrag = document.createDocumentFragment();
+
+    proj.verifiedAssets.forEach((asset, assetIdx) => {
+      const itemWrap = document.createElement("div");
+      itemWrap.className = "project-gallery-item";
+
+      if (is3DAsset(asset.type)) {
+        const box3d = document.createElement("div");
+        box3d.className = "stl-preview-container";
+        if (IS_MOBILE) {
+          box3d.style.display = "flex";
+          box3d.style.alignItems = "center";
+          box3d.style.justifyContent = "center";
+          box3d.innerHTML = `<div class="stl-badge-overlay" style="position:static;">TAP TO OPEN 3D ${asset.type.toUpperCase()}</div>`;
+          itemWrap.appendChild(box3d);
+        } else {
+          itemWrap.appendChild(box3d);
+          mountAutoRotating3DPreview(box3d, asset.fullSrc, asset.type);
+        }
+        itemWrap.addEventListener("click", () => openLightbox(lightboxList, assetIdx));
+      } else if (asset.type === "link") {
+        itemWrap.appendChild(createRunLinkCard(asset, proj.keys, true));
+      } else if (asset.type === "itch") {
+        itemWrap.appendChild(
+          createItchEmbedCard(
+            asset,
+            () => openLightbox(lightboxList, assetIdx),
+            proj.keys,
+            true
+          )
+        );
+      } else if (isImageAsset(asset.type)) {
+        const img = document.createElement("img");
+        img.className = "interactive-img";
+        img.loading = "lazy";
+        img.decoding = "async";
+        img.alt = `${proj.title} item ${assetIdx + 1}`;
+        itemWrap.appendChild(img);
+        loadImageSourceWithHeicSupport(asset.previewSrc).then((url) => {
+          img.src = url;
+        });
+        itemWrap.addEventListener("click", () => openLightbox(lightboxList, assetIdx));
+      } else {
+        itemWrap.appendChild(createUniversalAssetCard(asset));
+        itemWrap.addEventListener("click", () => openLightbox(lightboxList, assetIdx));
+      }
+
+      drawerFrag.appendChild(itemWrap);
+    });
+
+    galleryGrid.appendChild(drawerFrag);
+  }
+
+  const stackTrigger = card.querySelector(".photo-stack-trigger");
+  const subtitleEl = stackTrigger.querySelector(".stack-subtitle");
+  const drawer = card.querySelector(`#${drawerId}`);
+
+  stackTrigger.addEventListener("click", () => {
+    populateDrawerGrid();
+    const isOpen = drawer.classList.toggle("open");
+    stackTrigger.setAttribute("aria-expanded", String(isOpen));
+    if (subtitleEl) {
+      subtitleEl.innerHTML = isOpen
+        ? "TAP TO COLLAPSE GALLERY &#8593;"
+        : "TAP TO EXPAND GALLERY &#8595;";
+    }
+  });
+
+  return card;
+}
+
 async function loadAndRenderProjects() {
   if (projectsLoaded) return;
   if (projectsLoadingPromise) return projectsLoadingPromise;
@@ -1643,19 +1838,33 @@ async function loadAndRenderProjects() {
     const { baseFolder, textFileName, foldersToCheck } = PORTFOLIO_CONFIG.projectsConfig;
     const normBase = normalizeFolder(baseFolder);
 
-    // Fetch all configured project folders in parallel while preserving array order
-    const projectResults = await Promise.all(
-      foldersToCheck.map((folderName) =>
-        fetchSingleProjectFolder(normBase, folderName, textFileName)
-      )
+    container.innerHTML = "";
+    countBadge.textContent = "STREAMING PROJECTS...";
+
+    const slots = foldersToCheck.map(() => {
+      const slot = document.createElement("div");
+      slot.className = "project-stream-slot";
+      container.appendChild(slot);
+      return slot;
+    });
+
+    let loadedCount = 0;
+
+    await Promise.all(
+      foldersToCheck.map(async (folderName, idx) => {
+        const proj = await fetchSingleProjectFolder(normBase, folderName, textFileName);
+        if (!proj) {
+          slots[idx].remove();
+          return;
+        }
+        loadedCount++;
+        countBadge.textContent = `LOADED: ${loadedCount} PROJECT${loadedCount === 1 ? "" : "S"}`;
+        const cardEl = createProjectCardElement(proj, idx);
+        slots[idx].replaceWith(cardEl);
+      })
     );
-    const loadedProjects = projectResults.filter(Boolean);
 
-    countBadge.textContent = `LOADED: ${loadedProjects.length} PROJECT${
-      loadedProjects.length === 1 ? "" : "S"
-    }`;
-
-    if (loadedProjects.length === 0) {
+    if (loadedCount === 0) {
       container.innerHTML = `
         <div class="empty-state-box">
           <div class="empty-state-title">// 0 PROJECT TEXT FILES DETECTED</div>
@@ -1664,184 +1873,8 @@ async function loadAndRenderProjects() {
           </div>
         </div>
       `;
-      projectsLoaded = true;
-      return;
     }
 
-    const fragment = document.createDocumentFragment();
-
-    loadedProjects.forEach((proj, idx) => {
-      const card = document.createElement("article");
-      card.className = "project-card";
-      const drawerId = `drawer-proj-${idx}`;
-      const mainAsset = proj.verifiedAssets[0];
-      const stackPreview = proj.verifiedAssets.slice(0, 3);
-
-      const stackVisualHtml = stackPreview
-        .map((item) => {
-          if (is3DAsset(item.type)) {
-            return `<div class="stack-card-3d">[3D ${item.type.toUpperCase()}]</div>`;
-          }
-          if (item.type === "itch" || item.type === "link") {
-            return `<img class="stack-card-img" src="${item.previewSrc}" loading="lazy" decoding="async" alt="Run preview" />`;
-          }
-          if (item.type === "image") {
-            return `<img class="stack-card-img" src="${item.previewSrc}" loading="lazy" decoding="async" alt="Stack preview" />`;
-          }
-          const ext = getFileExtension(item.file).toUpperCase() || item.type.toUpperCase();
-          return `<div class="stack-card-badge">[${ext}]</div>`;
-        })
-        .join("");
-
-      card.innerHTML = `
-        <div class="project-top-layout">
-          <div class="project-main-img-wrap" id="main-wrap-${idx}"></div>
-
-          <div class="project-info-col">
-            <div>
-              <div class="project-code">${proj.code}</div>
-              <h2 class="project-title">${proj.title}</h2>
-              <p class="project-desc">${proj.description}</p>
-              <div class="project-tags">
-                ${proj.tags.map((t) => `<span class="skill-tag">${t}</span>`).join("")}
-              </div>
-            </div>
-
-            <div class="photo-stack-trigger">
-              <div class="stack-visual">${stackVisualHtml}</div>
-              <div class="stack-meta">
-                <span class="stack-title">PROJECT STACK (${proj.verifiedAssets.length} LINKED)</span>
-                <span class="stack-subtitle">Click stack to reveal full project grid &#8595;</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div id="${drawerId}" class="project-expanded-drawer">
-          <div class="drawer-header">
-            <span>// LINKED FROM ${proj.folder}project.txt (${proj.verifiedAssets.length} ITEMS)</span>
-            <span>CLICK ANY ASSET FOR FULL VIEW OR LAUNCH</span>
-          </div>
-          <div class="project-gallery-grid"></div>
-        </div>
-      `;
-
-      const lightboxList = proj.verifiedAssets.map((asset, i) => ({
-        type: asset.type,
-        file: asset.file,
-        previewSrc: asset.previewSrc,
-        fullSrc: asset.fullSrc,
-        embedUrl: asset.embedUrl,
-        targetUrl: asset.targetUrl,
-        keys: proj.keys,
-        caption: `${proj.title} (${asset.file}) // [${i + 1}/${proj.verifiedAssets.length}]`
-      }));
-
-      const mainWrap = card.querySelector(`#main-wrap-${idx}`);
-      if (is3DAsset(mainAsset.type)) {
-        const stage3d = document.createElement("div");
-        stage3d.className = "stl-preview-container";
-        mainWrap.prepend(stage3d);
-        mountAutoRotating3DPreview(stage3d, mainAsset.fullSrc, mainAsset.type);
-        mainWrap.addEventListener("click", () => openLightbox(lightboxList, 0));
-      } else if (mainAsset.type === "link") {
-        mainWrap.style.cursor = "pointer";
-        mainWrap.prepend(createRunLinkCard(mainAsset, proj.keys, false));
-      } else if (mainAsset.type === "itch") {
-        mainWrap.style.cursor = "pointer";
-        mainWrap.prepend(
-          createItchEmbedCard(mainAsset, () => openLightbox(lightboxList, 0), proj.keys, false)
-        );
-      } else if (isImageAsset(mainAsset.type)) {
-        const mainImg = document.createElement("img");
-        mainImg.className = "interactive-img project-main-img";
-        mainImg.loading = "lazy";
-        mainImg.decoding = "async";
-        mainImg.alt = proj.title;
-        mainWrap.prepend(mainImg);
-        loadImageSourceWithHeicSupport(mainAsset.previewSrc).then((url) => {
-          mainImg.src = url;
-        });
-        mainWrap.addEventListener("click", () => openLightbox(lightboxList, 0));
-      } else {
-        mainWrap.prepend(createUniversalAssetCard(mainAsset));
-        mainWrap.addEventListener("click", () => openLightbox(lightboxList, 0));
-      }
-
-      const galleryGrid = card.querySelector(".project-gallery-grid");
-      let drawerPopulated = false;
-
-      function populateDrawerGrid() {
-        if (drawerPopulated) return;
-        drawerPopulated = true;
-
-        const drawerFrag = document.createDocumentFragment();
-
-        proj.verifiedAssets.forEach((asset, assetIdx) => {
-          const itemWrap = document.createElement("div");
-          itemWrap.className = "project-gallery-item";
-
-          if (is3DAsset(asset.type)) {
-            const box3d = document.createElement("div");
-            box3d.className = "stl-preview-container";
-            if (IS_MOBILE) {
-              box3d.style.display = "flex";
-              box3d.style.alignItems = "center";
-              box3d.style.justifyContent = "center";
-              box3d.innerHTML = `<div class="stl-badge-overlay" style="position:static;">TAP TO OPEN 3D ${asset.type.toUpperCase()}</div>`;
-              itemWrap.appendChild(box3d);
-            } else {
-              itemWrap.appendChild(box3d);
-              mountAutoRotating3DPreview(box3d, asset.fullSrc, asset.type);
-            }
-            itemWrap.addEventListener("click", () => openLightbox(lightboxList, assetIdx));
-          } else if (asset.type === "link") {
-            itemWrap.appendChild(createRunLinkCard(asset, proj.keys, true));
-          } else if (asset.type === "itch") {
-            itemWrap.appendChild(
-              createItchEmbedCard(
-                asset,
-                () => openLightbox(lightboxList, assetIdx),
-                proj.keys,
-                true
-              )
-            );
-          } else if (isImageAsset(asset.type)) {
-            const img = document.createElement("img");
-            img.className = "interactive-img";
-            img.loading = "lazy";
-            img.decoding = "async";
-            img.alt = `${proj.title} item ${assetIdx + 1}`;
-            itemWrap.appendChild(img);
-            loadImageSourceWithHeicSupport(asset.previewSrc).then((url) => {
-              img.src = url;
-            });
-            itemWrap.addEventListener("click", () => openLightbox(lightboxList, assetIdx));
-          } else {
-            itemWrap.appendChild(createUniversalAssetCard(asset));
-            itemWrap.addEventListener("click", () => openLightbox(lightboxList, assetIdx));
-          }
-
-          drawerFrag.appendChild(itemWrap);
-        });
-
-        galleryGrid.appendChild(drawerFrag);
-      }
-
-      const stackTrigger = card.querySelector(".photo-stack-trigger");
-      const drawer = card.querySelector(`#${drawerId}`);
-      stackTrigger.addEventListener("click", () => {
-        populateDrawerGrid();
-        const isOpen = drawer.classList.toggle("open");
-        stackTrigger.querySelector(".stack-subtitle").innerHTML = isOpen
-          ? "Click stack to collapse project grid &#8593;"
-          : "Click stack to reveal full project grid &#8595;";
-      });
-
-      fragment.appendChild(card);
-    });
-
-    container.replaceChildren(fragment);
     projectsLoaded = true;
   })();
 
@@ -1850,79 +1883,11 @@ async function loadAndRenderProjects() {
 
 /**
  * ============================================================================
- * 7. TAB 3: DUAL-SET PHOTOGRAPHY ENGINE
+ * 6. TAB 3: STREAMING DUAL-SET PHOTOGRAPHY ENGINE
  * ============================================================================
  */
 let photographyLoaded = false;
 let photographyLoadingPromise = null;
-
-async function discoverPhotographyDualAssets() {
-  const { folder, previewSubfolder, fullSubfolder, maxNumberedProbe } =
-    PORTFOLIO_CONFIG.photographyConfig;
-  const normFolder = normalizeFolder(folder);
-  const discoveredItems = [];
-  const seenNames = new Set();
-
-  try {
-    const txtRes = await fetch(`${normFolder}photos.txt`, { cache: "default" });
-    if (txtRes.ok && !(txtRes.headers.get("content-type") || "").includes("text/html")) {
-      const text = await txtRes.text();
-      const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
-
-      const resolvedBatch = await runInBatches(lines, 8, async (fileName) => {
-        const dual = await resolveDualImageUrls(
-          normFolder,
-          previewSubfolder,
-          fullSubfolder,
-          fileName
-        );
-        return dual ? { fileName, ...dual } : null;
-      });
-
-      resolvedBatch.filter(Boolean).forEach((item) => {
-        if (!seenNames.has(item.fileName)) {
-          seenNames.add(item.fileName);
-          discoveredItems.push(item);
-        }
-      });
-    }
-  } catch (e) {}
-
-  if (discoveredItems.length === 0) {
-    const candidates = [];
-    for (let i = 1; i <= maxNumberedProbe; i++) {
-      const pad = String(i).padStart(2, "0");
-      candidates.push(
-        `Image (${i}).webp`,
-        `Image (${i}).jpg`,
-        `${pad}.webp`,
-        `${pad}.jpg`,
-        `${i}.webp`,
-        `${i}.jpg`
-      );
-    }
-
-    const results = await runInBatches(candidates, 10, async (fileName) => {
-      const dual = await resolveDualImageUrls(
-        normFolder,
-        previewSubfolder,
-        fullSubfolder,
-        fileName
-      );
-      return dual ? { fileName, ...dual } : null;
-    });
-
-    results.filter(Boolean).forEach((item) => {
-      if (!seenNames.has(item.fileName)) {
-        seenNames.add(item.fileName);
-        discoveredItems.push(item);
-      }
-    });
-  }
-
-  return discoveredItems;
-}
-
 let sharedSamplerCtx = null;
 
 function cacheSingleImageColorOnce(img, card) {
@@ -1953,6 +1918,72 @@ function cacheSingleImageColorOnce(img, card) {
   } catch (e) {}
 }
 
+async function discoverAndStreamPhotographyAssets(onPhotoDiscovered) {
+  const { folder, previewSubfolder, fullSubfolder, maxNumberedProbe } =
+    PORTFOLIO_CONFIG.photographyConfig;
+  const normFolder = normalizeFolder(folder);
+  const discoveredItems = [];
+  const seenNames = new Set();
+
+  try {
+    const txtRes = await fetch(`${normFolder}photos.txt`, { cache: "default" });
+    if (txtRes.ok && !(txtRes.headers.get("content-type") || "").includes("text/html")) {
+      const text = await txtRes.text();
+      const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+
+      await runInBatches(lines, 6, async (fileName) => {
+        if (seenNames.has(fileName)) return null;
+        const dual = await resolveDualImageUrls(
+          normFolder,
+          previewSubfolder,
+          fullSubfolder,
+          fileName
+        );
+        if (dual && !seenNames.has(fileName)) {
+          seenNames.add(fileName);
+          const item = { fileName, ...dual };
+          discoveredItems.push(item);
+          if (onPhotoDiscovered) onPhotoDiscovered(item, discoveredItems.length - 1);
+        }
+        return dual;
+      });
+    }
+  } catch (e) {}
+
+  if (discoveredItems.length === 0) {
+    const indices = Array.from({ length: maxNumberedProbe }, (_, i) => i + 1);
+    await runInBatches(indices, 6, async (i) => {
+      const pad = String(i).padStart(2, "0");
+      const candidateNames = [
+        `Image (${i}).webp`,
+        `Image (${i}).jpg`,
+        `${pad}.webp`,
+        `${pad}.jpg`,
+        `${i}.webp`,
+        `${i}.jpg`
+      ];
+      for (const fileName of candidateNames) {
+        if (seenNames.has(fileName)) continue;
+        const dual = await resolveDualImageUrls(
+          normFolder,
+          previewSubfolder,
+          fullSubfolder,
+          fileName
+        );
+        if (dual) {
+          seenNames.add(fileName);
+          const item = { fileName, ...dual };
+          discoveredItems.push(item);
+          if (onPhotoDiscovered) onPhotoDiscovered(item, discoveredItems.length - 1);
+          break;
+        }
+      }
+    });
+  }
+
+  return discoveredItems;
+}
+
 async function loadAndRenderPhotography() {
   if (photographyLoaded) return;
   if (photographyLoadingPromise) return photographyLoadingPromise;
@@ -1966,37 +1997,11 @@ async function loadAndRenderPhotography() {
       PORTFOLIO_CONFIG.photographyConfig.gridColumns || 5
     );
 
-    const photoItems = await discoverPhotographyDualAssets();
-
-    backgroundPrewarmPreviewImages(photoItems.map((item) => item.previewUrl));
-
-    countBadge.textContent = `FOLDER COUNT: ${photoItems.length} IMAGE${
-      photoItems.length === 1 ? "" : "S"
-    }`;
-
-    if (photoItems.length === 0) {
-      grid.style.display = "block";
-      grid.innerHTML = `
-        <div class="empty-state-box">
-          <div class="empty-state-title">// 0 IMAGES IN PHOTOGRAPHY FOLDER</div>
-          <div class="empty-state-desc">
-            No images were found in <code>${PORTFOLIO_CONFIG.photographyConfig.folder}preview/</code> or <code>${PORTFOLIO_CONFIG.photographyConfig.folder}</code>.
-          </div>
-        </div>
-      `;
-      photographyLoaded = true;
-      return;
-    }
-
+    grid.innerHTML = "";
     grid.style.display = "grid";
+    countBadge.textContent = "STREAMING GALLERY...";
 
-    const lightboxItems = photoItems.map((item, i) => ({
-      type: getAssetType(item.fullUrl),
-      file: item.fileName,
-      previewSrc: item.previewUrl,
-      fullSrc: item.fullUrl,
-      caption: `${item.fileName} // [${i + 1} / ${photoItems.length}]`
-    }));
+    const lightboxItems = [];
 
     const lazyObserver = new IntersectionObserver(
       (entries, obs) => {
@@ -2014,14 +2019,24 @@ async function loadAndRenderPhotography() {
           obs.unobserve(card);
         });
       },
-      { rootMargin: IS_MOBILE ? "180px 0px" : "400px 0px" }
+      { rootMargin: IS_MOBILE ? "220px 0px" : "450px 0px" }
     );
 
-    const gridFrag = document.createDocumentFragment();
+    function appendSinglePhotoCard(item, idx) {
+      const lbEntry = {
+        type: getAssetType(item.fullUrl),
+        file: item.fileName,
+        previewSrc: item.previewUrl,
+        fullSrc: item.fullUrl
+      };
+      lightboxItems.push(lbEntry);
 
-    photoItems.forEach((item, idx) => {
+      countBadge.textContent = `FOLDER COUNT: ${lightboxItems.length} IMAGE${
+        lightboxItems.length === 1 ? "" : "S"
+      }`;
+
       const card = document.createElement("div");
-      card.className = "insta-card";
+      card.className = "insta-card stream-in-item";
 
       const img = document.createElement("img");
       img.className = "photo-grid-img";
@@ -2047,11 +2062,24 @@ async function loadAndRenderPhotography() {
       card.prepend(img);
       card.addEventListener("click", () => openLightbox(lightboxItems, idx));
 
-      gridFrag.appendChild(card);
+      grid.appendChild(card);
       lazyObserver.observe(card);
-    });
+    }
 
-    grid.replaceChildren(gridFrag);
+    const photoItems = await discoverAndStreamPhotographyAssets(appendSinglePhotoCard);
+
+    if (photoItems.length === 0) {
+      grid.style.display = "block";
+      grid.innerHTML = `
+        <div class="empty-state-box">
+          <div class="empty-state-title">// 0 IMAGES IN PHOTOGRAPHY FOLDER</div>
+          <div class="empty-state-desc">
+            No images were found in <code>${PORTFOLIO_CONFIG.photographyConfig.folder}preview/</code> or <code>${PORTFOLIO_CONFIG.photographyConfig.folder}</code>.
+          </div>
+        </div>
+      `;
+    }
+
     photographyLoaded = true;
   })();
 
@@ -2060,7 +2088,7 @@ async function loadAndRenderPhotography() {
 
 /**
  * ============================================================================
- * 8. INSTANT CACHED AVERAGE COLOR ENGINE
+ * 7. INSTANT CACHED AVERAGE COLOR ENGINE
  * ============================================================================
  */
 let colorUpdateRaf = null;
@@ -2119,7 +2147,7 @@ function updatePhotographyAverageColor() {
 
 /**
  * ============================================================================
- * 9. TAB NAVIGATION
+ * 8. TAB NAVIGATION
  * ============================================================================
  */
 const TABS = ["about", "projects", "photography"];
@@ -2171,7 +2199,7 @@ function switchTab(targetIndex) {
 
 /**
  * ============================================================================
- * 10. UNIVERSAL LIGHTBOX & VIRTUAL CROSSHAIR CURSOR SYSTEM
+ * 9. UNIVERSAL LIGHTBOX, IMAGE ZOOM/PAN & VIRTUAL CROSSHAIR CURSOR
  * ============================================================================
  */
 let currentLightboxList = [];
@@ -2185,14 +2213,223 @@ let lbScene = null,
   lbModelGroup = null,
   lbAnimId = null;
 
+function applyLightboxImageTransform() {
+  const imgEl = document.getElementById("lightbox-img");
+  if (!imgEl) return;
+
+  if (lightboxZoomState.scale <= 1.01) {
+    lightboxZoomState.scale = 1;
+    lightboxZoomState.panX = 0;
+    lightboxZoomState.panY = 0;
+  } else {
+    const maxPanX = ((imgEl.clientWidth || 300) * (lightboxZoomState.scale - 1)) / 2;
+    const maxPanY = ((imgEl.clientHeight || 300) * (lightboxZoomState.scale - 1)) / 2;
+    lightboxZoomState.panX = Math.max(-maxPanX, Math.min(maxPanX, lightboxZoomState.panX));
+    lightboxZoomState.panY = Math.max(-maxPanY, Math.min(maxPanY, lightboxZoomState.panY));
+  }
+
+  imgEl.style.transform = `translate3d(${lightboxZoomState.panX}px, ${lightboxZoomState.panY}px, 0) scale(${lightboxZoomState.scale})`;
+  imgEl.classList.toggle("is-zoomed", lightboxZoomState.scale > 1);
+  imgEl.classList.toggle("is-panning", lightboxZoomState.isPanning);
+
+  const resetZoomBtn = document.getElementById("lightbox-zoom-reset-btn");
+  if (resetZoomBtn) {
+    resetZoomBtn.textContent = `${Math.round(lightboxZoomState.scale * 100)}%`;
+  }
+}
+
+function resetLightboxImageZoom() {
+  lightboxZoomState.scale = 1;
+  lightboxZoomState.panX = 0;
+  lightboxZoomState.panY = 0;
+  lightboxZoomState.isPanning = false;
+  applyLightboxImageTransform();
+}
+
+function adjustLightboxZoom(deltaScale) {
+  const nextScale = Math.max(
+    lightboxZoomState.minScale,
+    Math.min(lightboxZoomState.maxScale, +(lightboxZoomState.scale + deltaScale).toFixed(2))
+  );
+  lightboxZoomState.scale = nextScale;
+  applyLightboxImageTransform();
+}
+
+function setupLightboxImageZoomPan() {
+  const imgEl = document.getElementById("lightbox-img");
+  const zoomInBtn = document.getElementById("lightbox-zoom-in-btn");
+  const zoomOutBtn = document.getElementById("lightbox-zoom-out-btn");
+  const zoomResetBtn = document.getElementById("lightbox-zoom-reset-btn");
+
+  if (!imgEl || imgEl.dataset.zoomBound === "true") return;
+  imgEl.dataset.zoomBound = "true";
+
+  if (zoomInBtn) {
+    zoomInBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      adjustLightboxZoom(0.5);
+    });
+  }
+  if (zoomOutBtn) {
+    zoomOutBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      adjustLightboxZoom(-0.5);
+    });
+  }
+  if (zoomResetBtn) {
+    zoomResetBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      resetLightboxImageZoom();
+    });
+  }
+
+  imgEl.addEventListener(
+    "wheel",
+    (e) => {
+      if (imgEl.style.display === "none") return;
+      e.preventDefault();
+      e.stopPropagation();
+      const step = e.deltaY < 0 ? 0.35 : -0.35;
+      adjustLightboxZoom(step);
+    },
+    { passive: false }
+  );
+
+  imgEl.addEventListener("dblclick", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (lightboxZoomState.scale > 1) {
+      resetLightboxImageZoom();
+    } else {
+      lightboxZoomState.scale = 2.5;
+      applyLightboxImageTransform();
+    }
+  });
+
+  imgEl.addEventListener("mousedown", (e) => {
+    if (lightboxZoomState.scale <= 1) return;
+    e.preventDefault();
+    e.stopPropagation();
+    lightboxZoomState.isPanning = true;
+    lightboxZoomState.startX = e.clientX - lightboxZoomState.panX;
+    lightboxZoomState.startY = e.clientY - lightboxZoomState.panY;
+    applyLightboxImageTransform();
+  });
+
+  window.addEventListener("mousemove", (e) => {
+    if (!lightboxZoomState.isPanning) return;
+    e.preventDefault();
+    lightboxZoomState.panX = e.clientX - lightboxZoomState.startX;
+    lightboxZoomState.panY = e.clientY - lightboxZoomState.startY;
+    applyLightboxImageTransform();
+  });
+
+  window.addEventListener("mouseup", () => {
+    if (!lightboxZoomState.isPanning) return;
+    lightboxZoomState.isPanning = false;
+    applyLightboxImageTransform();
+  });
+
+  imgEl.addEventListener(
+    "touchstart",
+    (e) => {
+      if (imgEl.style.display === "none") return;
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        e.stopPropagation();
+        lightboxZoomState.isPanning = false;
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        lightboxZoomState.initialPinchDist = Math.hypot(dx, dy);
+        lightboxZoomState.initialPinchScale = lightboxZoomState.scale;
+      } else if (e.touches.length === 1) {
+        const now = Date.now();
+        if (now - lightboxZoomState.lastTapTime < 280) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (lightboxZoomState.scale > 1) {
+            resetLightboxImageZoom();
+          } else {
+            lightboxZoomState.scale = 2.5;
+            applyLightboxImageTransform();
+          }
+          lightboxZoomState.lastTapTime = 0;
+          return;
+        }
+        lightboxZoomState.lastTapTime = now;
+
+        if (lightboxZoomState.scale > 1) {
+          e.preventDefault();
+          e.stopPropagation();
+          lightboxZoomState.isPanning = true;
+          lightboxZoomState.startX = e.touches[0].clientX - lightboxZoomState.panX;
+          lightboxZoomState.startY = e.touches[0].clientY - lightboxZoomState.panY;
+        }
+      }
+    },
+    { passive: false }
+  );
+
+  imgEl.addEventListener(
+    "touchmove",
+    (e) => {
+      if (imgEl.style.display === "none") return;
+      if (e.touches.length === 2 && lightboxZoomState.initialPinchDist > 0) {
+        e.preventDefault();
+        e.stopPropagation();
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const dist = Math.hypot(dx, dy);
+        const ratio = dist / lightboxZoomState.initialPinchDist;
+        lightboxZoomState.scale = Math.max(
+          lightboxZoomState.minScale,
+          Math.min(lightboxZoomState.maxScale, lightboxZoomState.initialPinchScale * ratio)
+        );
+        applyLightboxImageTransform();
+      } else if (e.touches.length === 1 && lightboxZoomState.isPanning && lightboxZoomState.scale > 1) {
+        e.preventDefault();
+        e.stopPropagation();
+        lightboxZoomState.panX = e.touches[0].clientX - lightboxZoomState.startX;
+        lightboxZoomState.panY = e.touches[0].clientY - lightboxZoomState.startY;
+        applyLightboxImageTransform();
+      }
+    },
+    { passive: false }
+  );
+
+  imgEl.addEventListener("touchend", (e) => {
+    if (e.touches.length < 2) {
+      lightboxZoomState.initialPinchDist = 0;
+    }
+    if (e.touches.length === 0) {
+      lightboxZoomState.isPanning = false;
+      applyLightboxImageTransform();
+    }
+  });
+}
+
 function preventBackgroundScroll(e) {
   if (
     e.target &&
-    (e.target.closest("#lightbox-3d-stage") || e.target.closest(".keys-hud-popover"))
+    (e.target.closest("#lightbox-3d-stage") ||
+      e.target.closest(".keys-hud-popover") ||
+      e.target.closest("#lightbox-img"))
   ) {
     return;
   }
   e.preventDefault();
+}
+
+function resizeLightbox3D() {
+  if (!lbRenderer || !lbCamera) return;
+  const stage = document.getElementById("lightbox-3d-stage");
+  if (!stage || stage.style.display === "none") return;
+  const rect = stage.getBoundingClientRect();
+  const w = Math.max(200, Math.floor(rect.width || window.innerWidth * 0.9));
+  const h = Math.max(200, Math.floor(rect.height || window.innerHeight * 0.78));
+  lbCamera.aspect = w / h;
+  lbCamera.updateProjectionMatrix();
+  lbRenderer.setSize(w, h, false);
 }
 
 function initOrUpdateLightbox3D(modelUrl, type) {
@@ -2211,19 +2448,22 @@ function initOrUpdateLightbox3D(modelUrl, type) {
     });
     lbRenderer.setPixelRatio(Math.min(window.devicePixelRatio, IS_MOBILE ? 1.5 : 2));
     lbRenderer.outputEncoding = THREE.sRGBEncoding;
+    lbRenderer.domElement.style.width = "100%";
+    lbRenderer.domElement.style.height = "100%";
+    lbRenderer.domElement.style.display = "block";
     stage.appendChild(lbRenderer.domElement);
 
     lbControls = new THREE.OrbitControls(lbCamera, lbRenderer.domElement);
     lbControls.enableDamping = true;
     lbControls.dampingFactor = 0.06;
 
-    lbScene.add(new THREE.HemisphereLight(0xffffff, 0x222830, 0.4));
+    lbScene.add(new THREE.HemisphereLight(0xffffff, 0x222830, 0.45));
 
-    const dir1 = new THREE.DirectionalLight(0xffffff, 0.4);
+    const dir1 = new THREE.DirectionalLight(0xffffff, 0.45);
     dir1.position.set(100, 140, 120);
     lbScene.add(dir1);
 
-    const dir2 = new THREE.DirectionalLight(0xffffff, 0.1);
+    const dir2 = new THREE.DirectionalLight(0xffffff, 0.15);
     dir2.position.set(-100, -80, -90);
     lbScene.add(dir2);
 
@@ -2239,11 +2479,7 @@ function initOrUpdateLightbox3D(modelUrl, type) {
     });
   }
 
-  const w = stage.clientWidth || window.innerWidth * (IS_MOBILE ? 0.94 : 0.78);
-  const h = stage.clientHeight || window.innerHeight * (IS_MOBILE ? 0.68 : 0.74);
-  lbCamera.aspect = w / h;
-  lbCamera.updateProjectionMatrix();
-  lbRenderer.setSize(w, h);
+  resizeLightbox3D();
 
   if (lbModelGroup) {
     lbScene.remove(lbModelGroup);
@@ -2261,6 +2497,7 @@ function initOrUpdateLightbox3D(modelUrl, type) {
       lbControls.reset();
       lbCamera.position.set(70, 50, 95);
       lbControls.update();
+      resizeLightbox3D();
     })
     .catch(() => {
       loaderText.textContent = `ERROR LOADING 3D ${type.toUpperCase()} FILE`;
@@ -2298,10 +2535,13 @@ function closeLightbox() {
   }
 
   const modal = document.getElementById("lightbox-modal");
+  const contentWrapper = document.getElementById("lightbox-content-wrapper");
   modal.classList.remove("open");
   modal.setAttribute("aria-hidden", "true");
+  if (contentWrapper) contentWrapper.classList.remove("is-app-mode");
 
   activeFullImageRequestToken++;
+  resetLightboxImageZoom();
   lightboxVirtualCursorState.controlsActive = false;
   lightboxVirtualCursorState.enabled = false;
   updateLightboxVirtualCursorVisibilityAndPosition();
@@ -2346,6 +2586,7 @@ function closeLightbox() {
   if (itchFrame) {
     itchFrame.src = "";
     itchFrame.style.display = "none";
+    itchFrame.style.transform = "none";
   }
 
   const linkStage = document.getElementById("lightbox-link-stage");
@@ -2370,7 +2611,7 @@ function showGenericFileFallback(item, message) {
   const ext = getFileExtension(item.file || item.fullSrc).toUpperCase() || "FILE";
   document.getElementById("lightbox-generic-ext").textContent = `.${ext}`;
   document.getElementById("lightbox-generic-name").textContent =
-    item.file || item.caption || "Project Asset";
+    item.file || "Project Asset";
   document.getElementById("lightbox-generic-desc").textContent =
     message || "Preview not available in browser for this file format.";
   genericStage.style.display = "flex";
@@ -2381,6 +2622,7 @@ function updateLightboxSlide() {
   const item = currentLightboxList[currentLightboxIndex];
   const requestToken = ++activeFullImageRequestToken;
 
+  const contentWrapper = document.getElementById("lightbox-content-wrapper");
   const imgEl = document.getElementById("lightbox-img");
   const videoEl = document.getElementById("lightbox-video");
   const audioStage = document.getElementById("lightbox-audio-stage");
@@ -2394,8 +2636,14 @@ function updateLightboxSlide() {
   const externalBtn = document.getElementById("lightbox-external-btn");
   const keysBtn = document.getElementById("lightbox-keys-btn");
   const keysPopover = document.getElementById("lightbox-keys-popover");
+  const zoomControls = document.getElementById("lightbox-zoom-controls");
   const loaderOverlay = document.getElementById("lightbox-loader");
   const loaderText = document.getElementById("lightbox-loader-text");
+
+  const isFullAppOr3D = item.type === "itch" || is3DAsset(item.type) || item.type === "pdf";
+  if (contentWrapper) {
+    contentWrapper.classList.toggle("is-app-mode", isFullAppOr3D);
+  }
 
   imgEl.style.display = "none";
   videoEl.style.display = "none";
@@ -2404,6 +2652,7 @@ function updateLightboxSlide() {
   if (itchFrame) {
     itchFrame.src = "";
     itchFrame.style.display = "none";
+    itchFrame.style.transform = "none";
   }
   if (linkStage) {
     linkStage.innerHTML = "";
@@ -2415,9 +2664,12 @@ function updateLightboxSlide() {
   if (externalBtn) externalBtn.style.display = "none";
   if (keysBtn) keysBtn.style.display = "none";
   if (keysPopover) keysPopover.style.display = "none";
+  if (zoomControls) zoomControls.style.display = "none";
   loaderOverlay.style.display = "none";
 
-  // Controls & Virtual Cursor ALWAYS start turned OFF when opening a slide
+  resetLightboxImageZoom();
+  setupLightboxImageZoomPan();
+
   lightboxVirtualCursorState.xRatio = 0.5;
   lightboxVirtualCursorState.yRatio = 0.5;
   lightboxVirtualCursorState.controlsActive = false;
@@ -2451,12 +2703,15 @@ function updateLightboxSlide() {
   if (is3DAsset(item.type)) {
     stage3d.style.display = "block";
     resetBtn.style.display = "inline-block";
-    initOrUpdateLightbox3D(item.fullSrc, item.type);
+    requestAnimationFrame(() => initOrUpdateLightbox3D(item.fullSrc, item.type));
   } else if (item.type === "itch") {
     itchFrame.style.display = "block";
     itchFrame.src = item.embedUrl || item.fullSrc;
+    requestAnimationFrame(() => fitEmbeddedAppToStage());
+
     itchFrame.onload = () => {
       try {
+        fitEmbeddedAppToStage();
         itchFrame.focus();
         if (itchFrame.contentWindow) itchFrame.contentWindow.focus();
         updateLightboxVirtualCursorVisibilityAndPosition();
@@ -2507,6 +2762,8 @@ function updateLightboxSlide() {
     pdfFrame.src = item.fullSrc;
   } else if (isImageAsset(item.type)) {
     imgEl.style.display = "block";
+    if (zoomControls) zoomControls.style.display = "inline-flex";
+
     const previewUrl = item.previewSrc || item.fullSrc;
     const fullUrl = item.fullSrc || item.previewSrc;
 
@@ -2547,8 +2804,6 @@ function updateLightboxSlide() {
   } else {
     showGenericFileFallback(item);
   }
-
-  document.getElementById("lightbox-caption").textContent = item.caption || "";
 }
 
 function stepLightbox(delta) {
@@ -2561,28 +2816,26 @@ function stepLightbox(delta) {
 
 /**
  * ============================================================================
- * 11. INITIALIZATION & MOBILE-AWARE DEFERRED LOADING
+ * 10. INITIALIZATION & PROGRESSIVE STREAMING BOOT
  * ============================================================================
  */
-window.addEventListener("DOMContentLoaded", async () => {
-  await renderAboutSection();
+window.addEventListener("DOMContentLoaded", () => {
+  renderAboutSection();
+  document.getElementById("page-loader").classList.add("loaded");
+  document.body.classList.add("page-ready");
 
-  setTimeout(() => {
-    document.getElementById("page-loader").classList.add("loaded");
-    document.body.classList.add("page-ready");
+  if (!IS_MOBILE) {
+    const startDeferredBackgroundLoading = () => {
+      loadAndRenderProjects();
+      loadAndRenderPhotography();
+    };
 
-    if (!IS_MOBILE) {
-      const startDeferredBackgroundLoading = () => {
-        Promise.all([loadAndRenderProjects(), loadAndRenderPhotography()]);
-      };
-
-      if ("requestIdleCallback" in window) {
-        requestIdleCallback(startDeferredBackgroundLoading, { timeout: 2000 });
-      } else {
-        setTimeout(startDeferredBackgroundLoading, 1200);
-      }
+    if ("requestIdleCallback" in window) {
+      requestIdleCallback(startDeferredBackgroundLoading, { timeout: 1500 });
+    } else {
+      setTimeout(startDeferredBackgroundLoading, 600);
     }
-  }, 300);
+  }
 
   const mobileMenuBtn = document.getElementById("mobile-menu-btn");
   const mainTabNav = document.getElementById("main-tab-nav");
@@ -2616,11 +2869,16 @@ window.addEventListener("DOMContentLoaded", async () => {
     });
   });
 
-  document.getElementById("side-nav-prev").addEventListener("click", () => {
+  const sidePrevBtn = document.getElementById("side-nav-prev");
+  const sideNextBtn = document.getElementById("side-nav-next");
+
+  sidePrevBtn.addEventListener("click", (e) => {
+    e.currentTarget.blur();
     switchTab((currentTabIndex - 1 + TABS.length) % TABS.length);
   });
 
-  document.getElementById("side-nav-next").addEventListener("click", () => {
+  sideNextBtn.addEventListener("click", (e) => {
+    e.currentTarget.blur();
     switchTab((currentTabIndex + 1) % TABS.length);
   });
 
@@ -2629,15 +2887,26 @@ window.addEventListener("DOMContentLoaded", async () => {
     () => { if (currentTabIndex === 2) scheduleAverageColorUpdate(); },
     { passive: true }
   );
+
   window.addEventListener(
     "resize",
-    () => { if (currentTabIndex === 2) scheduleAverageColorUpdate(); },
+    () => {
+      if (currentTabIndex === 2) scheduleAverageColorUpdate();
+      const lightboxModal = document.getElementById("lightbox-modal");
+      if (lightboxModal && lightboxModal.classList.contains("open")) {
+        fitEmbeddedAppToStage();
+        resizeLightbox3D();
+        updateLightboxVirtualCursorVisibilityAndPosition();
+      }
+    },
     { passive: true }
   );
 
   const lightboxModal = document.getElementById("lightbox-modal");
   lightboxModal.addEventListener("click", (e) => {
-    if (e.target === lightboxModal) closeLightbox();
+    if (e.target === lightboxModal || e.target.id === "lightbox-stage-viewport") {
+      closeLightbox();
+    }
   });
   document.getElementById("lightbox-close").addEventListener("click", (e) => {
     e.stopPropagation();
@@ -2652,7 +2921,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     stepLightbox(1);
   });
 
-  // Lightbox Controls Toggle: turns OFF the virtual cursor whenever controls are closed
   const lbKeysBtn = document.getElementById("lightbox-keys-btn");
   const lbKeysPopover = document.getElementById("lightbox-keys-popover");
   if (lbKeysBtn && lbKeysPopover) {
@@ -2672,6 +2940,9 @@ window.addEventListener("DOMContentLoaded", async () => {
       if (e.key === "Escape") closeLightbox();
       if (e.key === "ArrowLeft") stepLightbox(-1);
       if (e.key === "ArrowRight") stepLightbox(1);
+      if (e.key === "+" || e.key === "=") adjustLightboxZoom(0.5);
+      if (e.key === "-" || e.key === "_") adjustLightboxZoom(-0.5);
+      if (e.key === "0") resetLightboxImageZoom();
     }
   });
 });
