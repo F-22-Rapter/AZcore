@@ -2,6 +2,6 @@ TITLE: Powertrain mounting System
 CODE: PRJ // FSAE ELECTRIC
 TAGS: SolidWorks, Ansys Fluent CFD, High-Voltage 72s6p, Thermal Management
 MAIN_FILE: 4.png
-ASSETS: 4.png, 5.png, 20260226_015208533_iOS.jpg, 20260226_220328764_iOS.webp
+ASSETS: 4.png, 5.png, 20260226_015208533_iOS.jpg, 20260226_220328764_iOS.jpg
 DESCRIPTION:
 Project description goes here.
