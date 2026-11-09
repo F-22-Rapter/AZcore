@@ -79,7 +79,7 @@ const PORTFOLIO_CONFIG = {
 
 /**
  * ============================================================================
- * 2. FILE HELPERS, 2D GRID CONTROLS, CROSSHAIR CURSOR & HEIC DECODING
+ * 2. FILE HELPERS, 2D GRID CONTROLS, 1x1 WASD JOYSTICK & HEIC DECODING
  * ============================================================================
  */
 const verifiedUrlCache = new Map();
@@ -101,6 +101,10 @@ const FALLBACK_RUN_SVG_URI = `data:image/svg+xml;utf8,${encodeURIComponent(
 )}`;
 
 const KEY_SPEC_MAP = {
+  JOYSTICK: { tokenName: "JOYSTICK", label: "WASD", key: "__JOYSTICK__", code: "VirtualJoystick", keyCode: 0, isJoystick: true },
+  STICK: { tokenName: "JOYSTICK", label: "WASD", key: "__JOYSTICK__", code: "VirtualJoystick", keyCode: 0, isJoystick: true },
+  WASD_STICK: { tokenName: "JOYSTICK", label: "WASD", key: "__JOYSTICK__", code: "VirtualJoystick", keyCode: 0, isJoystick: true },
+  WASD: { tokenName: "JOYSTICK", label: "WASD", key: "__JOYSTICK__", code: "VirtualJoystick", keyCode: 0, isJoystick: true },
   CURSOR: { tokenName: "CURSOR", label: "CURSOR", key: "__CURSOR__", code: "VirtualCursor", keyCode: 0, isCursorToggle: true },
   MOUSE: { tokenName: "CURSOR", label: "CURSOR", key: "__CURSOR__", code: "VirtualCursor", keyCode: 0, isCursorToggle: true },
   POINTER: { tokenName: "CURSOR", label: "CURSOR", key: "__CURSOR__", code: "VirtualCursor", keyCode: 0, isCursorToggle: true },
@@ -128,6 +132,13 @@ const KEY_SPEC_MAP = {
   TAB: { tokenName: "TAB", label: "TAB", key: "Tab", code: "Tab", keyCode: 9 },
   ESC: { tokenName: "ESC", label: "ESC", key: "Escape", code: "Escape", keyCode: 27 },
   ESCAPE: { tokenName: "ESC", label: "ESC", key: "Escape", code: "Escape", keyCode: 27 }
+};
+
+const WASD_DIRECTION_SPECS = {
+  W: { key: "w", code: "KeyW", keyCode: 87 },
+  A: { key: "a", code: "KeyA", keyCode: 65 },
+  S: { key: "s", code: "KeyS", keyCode: 83 },
+  D: { key: "d", code: "KeyD", keyCode: 68 }
 };
 
 const lightboxVirtualCursorState = {
@@ -267,6 +278,10 @@ function resolveKeySpec(rawToken) {
   };
 }
 
+/**
+ * Expands control strings into 2D grid items.
+ * Both `JOYSTICK` and `WASD` (or automatically detected W+A+S+D sets) become a single 1x1 WASD Joystick box.
+ */
 function expandVirtualKeysList(keysString) {
   if (!keysString || !keysString.trim()) return [];
   const entries = keysString.split(",").map((s) => s.trim()).filter(Boolean);
@@ -289,14 +304,12 @@ function expandVirtualKeysList(keysString) {
     const actionDesc = parts.length >= 2 ? parts.slice(1).join(":").trim() : "";
     const upperKey = rawKeyPart.toUpperCase().replace(/\s+/g, "");
 
-    if (upperKey === "WASD") {
-      [
-        { ch: "W", c: 2, r: 0 },
-        { ch: "A", c: 1, r: 1 },
-        { ch: "S", c: 2, r: 1 },
-        { ch: "D", c: 3, r: 1 }
-      ].forEach((item) => {
-        rawButtons.push({ ...resolveKeySpec(item.ch), desc: actionDesc || "Move", col: item.c, row: item.r });
+    if (upperKey === "WASD" || upperKey === "JOYSTICK" || upperKey === "STICK" || upperKey === "WASD_STICK") {
+      rawButtons.push({
+        ...resolveKeySpec("JOYSTICK"),
+        desc: actionDesc || "Move",
+        col: coordCol,
+        row: coordRow
       });
     } else if (upperKey === "ARROWS" || upperKey === "ARROWKEYS") {
       [
@@ -324,6 +337,32 @@ function expandVirtualKeysList(keysString) {
       });
     }
   });
+
+  // Automatically collapse separate W, A, S, D Move keys into a single 1x1 WASD Joystick item
+  const moveWasdIndices = [];
+  rawButtons.forEach((b, idx) => {
+    if (
+      ["W", "A", "S", "D"].includes(b.tokenName) &&
+      (!b.desc || /^move$/i.test(b.desc.trim()))
+    ) {
+      moveWasdIndices.push(idx);
+    }
+  });
+
+  if (moveWasdIndices.length === 4) {
+    const firstWasd = rawButtons[moveWasdIndices[0]];
+    const joyCol = firstWasd.col !== null ? firstWasd.col : 1;
+    const joyRow = firstWasd.row !== null ? firstWasd.row : 0;
+    const filtered = rawButtons.filter((_, idx) => !moveWasdIndices.includes(idx));
+    filtered.unshift({
+      ...resolveKeySpec("JOYSTICK"),
+      desc: firstWasd.desc || "Move",
+      col: joyCol,
+      row: joyRow
+    });
+    rawButtons.length = 0;
+    rawButtons.push(...filtered);
+  }
 
   const occupied = new Set();
   rawButtons.forEach((b) => {
@@ -353,7 +392,6 @@ function expandVirtualKeysList(keysString) {
 /**
  * ============================================================================
  * PROPORTIONAL GAME & SIM VIEWPORT SCALER
- * Prevents Unity & p5.js apps from squishing horizontally or clipping text on mobile/portrait
  * ============================================================================
  */
 function fitEmbeddedAppToStage() {
@@ -364,8 +402,6 @@ function fitEmbeddedAppToStage() {
   const availW = viewport.clientWidth || window.innerWidth * 0.94;
   const availH = viewport.clientHeight || window.innerHeight * 0.82;
 
-  // On narrow screens (< 920px), render the iframe at a standard landscape resolution (1280x720)
-  // and scale it down proportionally to fit the width/height without squishing or clipping HUD text.
   if (availW < 920) {
     const baseW = 1280;
     const baseH = 720;
@@ -381,7 +417,6 @@ function fitEmbeddedAppToStage() {
     frame.style.transform = "none";
   }
 
-  // Trigger resize inside same-origin apps (like p5.js windowResized)
   try {
     if (frame.contentWindow) {
       frame.contentWindow.dispatchEvent(new Event("resize"));
@@ -715,29 +750,205 @@ function buildKeysHudContentHtml(keysString) {
       <span>&#9783; DRAG PAD</span>
       <span>TAP / HOLD KEYS</span>
     </div>
-    <div class="keys-pad-grid" style="grid-template-columns: repeat(${colSpan}, minmax(54px, auto)); grid-template-rows: repeat(${rowSpan}, 50px);">
+    <div class="keys-pad-grid" style="grid-template-columns: repeat(${colSpan}, minmax(58px, auto)); grid-template-rows: repeat(${rowSpan}, 58px);">
       ${buttons
-        .map(
-          (b) => `
-        <div
-          role="button"
-          tabindex="-1"
-          class="virtual-key-btn ${b.isCursorToggle ? "vkey-cursor-toggle" : ""}"
-          style="grid-column: ${b.col - minCol + 1}; grid-row: ${b.row - minRow + 1};"
-          data-key="${b.key}"
-          data-code="${b.code}"
-          data-keycode="${b.keyCode}"
-          data-cursor-toggle="${b.isCursorToggle ? "true" : "false"}"
-          data-mouse-click="${b.isMouseClick ? "true" : "false"}"
-        >
-          <span class="vkey-main">${b.isCursorToggle ? "+ " + b.label : b.label}</span>
-          ${b.desc ? `<span class="vkey-sub">${b.desc}</span>` : ""}
-        </div>
-      `
-        )
+        .map((b) => {
+          const gridStyle = `grid-column: ${b.col - minCol + 1}; grid-row: ${b.row - minRow + 1};`;
+
+          if (b.isJoystick) {
+            return `
+              <div
+                role="slider"
+                aria-label="WASD Joystick (${b.desc || "Move"})"
+                tabindex="-1"
+                class="virtual-key-btn vkey-joystick-box"
+                style="${gridStyle}"
+                data-joystick="true"
+              >
+                <span class="vjoy-dir vjoy-w">W</span>
+                <span class="vjoy-dir vjoy-a">A</span>
+                <span class="vjoy-dir vjoy-s">S</span>
+                <span class="vjoy-dir vjoy-d">D</span>
+                <div class="vjoy-base">
+                  <div class="vjoy-stick"></div>
+                </div>
+              </div>
+            `;
+          }
+
+          return `
+            <div
+              role="button"
+              tabindex="-1"
+              class="virtual-key-btn ${b.isCursorToggle ? "vkey-cursor-toggle" : ""}"
+              style="${gridStyle}"
+              data-key="${b.key}"
+              data-code="${b.code}"
+              data-keycode="${b.keyCode}"
+              data-cursor-toggle="${b.isCursorToggle ? "true" : "false"}"
+              data-mouse-click="${b.isMouseClick ? "true" : "false"}"
+            >
+              <span class="vkey-main">${b.isCursorToggle ? "+ " + b.label : b.label}</span>
+              ${b.desc ? `<span class="vkey-sub">${b.desc}</span>` : ""}
+            </div>
+          `;
+        })
         .join("")}
     </div>
   `;
+}
+
+/**
+ * Binds the 1x1 WASD Joystick box so dragging inside it dispatches W/A/S/D keydown & keyup events
+ */
+function bindVirtualJoystick(joyEl) {
+  if (!joyEl || joyEl.dataset.bound === "true") return;
+  joyEl.dataset.bound = "true";
+
+  const stickEl = joyEl.querySelector(".vjoy-stick");
+  const activeDirs = new Set();
+  let isDragging = false;
+  let activeTouchId = null;
+  let repeatTimer = null;
+
+  function updateActiveDirections(nextDirs) {
+    // Release any WASD keys no longer held
+    for (const dir of Array.from(activeDirs)) {
+      if (!nextDirs.has(dir)) {
+        activeDirs.delete(dir);
+        joyEl.classList.remove(`dir-${dir.toLowerCase()}`);
+        triggerSyntheticKeyEvent("keyup", WASD_DIRECTION_SPECS[dir]);
+      }
+    }
+
+    // Press any newly activated WASD keys
+    for (const dir of nextDirs) {
+      if (!activeDirs.has(dir)) {
+        activeDirs.add(dir);
+        joyEl.classList.add(`dir-${dir.toLowerCase()}`);
+        triggerSyntheticKeyEvent("keydown", WASD_DIRECTION_SPECS[dir]);
+      }
+    }
+
+    if (activeDirs.size > 0 && !repeatTimer) {
+      repeatTimer = setInterval(() => {
+        activeDirs.forEach((dir) => {
+          triggerSyntheticKeyEvent("keydown", WASD_DIRECTION_SPECS[dir]);
+        });
+      }, 65);
+    } else if (activeDirs.size === 0 && repeatTimer) {
+      clearInterval(repeatTimer);
+      repeatTimer = null;
+    }
+  }
+
+  function handleMoveAtPoint(clientX, clientY) {
+    const rect = joyEl.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const maxRadius = Math.max(12, Math.min(rect.width, rect.height) * 0.32);
+
+    const dx = clientX - cx;
+    const dy = clientY - cy;
+    const dist = Math.hypot(dx, dy);
+    const angle = Math.atan2(dy, dx);
+
+    const clampedDist = Math.min(dist, maxRadius);
+    const offsetX = Math.cos(angle) * clampedDist;
+    const offsetY = Math.sin(angle) * clampedDist;
+
+    if (stickEl) {
+      stickEl.style.transform = `translate3d(${offsetX.toFixed(1)}px, ${offsetY.toFixed(1)}px, 0)`;
+    }
+
+    const deadzone = maxRadius * 0.28;
+    const nextDirs = new Set();
+
+    if (dist > deadzone) {
+      const normX = dx / dist;
+      const normY = dy / dist;
+      // 8-way directional threshold (sin(22.5 deg) ≈ 0.38)
+      if (normY < -0.38) nextDirs.add("W");
+      if (normY > 0.38) nextDirs.add("S");
+      if (normX < -0.38) nextDirs.add("A");
+      if (normX > 0.38) nextDirs.add("D");
+    }
+
+    updateActiveDirections(nextDirs);
+  }
+
+  function resetJoystick() {
+    isDragging = false;
+    activeTouchId = null;
+    joyEl.classList.remove("pressed");
+    if (stickEl) {
+      stickEl.style.transform = "translate3d(0px, 0px, 0)";
+    }
+    updateActiveDirections(new Set());
+  }
+
+  joyEl.addEventListener("mousedown", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    isDragging = true;
+    joyEl.classList.add("pressed");
+    handleMoveAtPoint(e.clientX, e.clientY);
+  });
+
+  window.addEventListener("mousemove", (e) => {
+    if (!isDragging || activeTouchId !== null) return;
+    e.preventDefault();
+    handleMoveAtPoint(e.clientX, e.clientY);
+  });
+
+  window.addEventListener("mouseup", () => {
+    if (!isDragging || activeTouchId !== null) return;
+    resetJoystick();
+  });
+
+  joyEl.addEventListener(
+    "touchstart",
+    (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const touch = e.changedTouches[0];
+      if (!touch) return;
+      isDragging = true;
+      activeTouchId = touch.identifier;
+      joyEl.classList.add("pressed");
+      handleMoveAtPoint(touch.clientX, touch.clientY);
+    },
+    { passive: false }
+  );
+
+  window.addEventListener(
+    "touchmove",
+    (e) => {
+      if (!isDragging || activeTouchId === null) return;
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        if (e.changedTouches[i].identifier === activeTouchId) {
+          e.preventDefault();
+          handleMoveAtPoint(e.changedTouches[i].clientX, e.changedTouches[i].clientY);
+          break;
+        }
+      }
+    },
+    { passive: false }
+  );
+
+  const onTouchEnd = (e) => {
+    if (!isDragging || activeTouchId === null) return;
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      if (e.changedTouches[i].identifier === activeTouchId) {
+        resetJoystick();
+        break;
+      }
+    }
+  };
+
+  window.addEventListener("touchend", onTouchEnd);
+  window.addEventListener("touchcancel", onTouchEnd);
+  joyEl.addEventListener("contextmenu", (e) => e.preventDefault());
 }
 
 function bindInteractiveVirtualKeys(containerEl) {
@@ -757,6 +968,12 @@ function bindInteractiveVirtualKeys(containerEl) {
 
   containerEl.querySelectorAll(".virtual-key-btn").forEach((btn) => {
     if (btn.dataset.bound === "true") return;
+
+    if (btn.dataset.joystick === "true") {
+      bindVirtualJoystick(btn);
+      return;
+    }
+
     btn.dataset.bound = "true";
 
     if (btn.dataset.cursorToggle === "true") {
@@ -1199,7 +1416,6 @@ function mountAutoRotating3DPreview(container, modelUrl, type) {
     const h = Math.max(100, Math.floor(rect.height || container.clientHeight || 260));
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
-    // Pass false to updateStyle so Three.js doesn't force fixed pixel widths that overflow CSS Grid on mobile
     renderer.setSize(w, h, false);
   }
 

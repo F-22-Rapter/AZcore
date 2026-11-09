@@ -195,7 +195,7 @@
       position: relative;
       display: grid;
       grid-template-columns: repeat(8, 58px);
-      grid-template-rows: repeat(4, 52px);
+      grid-template-rows: repeat(4, 58px);
       gap: 6px;
       padding: 10px;
       background: rgba(22, 25, 28, 0.95);
@@ -209,7 +209,7 @@
 
     .key-grid-cell {
       width: 58px;
-      height: 52px;
+      height: 58px;
       border: 1px dashed rgba(255, 255, 255, 0.12);
       border-radius: 6px;
       display: flex;
@@ -249,8 +249,12 @@
       border-bottom-color: #f1c40f;
       background: rgba(241, 196, 15, 0.18);
     }
+    .designer-key-item.is-joystick-key {
+      border-color: var(--accent);
+      background: radial-gradient(circle at center, rgba(217, 40, 4, 0.25) 0%, rgba(24, 28, 32, 0.98) 100%);
+    }
 
-    .designer-key-main { font-size: 0.78rem; font-weight: 700; line-height: 1.1; }
+    .designer-key-main { font-size: 0.74rem; font-weight: 700; line-height: 1.1; }
     .designer-key-sub {
       font-size: 0.52rem;
       color: var(--text-muted);
@@ -545,10 +549,11 @@
             <span>DRAG KEYS ON THE GRID BELOW TO ARRANGE</span>
           </label>
           <div class="dev-inline-add">
-            <input type="text" id="dev-keys" class="dev-input" placeholder="e.g. E:Interact@0,0, W:Move@2,0, SPACE:Jump@4,0, A:Move@1,1, S:Move@2,1, D:Move@3,1" style="flex:1;" />
+            <input type="text" id="dev-keys" class="dev-input" placeholder="e.g. E:Interact@0:0, JOYSTICK:Move@1:0, SPACE:Jump@2:0" style="flex:1;" />
           </div>
           <div class="quick-control-pills">
-            <button type="button" class="icon-btn" id="quick-add-wasd-layout-btn">+ WASD + E + SPACE LAYOUT</button>
+            <button type="button" class="icon-btn" id="quick-add-wasd-layout-btn">+ JOYSTICK + E + SPACE LAYOUT</button>
+            <button type="button" class="icon-btn" id="quick-add-joystick-btn">+ 1x1 WASD JOYSTICK</button>
             <button type="button" class="icon-btn" id="quick-add-cursor-btn">+ VIRTUAL CURSOR</button>
             <button type="button" class="icon-btn" id="quick-add-click-btn">+ LEFT CLICK</button>
             <button type="button" class="icon-btn" id="quick-add-key-prompt-btn">+ CUSTOM KEY</button>
@@ -557,7 +562,7 @@
 
           <div class="key-grid-designer-wrap">
             <div class="key-grid-designer-header">
-              <span>// SNAP-TO-GRID KEYPAD BUILDER (DRAG ANY KEY TO SNAP INTO CELL)</span>
+              <span>// SNAP-TO-GRID KEYPAD BUILDER (DRAG ANY KEY OR 1x1 JOYSTICK TO SNAP INTO CELL)</span>
               <span>8 COLS &times; 4 ROWS</span>
             </div>
             <div id="key-grid-board" class="key-grid-board"></div>
@@ -681,16 +686,15 @@
   <!-- DEV LIGHTBOX PREVIEW MODAL -->
   <div id="dev-fullscreen-modal" class="lightbox-modal" role="dialog" aria-modal="true" aria-hidden="true">
     <div class="lightbox-backdrop-hint">CLICK ANYWHERE OUTSIDE VIEWER TO CLOSE [ESC]</div>
-    <div class="lightbox-content-wrapper" style="width:88vw; max-width:88vw;">
+    <div class="lightbox-content-wrapper is-app-mode">
       <div class="lightbox-caption-bar">
-        <span id="dev-fs-caption">Untitled Project (WEB APP) // [1/1]</span>
         <div class="lightbox-caption-right">
           <button type="button" id="dev-fs-keys-btn" class="mini-action-btn" style="display:none;">&#9000; CONTROLS</button>
           <a id="dev-fs-open-tab" class="mini-action-btn" href="#" target="_blank" rel="noopener noreferrer" style="text-decoration:none;">OPEN TAB &#8599;</a>
           <button type="button" id="dev-fs-close" class="mini-action-btn lightbox-exit-btn">&#10005; EXIT</button>
         </div>
       </div>
-      <div id="dev-fs-stage-wrap" class="dev-fs-stage-wrap" style="position:relative; width:100%; height:82vh; background:#0b0d0f; overflow:hidden;">
+      <div id="dev-fs-stage-wrap" class="dev-fs-stage-wrap" style="position:relative; width:100%; height:calc(100% - 48px); background:#08090b; overflow:hidden; display:flex; align-items:center; justify-content:center;">
         <div id="dev-fs-keys-popover" class="keys-hud-popover" style="display:none;"></div>
 
         <!-- GAME CROSSHAIR VIRTUAL CURSOR IN DEV PREVIEW -->
@@ -742,6 +746,13 @@
       yRatio: 0.5,
       isDragging: false,
       isMouseDownHold: false
+    };
+
+    const WASD_DIRECTION_SPECS = {
+      W: { key: "w", code: "KeyW", keyCode: 87 },
+      A: { key: "a", code: "KeyA", keyCode: 65 },
+      S: { key: "s", code: "KeyS", keyCode: 83 },
+      D: { key: "d", code: "KeyD", keyCode: 68 }
     };
 
     function revokeAllObjectUrls() {
@@ -973,6 +984,10 @@
     }
 
     const KEY_SPEC_MAP = {
+      JOYSTICK: { tokenName: "JOYSTICK", label: "WASD", key: "__JOYSTICK__", code: "VirtualJoystick", keyCode: 0, isJoystick: true },
+      STICK: { tokenName: "JOYSTICK", label: "WASD", key: "__JOYSTICK__", code: "VirtualJoystick", keyCode: 0, isJoystick: true },
+      WASD_STICK: { tokenName: "JOYSTICK", label: "WASD", key: "__JOYSTICK__", code: "VirtualJoystick", keyCode: 0, isJoystick: true },
+      WASD: { tokenName: "JOYSTICK", label: "WASD", key: "__JOYSTICK__", code: "VirtualJoystick", keyCode: 0, isJoystick: true },
       CURSOR: { tokenName: "CURSOR", label: "CURSOR", key: "__CURSOR__", code: "VirtualCursor", keyCode: 0, isCursorToggle: true },
       MOUSE: { tokenName: "CURSOR", label: "CURSOR", key: "__CURSOR__", code: "VirtualCursor", keyCode: 0, isCursorToggle: true },
       POINTER: { tokenName: "CURSOR", label: "CURSOR", key: "__CURSOR__", code: "VirtualCursor", keyCode: 0, isCursorToggle: true },
@@ -987,14 +1002,14 @@
       ARROWDOWN: { tokenName: "DOWN", label: "↓", key: "ArrowDown", code: "ArrowDown", keyCode: 40 },
       "↓": { tokenName: "DOWN", label: "↓", key: "ArrowDown", code: "ArrowDown", keyCode: 40 },
       LEFT: { tokenName: "LEFT", label: "←", key: "ArrowLeft", code: "ArrowLeft", keyCode: 37 },
-      ARROWLEFT: { tokenName: "LEFT", label: "←", key: "ArrowLeft", code: "ArrowLeft", keyCode: 37 },
+      ARROWLEFT: { tokenName: "LEFT", label: "←", key: "ArrowLeft", keyCode: 37 },
       "←": { tokenName: "LEFT", label: "←", key: "ArrowLeft", code: "ArrowLeft", keyCode: 37 },
       RIGHT: { tokenName: "RIGHT", label: "→", key: "ArrowRight", code: "ArrowRight", keyCode: 39 },
       ARROWRIGHT: { tokenName: "RIGHT", label: "→", key: "ArrowRight", code: "ArrowRight", keyCode: 39 },
       "→": { tokenName: "RIGHT", label: "→", key: "ArrowRight", code: "ArrowRight", keyCode: 39 },
       SHIFT: { tokenName: "SHIFT", label: "SHIFT", key: "Shift", code: "ShiftLeft", keyCode: 16 },
       CTRL: { tokenName: "CTRL", label: "CTRL", key: "Control", code: "ControlLeft", keyCode: 17 },
-      CONTROL: { tokenName: "CTRL", label: "CTRL", key: "Control", keyCode: 17 },
+      CONTROL: { tokenName: "CTRL", label: "CTRL", key: "Control", code: "ControlLeft", keyCode: 17 },
       ALT: { tokenName: "ALT", label: "ALT", key: "Alt", code: "AltLeft", keyCode: 18 },
       ENTER: { tokenName: "ENTER", label: "ENTER", key: "Enter", code: "Enter", keyCode: 13 },
       TAB: { tokenName: "TAB", label: "TAB", key: "Tab", code: "Tab", keyCode: 9 },
@@ -1042,14 +1057,12 @@
         const actionDesc = parts.length >= 2 ? parts.slice(1).join(":").trim() : "";
         const upperKey = rawKeyPart.toUpperCase().replace(/\s+/g, "");
 
-        if (upperKey === "WASD") {
-          [
-            { ch: "W", c: 2, r: 0 },
-            { ch: "A", c: 1, r: 1 },
-            { ch: "S", c: 2, r: 1 },
-            { ch: "D", c: 3, r: 1 }
-          ].forEach((item) => {
-            rawButtons.push({ ...resolveKeySpec(item.ch), desc: actionDesc || "Move", col: item.c, row: item.r });
+        if (upperKey === "WASD" || upperKey === "JOYSTICK" || upperKey === "STICK" || upperKey === "WASD_STICK") {
+          rawButtons.push({
+            ...resolveKeySpec("JOYSTICK"),
+            desc: actionDesc || "Move",
+            col: coordCol,
+            row: coordRow
           });
         } else if (upperKey === "ARROWS" || upperKey === "ARROWKEYS") {
           [
@@ -1068,6 +1081,31 @@
           rawButtons.push({ ...resolveKeySpec(rawKeyPart), desc: actionDesc, col: coordCol, row: coordRow });
         }
       });
+
+      const moveWasdIndices = [];
+      rawButtons.forEach((b, idx) => {
+        if (
+          ["W", "A", "S", "D"].includes(b.tokenName) &&
+          (!b.desc || /^move$/i.test(b.desc.trim()))
+        ) {
+          moveWasdIndices.push(idx);
+        }
+      });
+
+      if (moveWasdIndices.length === 4) {
+        const firstWasd = rawButtons[moveWasdIndices[0]];
+        const joyCol = firstWasd.col !== null ? firstWasd.col : 1;
+        const joyRow = firstWasd.row !== null ? firstWasd.row : 0;
+        const filtered = rawButtons.filter((_, idx) => !moveWasdIndices.includes(idx));
+        filtered.unshift({
+          ...resolveKeySpec("JOYSTICK"),
+          desc: firstWasd.desc || "Move",
+          col: joyCol,
+          row: joyRow
+        });
+        rawButtons.length = 0;
+        rawButtons.push(...filtered);
+      }
 
       const occupied = new Set();
       rawButtons.forEach((b) => {
@@ -1118,11 +1156,14 @@
           if (matchIdx !== -1) {
             const b = buttons[matchIdx];
             const keyEl = document.createElement("div");
-            keyEl.className = "designer-key-item" + (b.isCursorToggle ? " is-cursor-key" : "");
+            keyEl.className =
+              "designer-key-item" +
+              (b.isCursorToggle ? " is-cursor-key" : "") +
+              (b.isJoystick ? " is-joystick-key" : "");
             keyEl.draggable = true;
             keyEl.innerHTML = `
               <button type="button" class="designer-key-del" title="Remove Key">&times;</button>
-              <span class="designer-key-main">${b.label}</span>
+              <span class="designer-key-main">${b.isJoystick ? "&#9678; WASD" : b.label}</span>
               ${b.desc ? `<span class="designer-key-sub">${b.desc}</span>` : ""}
             `;
 
@@ -1190,19 +1231,16 @@
         const target = (doc && (doc.querySelector("canvas") || doc.body || doc.documentElement)) || null;
         if (!target) return;
 
-        const rect = target.getBoundingClientRect();
-        const w = rect.width || frame.clientWidth || 800;
-        const h = rect.height || frame.clientHeight || 600;
-        const clientX = rect.left + xRatio * w;
-        const clientY = rect.top + yRatio * h;
-        const offsetX = xRatio * w;
-        const offsetY = yRatio * h;
+        const w = target.clientWidth || frame.clientWidth || 1280;
+        const h = target.clientHeight || frame.clientHeight || 720;
+        const clientX = xRatio * w;
+        const clientY = yRatio * h;
 
         win.__azcoreVirtualCursorActive = true;
-        if (typeof win.mouseX === "number") win.mouseX = offsetX;
-        if (typeof win.mouseY === "number") win.mouseY = offsetY;
-        if (typeof win.pmouseX === "number") win.pmouseX = offsetX;
-        if (typeof win.pmouseY === "number") win.pmouseY = offsetY;
+        if (typeof win.mouseX === "number") win.mouseX = clientX;
+        if (typeof win.mouseY === "number") win.mouseY = clientY;
+        if (typeof win.pmouseX === "number") win.pmouseX = clientX;
+        if (typeof win.pmouseY === "number") win.pmouseY = clientY;
         if (eventType === "mousedown") win.mouseIsPressed = true;
         if (eventType === "mouseup") win.mouseIsPressed = false;
 
@@ -1478,29 +1516,195 @@
           <span>&#9783; DRAG KEYPAD</span>
           <span>TAP / HOLD KEYS</span>
         </div>
-        <div class="keys-pad-grid" style="grid-template-columns: repeat(${colSpan}, minmax(54px, auto)); grid-template-rows: repeat(${rowSpan}, 50px);">
+        <div class="keys-pad-grid" style="grid-template-columns: repeat(${colSpan}, minmax(58px, auto)); grid-template-rows: repeat(${rowSpan}, 58px);">
           ${buttons
-            .map(
-              (b) => `
-            <div
-              role="button"
-              tabindex="-1"
-              class="virtual-key-btn ${b.isCursorToggle ? "vkey-cursor-toggle" : ""}"
-              style="grid-column: ${b.col - minCol + 1}; grid-row: ${b.row - minRow + 1};"
-              data-key="${b.key}"
-              data-code="${b.code}"
-              data-keycode="${b.keyCode}"
-              data-cursor-toggle="${b.isCursorToggle ? "true" : "false"}"
-              data-mouse-click="${b.isMouseClick ? "true" : "false"}"
-            >
-              <span class="vkey-main">${b.isCursorToggle ? "+ " + b.label : b.label}</span>
-              ${b.desc ? `<span class="vkey-sub">${b.desc}</span>` : ""}
-            </div>
-          `
-            )
+            .map((b) => {
+              const gridStyle = `grid-column: ${b.col - minCol + 1}; grid-row: ${b.row - minRow + 1};`;
+
+              if (b.isJoystick) {
+                return `
+                  <div
+                    role="slider"
+                    aria-label="WASD Joystick (${b.desc || "Move"})"
+                    tabindex="-1"
+                    class="virtual-key-btn vkey-joystick-box"
+                    style="${gridStyle}"
+                    data-joystick="true"
+                  >
+                    <span class="vjoy-dir vjoy-w">W</span>
+                    <span class="vjoy-dir vjoy-a">A</span>
+                    <span class="vjoy-dir vjoy-s">S</span>
+                    <span class="vjoy-dir vjoy-d">D</span>
+                    <div class="vjoy-base">
+                      <div class="vjoy-stick"></div>
+                    </div>
+                  </div>
+                `;
+              }
+
+              return `
+                <div
+                  role="button"
+                  tabindex="-1"
+                  class="virtual-key-btn ${b.isCursorToggle ? "vkey-cursor-toggle" : ""}"
+                  style="${gridStyle}"
+                  data-key="${b.key}"
+                  data-code="${b.code}"
+                  data-keycode="${b.keyCode}"
+                  data-cursor-toggle="${b.isCursorToggle ? "true" : "false"}"
+                  data-mouse-click="${b.isMouseClick ? "true" : "false"}"
+                >
+                  <span class="vkey-main">${b.isCursorToggle ? "+ " + b.label : b.label}</span>
+                  ${b.desc ? `<span class="vkey-sub">${b.desc}</span>` : ""}
+                </div>
+              `;
+            })
             .join("")}
         </div>
       `;
+    }
+
+    function bindVirtualJoystick(joyEl) {
+      if (!joyEl || joyEl.dataset.bound === "true") return;
+      joyEl.dataset.bound = "true";
+
+      const stickEl = joyEl.querySelector(".vjoy-stick");
+      const activeDirs = new Set();
+      let isDragging = false;
+      let activeTouchId = null;
+      let repeatTimer = null;
+
+      function updateActiveDirections(nextDirs) {
+        for (const dir of Array.from(activeDirs)) {
+          if (!nextDirs.has(dir)) {
+            activeDirs.delete(dir);
+            joyEl.classList.remove(`dir-${dir.toLowerCase()}`);
+            triggerSyntheticKeyEvent("keyup", WASD_DIRECTION_SPECS[dir]);
+          }
+        }
+        for (const dir of nextDirs) {
+          if (!activeDirs.has(dir)) {
+            activeDirs.add(dir);
+            joyEl.classList.add(`dir-${dir.toLowerCase()}`);
+            triggerSyntheticKeyEvent("keydown", WASD_DIRECTION_SPECS[dir]);
+          }
+        }
+
+        if (activeDirs.size > 0 && !repeatTimer) {
+          repeatTimer = setInterval(() => {
+            activeDirs.forEach((dir) => {
+              triggerSyntheticKeyEvent("keydown", WASD_DIRECTION_SPECS[dir]);
+            });
+          }, 65);
+        } else if (activeDirs.size === 0 && repeatTimer) {
+          clearInterval(repeatTimer);
+          repeatTimer = null;
+        }
+      }
+
+      function handleMoveAtPoint(clientX, clientY) {
+        const rect = joyEl.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        const maxRadius = Math.max(12, Math.min(rect.width, rect.height) * 0.32);
+
+        const dx = clientX - cx;
+        const dy = clientY - cy;
+        const dist = Math.hypot(dx, dy);
+        const angle = Math.atan2(dy, dx);
+
+        const clampedDist = Math.min(dist, maxRadius);
+        const offsetX = Math.cos(angle) * clampedDist;
+        const offsetY = Math.sin(angle) * clampedDist;
+
+        if (stickEl) {
+          stickEl.style.transform = `translate3d(${offsetX.toFixed(1)}px, ${offsetY.toFixed(1)}px, 0)`;
+        }
+
+        const deadzone = maxRadius * 0.28;
+        const nextDirs = new Set();
+
+        if (dist > deadzone) {
+          const normX = dx / dist;
+          const normY = dy / dist;
+          if (normY < -0.38) nextDirs.add("W");
+          if (normY > 0.38) nextDirs.add("S");
+          if (normX < -0.38) nextDirs.add("A");
+          if (normX > 0.38) nextDirs.add("D");
+        }
+
+        updateActiveDirections(nextDirs);
+      }
+
+      function resetJoystick() {
+        isDragging = false;
+        activeTouchId = null;
+        joyEl.classList.remove("pressed");
+        if (stickEl) stickEl.style.transform = "translate3d(0px, 0px, 0)";
+        updateActiveDirections(new Set());
+      }
+
+      joyEl.addEventListener("mousedown", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        isDragging = true;
+        joyEl.classList.add("pressed");
+        handleMoveAtPoint(e.clientX, e.clientY);
+      });
+
+      window.addEventListener("mousemove", (e) => {
+        if (!isDragging || activeTouchId !== null) return;
+        e.preventDefault();
+        handleMoveAtPoint(e.clientX, e.clientY);
+      });
+
+      window.addEventListener("mouseup", () => {
+        if (!isDragging || activeTouchId !== null) return;
+        resetJoystick();
+      });
+
+      joyEl.addEventListener(
+        "touchstart",
+        (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const touch = e.changedTouches[0];
+          if (!touch) return;
+          isDragging = true;
+          activeTouchId = touch.identifier;
+          joyEl.classList.add("pressed");
+          handleMoveAtPoint(touch.clientX, touch.clientY);
+        },
+        { passive: false }
+      );
+
+      window.addEventListener(
+        "touchmove",
+        (e) => {
+          if (!isDragging || activeTouchId === null) return;
+          for (let i = 0; i < e.changedTouches.length; i++) {
+            if (e.changedTouches[i].identifier === activeTouchId) {
+              e.preventDefault();
+              handleMoveAtPoint(e.changedTouches[i].clientX, e.changedTouches[i].clientY);
+              break;
+            }
+          }
+        },
+        { passive: false }
+      );
+
+      const onTouchEnd = (e) => {
+        if (!isDragging || activeTouchId === null) return;
+        for (let i = 0; i < e.changedTouches.length; i++) {
+          if (e.changedTouches[i].identifier === activeTouchId) {
+            resetJoystick();
+            break;
+          }
+        }
+      };
+
+      window.addEventListener("touchend", onTouchEnd);
+      window.addEventListener("touchcancel", onTouchEnd);
     }
 
     function bindInteractiveVirtualKeys(containerEl) {
@@ -1520,6 +1724,12 @@
 
       containerEl.querySelectorAll(".virtual-key-btn").forEach((btn) => {
         if (btn.dataset.bound === "true") return;
+
+        if (btn.dataset.joystick === "true") {
+          bindVirtualJoystick(btn);
+          return;
+        }
+
         btn.dataset.bound = "true";
 
         if (btn.dataset.cursorToggle === "true") {
@@ -1801,11 +2011,9 @@
       const modal = document.getElementById("dev-fullscreen-modal");
       const iframe = document.getElementById("dev-fs-iframe");
       const openTabBtn = document.getElementById("dev-fs-open-tab");
-      const captionEl = document.getElementById("dev-fs-caption");
       const keysBtn = document.getElementById("dev-fs-keys-btn");
       const keysPopover = document.getElementById("dev-fs-keys-popover");
 
-      captionEl.textContent = `${state.title || "Untitled Project"} (INTERACTIVE APP)`;
       openTabBtn.href = embedUrl;
       iframe.src = embedUrl;
 
@@ -1963,12 +2171,14 @@
         })
         .join("");
 
-      const folderClean = (state.folder || "new-project").trim().replace(/^\/+|\/+$/g, "");
+      const isMainImg = mainItem && !isTargetableInteractiveType(mainItem.type) && isImageFileName(mainItem.token);
 
       container.innerHTML = `
         <article class="project-card" style="padding:20px;">
           <div class="project-top-layout" style="grid-template-columns: 1fr;">
-            <div class="project-main-img-wrap" id="dev-preview-main-stage" style="min-height:280px; max-height:340px;"></div>
+            <div class="project-main-stage-cell">
+              <div class="project-main-img-wrap ${isMainImg ? "is-image-wrap" : "is-interactive-wrap"}" id="dev-preview-main-stage" style="min-height:240px; max-height:340px;"></div>
+            </div>
             <div class="project-info-col">
               <div>
                 <div class="project-code">${state.code || "PRJ // ARCHIVE"}</div>
@@ -1980,14 +2190,18 @@
               </div>
 
               <div class="photo-stack-trigger" id="dev-stack-trigger">
+                <span class="corner-tick tl"></span>
+                <span class="corner-tick tr"></span>
+                <span class="corner-tick bl"></span>
+                <span class="corner-tick br"></span>
                 <div class="stack-visual">${stackVisualHtml || `<div class="stack-card-badge">[EMPTY]</div>`}</div>
                 <div class="stack-meta">
-                  <span class="stack-title">PROJECT STACK (${ordered.length} LINKED)</span>
+                  <span class="stack-title">// PROJECT MEDIA STACK [${ordered.length}]</span>
                   <span class="stack-subtitle" id="dev-stack-subtitle">
                     ${
                       state.drawerOpen
-                        ? "Click stack to collapse project grid &#8593;"
-                        : "Click stack to reveal full project grid &#8595;"
+                        ? "TAP TO COLLAPSE GALLERY &#8593;"
+                        : "TAP TO EXPAND GALLERY &#8595;"
                     }
                   </span>
                 </div>
@@ -1996,10 +2210,6 @@
           </div>
 
           <div id="dev-preview-drawer" class="project-expanded-drawer ${state.drawerOpen ? "open" : ""}">
-            <div class="drawer-header">
-              <span>// LINKED FROM assets/projects/${folderClean}/project.txt (${ordered.length} ITEMS)</span>
-              <span>STACK ITEMS SHOW ONLY THE RUN BUTTON</span>
-            </div>
             <div class="project-gallery-grid" id="dev-preview-gallery-grid"></div>
           </div>
         </article>
@@ -2010,7 +2220,7 @@
         mainStage.appendChild(createDevMediaElement(mainItem, false));
       } else {
         mainStage.innerHTML = `
-          <div class="universal-asset-card" style="min-height:280px;">
+          <div class="universal-asset-card" style="min-height:240px;">
             <div class="universal-asset-icon">+</div>
             <div class="universal-asset-label">ADD AN ASSET TO PREVIEW</div>
           </div>
@@ -2031,8 +2241,8 @@
         state.drawerOpen = !state.drawerOpen;
         document.getElementById("dev-preview-drawer").classList.toggle("open", state.drawerOpen);
         document.getElementById("dev-stack-subtitle").innerHTML = state.drawerOpen
-          ? "Click stack to collapse project grid &#8593;"
-          : "Click stack to reveal full project grid &#8595;";
+          ? "TAP TO COLLAPSE GALLERY &#8593;"
+          : "TAP TO EXPAND GALLERY &#8595;";
       });
     }
 
@@ -2099,7 +2309,7 @@
           if (lnk) addAssetToken(`run:${lnk}`, thumb, true);
         } else if (/^MAIN(_IMAGE|_STL|_MODEL|_GLB|_VIDEO|_FILE|_ITCH|_LINK|_APP)?\s*:/i.test(line)) {
           inDesc = false;
-          rawMain = line.replace(/^MAIN(_IMAGE|_STL|_MODEL|_GLB|_VIDEO|_FILE|_ITCH|_LINK|_APP)?\s*:\s*/i, "").trim();
+          rawMain = line.replace(/^MAIN(_IMAGE|_STL|_MODEL|_GLB|_VIDEO|_FILE|_ITCH|_LINK|_APP)?\s*:/i, "").trim();
           const { baseToken, thumb } = splitTokenAndThumb(rawMain);
           addAssetToken(baseToken, thumb, true);
         } else if (/^(IMAGES|FILES|ASSETS|MODELS|VIDEOS)\s*:/i.test(line)) {
@@ -2352,7 +2562,10 @@
       document.getElementById("save-disk-btn").addEventListener("click", saveProjectDirectlyToDisk);
 
       document.getElementById("quick-add-wasd-layout-btn").addEventListener("click", () => {
-        appendQuickControlToken("E:Interact@0:0, W:Move@2:0, SPACE:Jump@4:0, A:Move@1:1, S:Move@2:1, D:Move@3:1");
+        appendQuickControlToken("E:Interact@0:0, JOYSTICK:Move@1:0, SPACE:Jump@2:0");
+      });
+      document.getElementById("quick-add-joystick-btn").addEventListener("click", () => {
+        appendQuickControlToken("JOYSTICK:Move");
       });
       document.getElementById("quick-add-cursor-btn").addEventListener("click", () => {
         appendQuickControlToken("CURSOR:Crosshair");
@@ -2361,7 +2574,7 @@
         appendQuickControlToken("CLICK:Fire");
       });
       document.getElementById("quick-add-key-prompt-btn").addEventListener("click", () => {
-        const k = prompt("Enter Key (e.g. Q, E, R, 1, 2, SHIFT, SPACE):", "E");
+        const k = prompt("Enter Key (e.g. JOYSTICK, Q, E, R, 1, 2, SHIFT, SPACE):", "E");
         if (!k) return;
         const desc = prompt("Optional short label (e.g. Interact, Spawn, Boost):", "");
         appendQuickControlToken(desc ? `${k.trim()}:${desc.trim()}` : k.trim());
