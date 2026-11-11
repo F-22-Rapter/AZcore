@@ -17,7 +17,7 @@ const PORTFOLIO_CONFIG = {
   // -------------------- TAB 1: ABOUT ME & RESUME CONFIG --------------------
   about: {
     name: "ALEXANDER ZHUK",
-    headline: "ENGINEERING, FABRICATION & VISUAL DESIGN",
+    headline: "ABOUT ME",
     folder: "assets/about/",
     profileImage: "profile.webp",
     resume: {
@@ -26,8 +26,8 @@ const PORTFOLIO_CONFIG = {
       subtitle: ""
     },
     bioParagraphs: [
-      "I am a Civil Engineering student, fabricator, and photographer based in Chicago. My work sits at the intersection of structural systems, custom mechanical/electrical fabrication, and architectural & night-sky photography.",
-      "Whether leading tractive battery accumulator design and thermal simulation, machining custom drivetrain mounts on a manual lathe, or capturing high-resolution panoramic astrophotography, I approach every project with precision CAD workflows and hands-on execution."
+      "Hello! My name is Alex and ever since I was a kid ive always loved working on hands on projects",
+      "Currently I am studying Civil Engineering at IIT, working as High voltage lead for our FSAE team, and a photographer based in Chicago.",
     ],
     quickSpecs: [
       { label: "DISCIPLINE", value: "Civil & Structural Engineering" },
@@ -46,7 +46,7 @@ const PORTFOLIO_CONFIG = {
       },
       {
         category: "DIGITAL MEDIA",
-        items: ["Lightroom Classic", "DaVinci Resolve", "Photoshop", "Microsoft 365"]
+        items: ["Lightroom Classic", "DaVinci Resolve",   "Photoshop", "Microsoft 365"]
       },
       {
         category: "LANGUAGES & DEVELOPMENT",
@@ -64,7 +64,7 @@ const PORTFOLIO_CONFIG = {
   projectsConfig: {
     baseFolder: "assets/projects/",
     textFileName: "project.txt",
-    foldersToCheck: ["LARP", "fabrication", "Ansys sim aero", "Powertrain mounting", "Coin hunter", "particle sim"]
+    foldersToCheck: ["LARP",  "Ansys sim aero", "Powertrain mounting",  "Fabricationpt2","fabrication","Coin hunter", "particle sim"]
   },
 
   // -------------------- TAB 3: PHOTOGRAPHY FOLDER CONFIG --------------------

@@ -1,6 +1,7 @@
-TITLE: Suspension
-CODE: PRJ-02 // FSAE ELECTRIC
-TAGS: Mill Machining, Lathe machining, Metal working, Fabrication
-MAIN_IMAGE: Image (8).webp
-IMAGES: Image (1).webp, Image (2).webp, Image (3).webp, Image (4).webp, Image (5).webp, Image (6).webp, Image (7).webp, Image (8).webp
-DESCRIPTION: fabricated stuff for suspension
+TITLE: FSAE Fabrication Experience
+CODE: PRJ-02 // FABRICATION
+TAGS: Mill Machining, Lathe Machining, Metalworking
+MAIN_FILE: Image (8).webp
+ASSETS: Image (8).webp, Image (1).webp, Image (2).webp, Image (3).webp, Image (4).webp, Image (5).webp, Image (6).webp, Image (7).webp
+DESCRIPTION:
+Machined and assembled rod-end assembly for suspension sub-team using the manual lathe and mill.

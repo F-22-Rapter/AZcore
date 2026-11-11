@@ -1,9 +1,9 @@
 TITLE: Coin Hunter
-CODE: PRJ-1 // PROGRAMING
-TAGS: Unity, C#, Sprite Art, Sound Design
+CODE: PRJ-01 // PROGRAMING
+TAGS: 2D Game Development,Unity, C#, Sprite Art, Sound Design,UI Implementation,Object-Oriented Programming
 CONTROLS: E:Interact@0:0, JOYSTICK:Move@1:0, SPACE:Dash@2:0, CURSOR:Crosshair@3:0
 MAIN_FILE: app:app/index.html|thumb=coinhunter thumbnail.png
 APP: app/index.html|thumb=coinhunter thumbnail.png
 ASSETS: app:app/index.html|thumb=coinhunter thumbnail.png
 DESCRIPTION:
-blaw blaw
+Developed a 2D top-down arcade game in Unity using C#. Programmed core gameplay mechanics including player movement controllers, collision detection for coin collection, and an interactive shop system to upgrade abilities.

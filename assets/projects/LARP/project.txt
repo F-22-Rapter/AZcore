@@ -1,7 +1,7 @@
 TITLE: Tractive Battery Accumulator & Active Cooling Loop
 CODE: PRJ-01 // FSAE ELECTRIC
-TAGS: SolidWorks, Ansys Fluent CFD, High-Voltage 72s6p, Thermal Management
-MAIN_IMAGE: main.glb
-IMAGES: main.glb, 1.jpg, 2.jpg, 3.jpg
+TAGS: SolidWorks, Ansys Fluent CFD, High-Voltage Safety, Thermal Management, Cross-Team collaboration
+MAIN_FILE: 2smallersegment.glb
+ASSETS: 2smallersegment.glb, fullassy.jpg, transassy.jpg, fullone.jpg, side view.jpg, transparentside.jpg, insidesegment.jpg
 DESCRIPTION:
-Designed, modeled, and thermally simulated a 72s6p tractive battery accumulator module system with an active air-cooling loop. Led a six-engineer subteam through structural enclosure layout, busbar fabrication, and Ansys Fluent CFD thermal validation.
+Designed, modeled, and thermally simulated a 72s6p tractive battery with an active cooling loop. Engineered a lightweight segment structure using multiple internal plate and active internal fan which transferred heat to the liquid cooling loop. Worked with other sub-team leads to effectively integrate tractive system and ensure safety of the vehicle.

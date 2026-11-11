@@ -1,0 +1,7 @@
+TITLE: Go-kart Fabrication Experience
+CODE: PRJ-01 // FABRICATION
+TAGS: Mill Machining, Lathe Machining,Welding ,Metalworking,Solidworks
+MAIN_FILE: 20260306_180036777_iOS.jpg
+ASSETS: 20260306_180036777_iOS.jpg, 20260306_174746438_iOS.jpg, 20260305_014352634_iOS.jpg, 20260302_033911739_iOS.png, 20260306_192259412_iOS.jpg, 20260306_192400488_iOS.jpg, 20260306_192248745_iOS.jpg
+DESCRIPTION:
+Machined and welded a shaft extender for a Go-Kart project using a manual lathe and mill.

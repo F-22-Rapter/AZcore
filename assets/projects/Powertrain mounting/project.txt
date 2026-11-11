@@ -1,7 +1,7 @@
-TITLE: Powertrain mounting System
-CODE: PRJ // FSAE ELECTRIC
-TAGS: SolidWorks, Ansys Fluent CFD, High-Voltage 72s6p, Thermal Management
+TITLE: Powertrain Mounting System
+CODE: PRJ-03 // FSAE ELECTRIC
+TAGS: Jig & Fixture Design,SolidWorks, 3d-Printing,Design Manufacturing
 MAIN_FILE: 4.png
 ASSETS: 4.png, 5.png, 20260226_015208533_iOS.jpg, 20260226_220328764_iOS.jpg
 DESCRIPTION:
-Project description goes here.
+Engineered and fabricated a custom welding jig to align the FSAE powertrain and shaft brackets. Utilized a precision setup of wooden dowels and clear PVC tubing spacers to maintain strict tolerances while managing heat during MIG tacking.
