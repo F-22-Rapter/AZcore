@@ -4,4 +4,4 @@ TAGS: Ansys Fluent,Ansys Meshing,CFD, Solidworks,Data Visualization
 MAIN_FILE: 9.png
 ASSETS: 9.png, 3.png, 6.png, 13.png, 11.png, 12.png
 DESCRIPTION:
-Modeled a simplified CAD of the full chassis and aero package, and conducted CFD simulations using Ansys Fluent. Configured virtual wind tunnel and generated 3D streamline plots to analyze aerodynamic interactions across the vehicle. Concluded with viable data, demonstrating an accurate lift-to-drag (L/D) ratio of 1.44.
+Modeled a simplified CAD of the full chassis and aero package, and conducted CFD simulations using Ansys Fluent. Configured a virtual wind tunnel utilizing Moving Reference Frames (MRF) for rotating wheels and a moving ground boundary. Generated 3D streamline plots to analyze aerodynamic interactions across the vehicle. Concluded with viable data, demonstrating an accurate lift-to-drag (L/D) ratio of 1.44.
