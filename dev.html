@@ -10,6 +10,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <!-- Load script.js so PORTFOLIO_CONFIG skills & sub-name presets are synced -->
+  <script defer src="script.js"></script>
   <style>
     .dev-stage {
       position: relative;
@@ -130,6 +132,43 @@
       resize: vertical;
       font-family: var(--font-sans);
       line-height: 1.5;
+    }
+
+    /* --- Attribute Picker Containers (Sub-Name & Skills) --- */
+    .dev-attr-picker-box {
+      background: rgba(12, 14, 16, 0.92);
+      border: 1px solid var(--border-cad);
+      padding: 10px 12px;
+      margin-top: 4px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .dev-attr-pill {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      padding: 4px 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.18s ease;
+      user-select: none;
+    }
+
+    .dev-attr-pill:hover {
+      border-color: var(--accent);
+      color: #fff;
+      background: rgba(217, 40, 4, 0.15);
+    }
+
+    .dev-attr-pill.selected {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #ffffff;
+      font-weight: 700;
+      box-shadow: 0 0 10px rgba(217, 40, 4, 0.4);
     }
 
     .dev-adder-box {
@@ -517,7 +556,7 @@
       <!-- LEFT COLUMN: BUILDER CONTROLS -->
       <div class="cad-panel">
         <div class="panel-header">
-          <span class="panel-title">// 01. PROJECT METADATA &amp; SNAP-GRID CONTROLS</span>
+          <span class="panel-title">// 01. PROJECT METADATA, ATTRIBUTES &amp; SNAP-GRID CONTROLS</span>
           <button type="button" id="reset-form-btn" class="mini-action-btn">NEW / CLEAR</button>
         </div>
 
@@ -527,9 +566,19 @@
             <input type="text" id="dev-folder" class="dev-input" placeholder="e.g. coin-hunter" value="new-project" />
           </div>
           <div class="dev-field-group">
-            <label class="dev-label" for="dev-code">PROJECT CODE <span>HEADER TAG</span></label>
-            <input type="text" id="dev-code" class="dev-input" placeholder="PRJ // 01 — ENGINEERING" value="PRJ // ARCHIVE" />
+            <label class="dev-label" for="dev-code-prefix">PROJECT ID PREFIX <span>BEFORE //</span></label>
+            <input type="text" id="dev-code-prefix" class="dev-input" placeholder="e.g. PRJ-01" value="PRJ-01" />
           </div>
+        </div>
+
+        <!-- PROJECT SUB-NAME ATTRIBUTE (e.g. FSAE ELECTRIC in PRJ-01 // FSAE ELECTRIC) -->
+        <div class="dev-field-group">
+          <label class="dev-label" for="dev-subname">
+            PROJECT SUB-NAME ATTRIBUTE (SEARCHABLE CATEGORY)
+            <span id="dev-full-code-preview">PRJ-01 // FSAE ELECTRIC</span>
+          </label>
+          <input type="text" id="dev-subname" class="dev-input" placeholder="e.g. FSAE ELECTRIC, FABRICATION, SIMULATION & CFD" value="FSAE ELECTRIC" />
+          <div id="dev-subname-picker" class="dev-attr-picker-box"></div>
         </div>
 
         <div class="dev-field-group">
@@ -537,9 +586,13 @@
           <input type="text" id="dev-title" class="dev-input" placeholder="e.g. Coin Hunter 1.2 / Particle Simulator" />
         </div>
 
+        <!-- SKILL ATTRIBUTES WITH CLICKABLE SELECTOR LIST -->
         <div class="dev-field-group">
-          <label class="dev-label" for="dev-tags">SKILL / TECH TAGS <span>COMMA SEPARATED</span></label>
-          <input type="text" id="dev-tags" class="dev-input" placeholder="e.g. Unity, C#, WebGL, p5.js" />
+          <label class="dev-label" for="dev-tags">
+            SKILL ATTRIBUTES <span>CLICK SKILLS BELOW TO TOGGLE OR TYPE COMMA-SEPARATED</span>
+          </label>
+          <input type="text" id="dev-tags" class="dev-input" placeholder="e.g. SolidWorks, Ansys Fluent CFD, Li-Ion Pack Assembly" />
+          <div id="dev-skills-picker" class="dev-attr-picker-box"></div>
         </div>
 
         <!-- INTERACTIVE CONTROLS + 2D SNAP GRID DESIGNER -->
@@ -635,11 +688,11 @@
         <div id="asset-list-editor" class="asset-list-editor"></div>
       </div>
 
-      <!-- RIGHT COLUMN: LIVE CARD PREVIEW & DIRECT DISK SAVE -->
+      <!-- RIGHT COLUMN: LIVE 2-WIDE CARD + DETAIL PREVIEW & DIRECT DISK SAVE -->
       <div style="display:flex; flex-direction:column; gap:24px;">
         <div class="cad-panel">
           <div class="panel-header">
-            <span class="panel-title">// 03. LIVE PROJECT CARD &amp; STACK PREVIEW</span>
+            <span class="panel-title">// 03. LIVE 2-WIDE GRID CARD &amp; FULL MODAL PREVIEW</span>
             <span class="telemetry-badge" id="preview-main-badge">MAIN: NONE</span>
           </div>
           <div id="dev-live-card-preview"></div>
@@ -718,14 +771,15 @@
   </div>
 
   <script>
-    const GRID_COLS = 8;
-    const GRID_ROWS = 4;
+    const DEV_GRID_COLS = 8;
+    const DEV_GRID_ROWS = 4;
 
     const state = {
       rootDirHandle: null,
       projectsDirHandle: null,
       folder: "new-project",
-      code: "PRJ // ARCHIVE",
+      codePrefix: "PRJ-01",
+      subName: "FSAE ELECTRIC",
       title: "",
       tags: "",
       keys: "",
@@ -754,6 +808,130 @@
       S: { key: "s", code: "KeyS", keyCode: 83 },
       D: { key: "d", code: "KeyD", keyCode: 68 }
     };
+
+    function getFullCodeString() {
+      const prefix = (state.codePrefix || "PRJ").trim();
+      const sub = (state.subName || "ARCHIVE").trim().toUpperCase();
+      return sub ? `${prefix} // ${sub}` : prefix;
+    }
+
+    function getParsedTagsArray() {
+      return state.tags
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+    }
+
+    /**
+     * Renders the clickable Sub-Name Attribute selector pills in Dev Mode
+     */
+    function renderSubNameAttributePicker() {
+      const box = document.getElementById("dev-subname-picker");
+      if (!box) return;
+
+      const presets =
+        typeof window.getAllPortfolioSubNames === "function"
+          ? window.getAllPortfolioSubNames()
+          : [
+              "FSAE ELECTRIC",
+              "SIMULATION & CFD",
+              "FABRICATION",
+              "INTERACTIVE & SOFTWARE",
+              "STRUCTURAL & CAD"
+            ];
+
+      const currentUpper = (state.subName || "").trim().toUpperCase();
+      if (currentUpper && !presets.includes(currentUpper)) {
+        presets.unshift(currentUpper);
+      }
+
+      box.innerHTML = presets
+        .map((sub) => {
+          const isSelected = sub.toUpperCase() === currentUpper;
+          return `<button type="button" class="dev-attr-pill ${isSelected ? "selected" : ""}" data-subname="${sub}">// ${sub}</button>`;
+        })
+        .join("");
+
+      box.querySelectorAll(".dev-attr-pill").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          state.subName = btn.dataset.subname;
+          document.getElementById("dev-subname").value = state.subName;
+          syncAll();
+        });
+      });
+    }
+
+    /**
+     * Renders the clickable Skill Attribute selector pills in Dev Mode (synced from PORTFOLIO_CONFIG.about.skills)
+     */
+    function renderSkillsAttributePicker() {
+      const box = document.getElementById("dev-skills-picker");
+      if (!box) return;
+
+      const availableSkills =
+        typeof window.getAllPortfolioSkills === "function"
+          ? window.getAllPortfolioSkills()
+          : [
+              "SolidWorks",
+              "AutoCAD",
+              "Revit",
+              "Ansys Fluent CFD",
+              "Inventor",
+              "Blender",
+              "Unity",
+              "Manual Lathe Machining",
+              "Manual Mill Machining",
+              "Li-Ion Pack Assembly",
+              "3D Printing",
+              "Metal Working",
+              "Soldering",
+              "Lightroom Classic",
+              "DaVinci Resolve",
+              "Photoshop",
+              "Microsoft 365",
+              "Python",
+              "C#",
+              "MATLAB",
+              "Javascript"
+            ];
+
+      const selectedTags = getParsedTagsArray();
+      const selectedLower = new Set(selectedTags.map((t) => t.toLowerCase()));
+
+      // Also include any custom tags typed in the input so they show as selected pills
+      selectedTags.forEach((customTag) => {
+        if (!availableSkills.some((s) => s.toLowerCase() === customTag.toLowerCase())) {
+          availableSkills.push(customTag);
+        }
+      });
+
+      box.innerHTML = availableSkills
+        .map((skill) => {
+          const isSelected = selectedLower.has(skill.toLowerCase());
+          return `<button type="button" class="dev-attr-pill ${isSelected ? "selected" : ""}" data-skill="${skill}">${isSelected ? "✓ " : "+ "}${skill}</button>`;
+        })
+        .join("");
+
+      box.querySelectorAll(".dev-attr-pill").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const skill = btn.dataset.skill;
+          const currentList = getParsedTagsArray();
+          const existingIdx = currentList.findIndex(
+            (t) => t.toLowerCase() === skill.toLowerCase()
+          );
+
+          if (existingIdx !== -1) {
+            currentList.splice(existingIdx, 1);
+          } else {
+            currentList.push(skill);
+          }
+
+          state.tags = currentList.join(", ");
+          document.getElementById("dev-tags").value = state.tags;
+          syncAll();
+        });
+      });
+    }
 
     function revokeAllObjectUrls() {
       for (const url of state.localObjectUrls.values()) {
@@ -997,12 +1175,12 @@
       SPACEBAR: { tokenName: "SPACE", label: "SPACE", key: " ", code: "Space", keyCode: 32 },
       UP: { tokenName: "UP", label: "↑", key: "ArrowUp", code: "ArrowUp", keyCode: 38 },
       ARROWUP: { tokenName: "UP", label: "↑", key: "ArrowUp", code: "ArrowUp", keyCode: 38 },
-      "↑": { tokenName: "UP", label: "↑", key: "ArrowUp", code: "ArrowUp", keyCode: 38 },
+      "↑": { tokenName: "UP", label: "↑", key: "ArrowUp", keyCode: "ArrowUp", keyCode: 38 },
       DOWN: { tokenName: "DOWN", label: "↓", key: "ArrowDown", code: "ArrowDown", keyCode: 40 },
       ARROWDOWN: { tokenName: "DOWN", label: "↓", key: "ArrowDown", code: "ArrowDown", keyCode: 40 },
       "↓": { tokenName: "DOWN", label: "↓", key: "ArrowDown", code: "ArrowDown", keyCode: 40 },
       LEFT: { tokenName: "LEFT", label: "←", key: "ArrowLeft", code: "ArrowLeft", keyCode: 37 },
-      ARROWLEFT: { tokenName: "LEFT", label: "←", key: "ArrowLeft", keyCode: 37 },
+      ARROWLEFT: { tokenName: "LEFT", label: "←", key: "ArrowLeft", code: "ArrowLeft", keyCode: 37 },
       "←": { tokenName: "LEFT", label: "←", key: "ArrowLeft", code: "ArrowLeft", keyCode: 37 },
       RIGHT: { tokenName: "RIGHT", label: "→", key: "ArrowRight", code: "ArrowRight", keyCode: 39 },
       ARROWRIGHT: { tokenName: "RIGHT", label: "→", key: "ArrowRight", code: "ArrowRight", keyCode: 39 },
@@ -1047,8 +1225,8 @@
 
         const coordMatch = entry.match(/@(\d+)\s*[:x,]\s*(\d+)$/i);
         if (coordMatch) {
-          coordCol = Math.max(0, Math.min(GRID_COLS - 1, parseInt(coordMatch[1], 10)));
-          coordRow = Math.max(0, Math.min(GRID_ROWS - 1, parseInt(coordMatch[2], 10)));
+          coordCol = Math.max(0, Math.min(DEV_GRID_COLS - 1, parseInt(coordMatch[1], 10)));
+          coordRow = Math.max(0, Math.min(DEV_GRID_ROWS - 1, parseInt(coordMatch[2], 10)));
           cleanEntry = entry.slice(0, coordMatch.index).trim();
         }
 
@@ -1118,9 +1296,9 @@
         if (b.col === null || b.row === null) {
           while (occupied.has(`${nextCol}:${nextRow}`)) {
             nextCol++;
-            if (nextCol >= GRID_COLS) {
+            if (nextCol >= DEV_GRID_COLS) {
               nextCol = 0;
-              nextRow = Math.min(GRID_ROWS - 1, nextRow + 1);
+              nextRow = Math.min(DEV_GRID_ROWS - 1, nextRow + 1);
             }
           }
           b.col = nextCol;
@@ -1145,8 +1323,8 @@
       const buttons = expandVirtualKeysList(state.keys);
       const frag = document.createDocumentFragment();
 
-      for (let r = 0; r < GRID_ROWS; r++) {
-        for (let c = 0; c < GRID_COLS; c++) {
+      for (let r = 0; r < DEV_GRID_ROWS; r++) {
+        for (let c = 0; c < DEV_GRID_COLS; c++) {
           const cell = document.createElement("div");
           cell.className = "key-grid-cell";
           cell.dataset.col = c;
@@ -1821,9 +1999,13 @@
     }
 
     function buildProjectTxtString() {
+      const fullCode = getFullCodeString();
+      const subClean = (state.subName || "ARCHIVE").trim().toUpperCase();
+
       const lines = [
         `TITLE: ${state.title || "Untitled Project"}`,
-        `CODE: ${state.code || "PRJ // ARCHIVE"}`
+        `CODE: ${fullCode}`,
+        `SUBNAME: ${subClean}`
       ];
       if (state.tags.trim()) lines.push(`TAGS: ${state.tags.trim()}`);
       if (state.keys.trim()) lines.push(`CONTROLS: ${state.keys.trim()}`);
@@ -2152,28 +2334,60 @@
       const container = document.getElementById("dev-live-card-preview");
       const ordered = getOrderedVisibleAssets();
       const mainItem = ordered[0] || null;
+      const fullCode = getFullCodeString();
 
       document.getElementById("preview-main-badge").textContent = mainItem
         ? `MAIN: ${mainItem.type}`
         : "MAIN: NONE";
 
-      const tagsList = state.tags.split(",").map((t) => t.trim()).filter(Boolean);
-      const stackVisualHtml = ordered
-        .slice(0, 3)
-        .map((item) => {
-          if (isTargetableInteractiveType(item.type)) {
-            return `<img class="stack-card-img" src="${resolvePreviewThumbUrl(item)}" alt="Run stack preview" decoding="async" />`;
+      const tagsList = getParsedTagsArray();
+
+      // Resolve thumbnail for the 2-wide grid card preview
+      let gridCardThumbSrc = null;
+      if (mainItem) {
+        if (isTargetableInteractiveType(mainItem.type)) {
+          gridCardThumbSrc = resolvePreviewThumbUrl(mainItem);
+        } else if (state.localObjectUrls.has(mainItem.token.toLowerCase()) && isImageFileName(mainItem.token)) {
+          gridCardThumbSrc = state.localObjectUrls.get(mainItem.token.toLowerCase());
+        } else {
+          const firstImgAsset = ordered.find(
+            (a) => state.localObjectUrls.has(a.token.toLowerCase()) && isImageFileName(a.token)
+          );
+          if (firstImgAsset) {
+            gridCardThumbSrc = state.localObjectUrls.get(firstImgAsset.token.toLowerCase());
           }
-          if (state.localObjectUrls.has(item.token.toLowerCase()) && isImageFileName(item.token)) {
-            return `<img class="stack-card-img" src="${state.localObjectUrls.get(item.token.toLowerCase())}" alt="Stack preview" decoding="async" />`;
-          }
-          return `<div class="stack-card-badge">[${item.type}]</div>`;
-        })
-        .join("");
+        }
+      }
 
       const isMainImg = mainItem && !isTargetableInteractiveType(mainItem.type) && isImageFileName(mainItem.token);
 
       container.innerHTML = `
+        <div style="margin-bottom: 18px;">
+          <div class="dev-label" style="margin-bottom: 6px;">
+            <span>// A. 2-WIDE GRID CARD PREVIEW (MAIN PICTURE + TITLE ONLY)</span>
+          </div>
+          <div class="project-grid-card" style="max-width: 380px;">
+            <span class="corner-tick tl"></span>
+            <span class="corner-tick tr"></span>
+            <span class="corner-tick bl"></span>
+            <span class="corner-tick br"></span>
+            <div class="project-grid-thumb" style="aspect-ratio: 16/10;">
+              ${
+                gridCardThumbSrc
+                  ? `<img class="project-grid-img img-loaded" src="${gridCardThumbSrc}" alt="Card Preview" />`
+                  : `<div class="universal-asset-card" style="min-height:100%;"><div class="universal-asset-icon">${mainItem ? "." + mainItem.type : "+"}</div><div class="universal-asset-label">${mainItem ? mainItem.token : "ADD MAIN IMAGE"}</div></div>`
+              }
+            </div>
+            <div class="project-grid-title-bar">
+              <h2 class="project-grid-title">${state.title || "Untitled Project"}</h2>
+              <span class="project-grid-open-icon">&#8599;</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="dev-label" style="margin-bottom: 6px;">
+          <span>// B. EXPANDED MODAL VIEW PREVIEW (OPENS ON CLICK)</span>
+        </div>
         <article class="project-card" style="padding:20px;">
           <div class="project-top-layout" style="grid-template-columns: 1fr;">
             <div class="project-main-stage-cell">
@@ -2181,35 +2395,23 @@
             </div>
             <div class="project-info-col">
               <div>
-                <div class="project-code">${state.code || "PRJ // ARCHIVE"}</div>
+                <div class="project-code">${fullCode}</div>
                 <h2 class="project-title" style="font-size:1.35rem;">${state.title || "Untitled Project"}</h2>
                 <p class="project-desc" style="font-size:0.88rem;">${state.desc || "Project description preview..."}</p>
                 <div class="project-tags">
+                  ${
+                    state.subName
+                      ? `<span class="skill-tag subname-tag-pill">// ${state.subName.toUpperCase()}</span>`
+                      : ""
+                  }
                   ${tagsList.map((t) => `<span class="skill-tag">${t}</span>`).join("")}
-                </div>
-              </div>
-
-              <div class="photo-stack-trigger" id="dev-stack-trigger">
-                <span class="corner-tick tl"></span>
-                <span class="corner-tick tr"></span>
-                <span class="corner-tick bl"></span>
-                <span class="corner-tick br"></span>
-                <div class="stack-visual">${stackVisualHtml || `<div class="stack-card-badge">[EMPTY]</div>`}</div>
-                <div class="stack-meta">
-                  <span class="stack-title">// PROJECT MEDIA STACK [${ordered.length}]</span>
-                  <span class="stack-subtitle" id="dev-stack-subtitle">
-                    ${
-                      state.drawerOpen
-                        ? "TAP TO COLLAPSE GALLERY &#8593;"
-                        : "TAP TO EXPAND GALLERY &#8595;"
-                    }
-                  </span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div id="dev-preview-drawer" class="project-expanded-drawer ${state.drawerOpen ? "open" : ""}">
+          <div style="margin-top: 18px; padding-top: 14px; border-top: 1px dashed var(--border-cad);">
+            <div class="dev-label" style="margin-bottom: 8px;">// LINKED GALLERY MEDIA [${ordered.length}]</div>
             <div class="project-gallery-grid" id="dev-preview-gallery-grid"></div>
           </div>
         </article>
@@ -2236,19 +2438,15 @@
         galleryFrag.appendChild(cell);
       });
       galleryGrid.appendChild(galleryFrag);
-
-      document.getElementById("dev-stack-trigger").addEventListener("click", () => {
-        state.drawerOpen = !state.drawerOpen;
-        document.getElementById("dev-preview-drawer").classList.toggle("open", state.drawerOpen);
-        document.getElementById("dev-stack-subtitle").innerHTML = state.drawerOpen
-          ? "TAP TO COLLAPSE GALLERY &#8593;"
-          : "TAP TO EXPAND GALLERY &#8595;";
-      });
     }
 
     function syncAll() {
       const folderClean = (state.folder || "new-project").trim().replace(/^\/+|\/+$/g, "");
       document.getElementById("target-path-readout").textContent = `assets/projects/${folderClean}/project.txt`;
+      document.getElementById("dev-full-code-preview").textContent = getFullCodeString();
+
+      renderSubNameAttributePicker();
+      renderSkillsAttributePicker();
       renderKeyGridDesigner();
       renderAssetListEditor();
       renderLivePreview();
@@ -2279,8 +2477,21 @@
           document.getElementById("dev-title").value = state.title;
         } else if (/^CODE\s*:/i.test(line)) {
           inDesc = false;
-          state.code = line.replace(/^CODE\s*:\s*/i, "").trim();
-          document.getElementById("dev-code").value = state.code;
+          const rawCode = line.replace(/^CODE\s*:\s*/i, "").trim();
+          const parts = rawCode.split("//");
+          state.codePrefix = parts[0] ? parts[0].trim() : "PRJ-01";
+          if (parts.length > 1) {
+            state.subName = parts.slice(1).join("//").trim().toUpperCase();
+          }
+          document.getElementById("dev-code-prefix").value = state.codePrefix;
+          document.getElementById("dev-subname").value = state.subName;
+        } else if (/^(SUBNAME|SUB_NAME|SECTION|CATEGORY)\s*:/i.test(line)) {
+          inDesc = false;
+          state.subName = line
+            .replace(/^(SUBNAME|SUB_NAME|SECTION|CATEGORY)\s*:\s*/i, "")
+            .trim()
+            .toUpperCase();
+          document.getElementById("dev-subname").value = state.subName;
         } else if (/^TAGS\s*:/i.test(line)) {
           inDesc = false;
           state.tags = line.replace(/^TAGS\s*:\s*/i, "").trim();
@@ -2585,11 +2796,33 @@
         syncAll();
       });
 
-      ["folder", "code", "title", "tags", "keys", "desc"].forEach((key) => {
-        document.getElementById(`dev-${key}`).addEventListener("input", (e) => {
-          state[key] = e.target.value;
-          syncAll();
-        });
+      document.getElementById("dev-folder").addEventListener("input", (e) => {
+        state.folder = e.target.value;
+        syncAll();
+      });
+      document.getElementById("dev-code-prefix").addEventListener("input", (e) => {
+        state.codePrefix = e.target.value;
+        syncAll();
+      });
+      document.getElementById("dev-subname").addEventListener("input", (e) => {
+        state.subName = e.target.value;
+        syncAll();
+      });
+      document.getElementById("dev-title").addEventListener("input", (e) => {
+        state.title = e.target.value;
+        syncAll();
+      });
+      document.getElementById("dev-tags").addEventListener("input", (e) => {
+        state.tags = e.target.value;
+        syncAll();
+      });
+      document.getElementById("dev-keys").addEventListener("input", (e) => {
+        state.keys = e.target.value;
+        syncAll();
+      });
+      document.getElementById("dev-desc").addEventListener("input", (e) => {
+        state.desc = e.target.value;
+        syncAll();
       });
 
       document.getElementById("add-link-btn").addEventListener("click", () => {
@@ -2650,7 +2883,8 @@
 
       document.getElementById("reset-form-btn").addEventListener("click", () => {
         state.title = "";
-        state.code = "PRJ // ARCHIVE";
+        state.codePrefix = "PRJ-01";
+        state.subName = "FSAE ELECTRIC";
         state.tags = "";
         state.keys = "";
         state.desc = "";
@@ -2659,7 +2893,8 @@
         state.localFilesMap.clear();
         revokeAllObjectUrls();
         document.getElementById("dev-title").value = "";
-        document.getElementById("dev-code").value = state.code;
+        document.getElementById("dev-code-prefix").value = state.codePrefix;
+        document.getElementById("dev-subname").value = state.subName;
         document.getElementById("dev-tags").value = "";
         document.getElementById("dev-keys").value = "";
         document.getElementById("dev-desc").value = "";

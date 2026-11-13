@@ -25,6 +25,11 @@
   <script defer src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+
+  <!-- Modular Portfolio Scripts (Loaded in Order) -->
+  <script defer src="js/utils-3d.js"></script>
+  <script defer src="js/projects.js"></script>
+  <script defer src="js/photo-lightbox.js"></script>
   <script defer src="script.js"></script>
 </head>
 <body class="cad-theme">
@@ -132,7 +137,7 @@
 
           <div class="cad-panel">
             <div class="panel-header">
-              <span class="panel-title">// SKILLS</span>
+              <span class="panel-title">// SKILLS <span class="skills-dropdown-arrow" aria-hidden="true">&#9662;</span></span>
             </div>
             <div id="about-skills-grid" class="skills-grid"></div>
           </div>
@@ -188,7 +193,7 @@
 
     <div class="lightbox-content-wrapper" id="lightbox-content-wrapper">
       
-      <!-- LIGHTBOX HEADER BAR (NO TOP-LEFT TEXT, EXIT ALWAYS PINNED TOP-RIGHT) -->
+      <!-- LIGHTBOX HEADER BAR -->
       <div class="lightbox-caption-bar">
         <div class="lightbox-caption-right">
           <div id="lightbox-zoom-controls" class="lightbox-zoom-controls" style="display:none;">

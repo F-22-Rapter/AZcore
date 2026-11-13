@@ -15,6 +15,7 @@
   --font-mono: 'JetBrains Mono', monospace;
   --side-bar-width: 58px;
   --photo-grid-cols: 5;
+  --project-grid-cols: 2;
 }
 
 *, *::before, *::after {
@@ -491,6 +492,7 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   width: 10px;
   height: 10px;
   pointer-events: none;
+  z-index: 6;
 }
 .corner-tick.tl { top: -1px; left: -1px; border-top: 2px solid var(--accent); border-left: 2px solid var(--accent); }
 .corner-tick.tr { top: -1px; right: -1px; border-top: 2px solid var(--accent); border-right: 2px solid var(--accent); }
@@ -595,6 +597,7 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   padding: 4px 9px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-main);
 }
 
 .socials-grid {
@@ -636,7 +639,7 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
 .projects-list {
   display: flex;
   flex-direction: column;
-  gap: 36px;
+  gap: 28px;
   width: 100%;
   min-width: 0;
 }
@@ -1082,7 +1085,7 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   pointer-events: none;
 }
 
-/* Fixed 3D GLB Preview Container so canvas never stretches card wider than mobile screen */
+/* Fixed 3D GLB Preview Container */
 .stl-preview-container {
   width: 100%;
   max-width: 100%;
@@ -1156,7 +1159,7 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   overflow-wrap: break-word;
 }
 
-/* Centered & Tied-in Project Stack Trigger */
+/* Centered & Tied-in Project Stack Trigger (used in Dev Studio live preview) */
 .photo-stack-trigger {
   position: relative;
   margin-top: auto;
@@ -1376,7 +1379,7 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
 .lightbox-modal {
   position: fixed;
   inset: 0;
-  z-index: 2000;
+  z-index: 2200;
   background: rgba(12, 14, 16, 0.94);
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
@@ -1738,7 +1741,393 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
 }
 
 /* ==========================================================================
-   12. RESPONSIVE BREAKPOINTS & HAMBURGER MENU
+   12. IIT CLICKABLE LINKS & MOBILE SKILLS DROPDOWN
+   ========================================================================== */
+.iit-link {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.iit-link:hover {
+  color: #ff4422;
+  border-color: #ff4422;
+}
+
+.spec-val .iit-link {
+  color: var(--text-main);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+
+.spec-val .iit-link:hover {
+  color: var(--accent);
+}
+
+/* Mobile Skills Dropdown ("// SKILLS" with down arrow) */
+.skills-dropdown-arrow {
+  display: none;
+  font-size: 0.85rem;
+  margin-left: 6px;
+  color: var(--accent);
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (max-width: 860px) {
+  .skills-dropdown-header {
+    cursor: pointer;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.2s ease;
+  }
+
+  .skills-dropdown-header:hover {
+    background: rgba(217, 40, 4, 0.06);
+  }
+
+  .skills-dropdown-arrow {
+    display: inline-block;
+  }
+
+  .cad-panel.mobile-skills-collapsed .panel-header {
+    margin-bottom: 0;
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .cad-panel.mobile-skills-collapsed .skills-dropdown-arrow {
+    transform: rotate(-90deg);
+  }
+
+  .cad-panel.mobile-skills-collapsed .skills-grid {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   13. ATTRIBUTE PILLS & UNIFIED PROJECT LOOKUP BAR
+   ========================================================================== */
+.skill-tag-clickable,
+.project-skill-filter,
+.subname-tag-pill {
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+.skill-tag-clickable:hover,
+.project-skill-filter:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--text-main);
+  transform: translateY(-1px);
+}
+
+.subname-tag-pill {
+  background: rgba(217, 40, 4, 0.15);
+  border-color: var(--accent);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.subname-tag-pill:hover {
+  background: var(--accent);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.project-filter-bar {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-cad);
+  padding: 18px 22px;
+  margin-bottom: 8px;
+}
+
+.filter-bar-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.filter-search-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.project-filter-input {
+  flex: 1;
+  width: 100%;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-cad);
+  color: var(--text-main);
+  font-family: var(--font-mono);
+  font-size: 0.84rem;
+  letter-spacing: 0.04em;
+  outline: none;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.project-filter-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.72;
+}
+
+.project-filter-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(217, 40, 4, 0.15);
+}
+
+.filter-group-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.filter-group-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.08em;
+  min-width: 170px;
+}
+
+.filter-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex: 1;
+}
+
+.filter-pill {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 5px 11px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+  letter-spacing: 0.04em;
+}
+
+.filter-pill.subname-pill {
+  border-color: rgba(217, 40, 4, 0.45);
+  color: #e2e6ea;
+}
+
+.filter-pill:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--text-main);
+  transform: translateY(-1px);
+}
+
+.filter-pill.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+/* ==========================================================================
+   14. 2-WIDE VARIABLE PROJECT GRID (MAIN PICTURE + TITLE ONLY)
+   ========================================================================== */
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--project-grid-cols, 2), minmax(0, 1fr));
+  gap: 24px;
+  width: 100%;
+}
+
+.project-grid-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-cad);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.34s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.3s ease;
+  outline: none;
+}
+
+.project-grid-card:hover,
+.project-grid-card:focus-visible {
+  transform: translateY(-6px);
+  border-color: var(--accent);
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.68);
+}
+
+.project-grid-thumb {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  background: #121417;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.project-grid-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  opacity: 0;
+  filter: brightness(0.92);
+  transition: opacity 0.35s ease,
+              filter 0.35s ease,
+              transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.project-grid-img.img-loaded {
+  opacity: 1;
+}
+
+.project-grid-card:hover .project-grid-img {
+  filter: brightness(1.14);
+  transform: scale(1.04);
+}
+
+.project-grid-title-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  background: rgba(18, 21, 24, 0.96);
+  border-top: 1px solid var(--border-cad);
+}
+
+.project-grid-title {
+  font-family: var(--font-sans);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: 0.02em;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.project-grid-open-icon {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  color: var(--accent);
+  transition: transform 0.25s ease;
+  flex-shrink: 0;
+}
+
+.project-grid-card:hover .project-grid-open-icon {
+  transform: translate(3px, -3px);
+}
+
+/* ==========================================================================
+   15. FULL PROJECT DETAIL MODAL (OPENS WHEN CLICKING A PROJECT CARD)
+   ========================================================================== */
+.project-detail-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1850;
+  background: rgba(10, 12, 14, 0.92);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3vh 3vw;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.project-detail-modal.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+.project-detail-dialog {
+  width: min(1320px, 94vw);
+  max-height: 90vh;
+  background: #14171a;
+  border: 1px solid var(--border-cad);
+  box-shadow: 0 28px 75px rgba(0, 0, 0, 0.88);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.project-detail-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 20px;
+  background: #181c20;
+  border-bottom: 1px solid var(--border-cad);
+  flex-shrink: 0;
+}
+
+.project-detail-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.project-detail-code {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  letter-spacing: 0.1em;
+}
+
+.subname-attr-badge {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  background: rgba(217, 40, 4, 0.16);
+  border: 1px solid var(--accent);
+  color: #ffffff;
+  cursor: pointer;
+  letter-spacing: 0.08em;
+  transition: background 0.2s ease;
+}
+
+.subname-attr-badge:hover {
+  background: var(--accent);
+}
+
+.project-detail-body {
+  padding: 28px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.project-detail-attr-group {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px dashed rgba(255, 255, 255, 0.12);
+}
+
+.project-detail-gallery-section {
+  padding-top: 10px;
+  border-top: 1px dashed var(--border-cad);
+}
+
+/* ==========================================================================
+   16. RESPONSIVE BREAKPOINTS & HAMBURGER MENU
    ========================================================================== */
 @media (max-width: 1200px) {
   .insta-grid { grid-template-columns: repeat(3, 1fr); }
@@ -1751,16 +2140,23 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   .header-telemetry { display: none; }
 }
 
+@media (max-width: 760px) {
+  .projects-grid { grid-template-columns: 1fr; }
+  .filter-group-label { min-width: 100%; }
+}
+
 @media (max-width: 680px) {
   :root { --side-bar-width: 34px; }
   .site-header { padding: 0 14px; }
   .brand-tag { display: none; }
   .stage-container { padding: 92px calc(var(--side-bar-width) + 12px) 60px; }
-  .project-card { padding: 16px; }
+  .project-card,
+  .project-detail-body { padding: 16px; }
   .stl-preview-container { height: 280px; min-height: 240px; }
   .insta-grid { grid-template-columns: 1fr; }
 
-  .lightbox-modal {
+  .lightbox-modal,
+  .project-detail-modal {
     padding: 1vh 2vw;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
