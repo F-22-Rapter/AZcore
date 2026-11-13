@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * js/projects.js — 2-WIDE PROJECT GRID, DETAIL MODAL & ATTRIBUTE LOOKUP
+ * js/projects.js — 2-WIDE PROJECT GRID, DETAIL MODAL & CATEGORY FILTER
  * ============================================================================
  * Load order in index.html:
  *   1. js/utils-3d.js
@@ -13,6 +13,7 @@ let projectsLoaded = false;
 let projectsLoadingPromise = null;
 let allLoadedProjects = [];
 let pendingProjectFilter = null;
+let currentActiveCategory = "";
 
 function parseProjectTextFile(rawText, folderPath) {
   const lines = rawText.replace(/\r\n/g, "\n").split("\n");
@@ -279,7 +280,6 @@ function resolveBestGridCardPreview(proj) {
     };
   }
 
-  // If the main asset is a 3D model or video, check if there is an image in the stack to use as a thumbnail, or render a 3D preview
   const firstImg = proj.verifiedAssets.find((a) => isImageAsset(a.type));
   return {
     type: mainAsset.type,
@@ -366,7 +366,25 @@ function createCompactProjectGridCard(proj, idx) {
 }
 
 /**
- * Ensures the Full Project Detail Modal exists in the DOM (auto-injects if missing)
+ * Prevents background page scrolling when the Project Detail Modal is open,
+ * while allowing internal scrolling inside #pmodal-body.
+ */
+function preventProjectModalBackgroundScroll(e) {
+  const modal = document.getElementById("project-detail-modal");
+  if (!modal || !modal.classList.contains("open")) return;
+
+  const lbModal = document.getElementById("lightbox-modal");
+  if (lbModal && lbModal.classList.contains("open")) return;
+
+  const bodyEl = document.getElementById("pmodal-body");
+  if (bodyEl && bodyEl.contains(e.target)) {
+    return;
+  }
+  e.preventDefault();
+}
+
+/**
+ * Ensures the Full Project Detail Modal exists in the DOM
  */
 function ensureProjectDetailModalExists() {
   let modal = document.getElementById("project-detail-modal");
@@ -416,23 +434,30 @@ function closeProjectDetailModal() {
   if (!modal) return;
   modal.classList.remove("open");
   modal.setAttribute("aria-hidden", "true");
-  document.body.classList.remove("lightbox-lock");
+
+  const lbModal = document.getElementById("lightbox-modal");
+  const isLbOpen = lbModal && lbModal.classList.contains("open");
+  if (!isLbOpen) {
+    document.documentElement.classList.remove("lightbox-lock");
+    document.body.classList.remove("lightbox-lock");
+  }
+
+  window.removeEventListener("wheel", preventProjectModalBackgroundScroll);
+  window.removeEventListener("touchmove", preventProjectModalBackgroundScroll);
 
   const bodyEl = modal.querySelector("#pmodal-body");
   if (bodyEl) bodyEl.innerHTML = "";
 }
 
 /**
- * Opens the full project details (main stage, full description, clickable sub-name & skill attributes, and full media gallery)
+ * Opens the full project details (main stage, full description, category & skills, and full media gallery)
  */
 function openProjectDetailModal(proj) {
   const modal = ensureProjectDetailModalExists();
   const codeEl = modal.querySelector("#pmodal-code");
-  const subNameBtn = modal.querySelector("#pmodal-subname-btn");
   const bodyEl = modal.querySelector("#pmodal-body");
 
   codeEl.textContent = proj.code || "PRJ // ARCHIVE";
-
 
   const mainAsset = proj.verifiedAssets[0];
   const isImageMain = isImageAsset(mainAsset.type);
@@ -454,10 +479,19 @@ function openProjectDetailModal(proj) {
       ? window.PORTFOLIO_CONFIG.about.iitUrl
       : "https://www.iit.edu/";
 
-  const formattedDesc = (proj.description || "").replace(
-    /\bIIT\b/g,
-    `<a href="${iitUrl}" target="_blank" rel="noopener noreferrer" class="iit-link">IIT</a>`
-  );
+  const rawDesc = proj.description || "";
+  const formattedDesc =
+    typeof window.linkifyIITText === "function"
+      ? window.linkifyIITText(rawDesc, iitUrl)
+      : rawDesc
+          .replace(
+            /Illinois Inst(?:i|e)tute of Technology/gi,
+            (match) => `<a href="${iitUrl}" target="_blank" rel="noopener noreferrer" class="iit-link">${match}</a>`
+          )
+          .replace(
+            /\bIIT\b/gi,
+            (match) => `<a href="${iitUrl}" target="_blank" rel="noopener noreferrer" class="iit-link">${match}</a>`
+          );
 
   bodyEl.innerHTML = `
     <div class="project-top-layout">
@@ -471,18 +505,15 @@ function openProjectDetailModal(proj) {
           <p class="project-desc">${formattedDesc}</p>
 
           <div class="project-detail-attr-group">
-            <div class="skill-group-title">// SUB-NAME &amp; SKILL ATTRIBUTES (CLICK TO FILTER)</div>
+            <div class="skill-group-title">// CATEGORY &amp; SKILLS</div>
             <div class="project-tags" id="pmodal-attr-tags">
               ${
                 proj.subName
-                  ? `<button type="button" class="skill-tag subname-tag-pill" data-subname="${proj.subName}">// ${proj.subName}</button>`
+                  ? `<button type="button" class="skill-tag subname-tag-pill" data-category="${proj.subName}" title="Filter by ${proj.subName}">// ${proj.subName}</button>`
                   : ""
               }
               ${proj.tags
-                .map(
-                  (t) =>
-                    `<button type="button" class="skill-tag project-skill-filter" data-skill="${t}">${t}</button>`
-                )
+                .map((t) => `<span class="skill-tag">${t}</span>`)
                 .join("")}
             </div>
           </div>
@@ -529,20 +560,12 @@ function openProjectDetailModal(proj) {
     mainWrap.addEventListener("click", () => openLightbox(lightboxList, 0));
   }
 
-  // Bind attribute tag clicks inside the modal so clicking a skill or sub-name filters the grid
-  bodyEl.querySelectorAll(".project-skill-filter").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const skill = btn.dataset.skill;
-      closeProjectDetailModal();
-      window.filterProjectsByAttribute({ skill });
-    });
-  });
-
+  // Clicking the category pill inside the modal filters the project grid by that category
   bodyEl.querySelectorAll(".subname-tag-pill").forEach((btn) => {
     btn.addEventListener("click", () => {
-      const subName = btn.dataset.subname;
+      const category = btn.dataset.category;
       closeProjectDetailModal();
-      window.filterProjectsByAttribute({ subName });
+      window.filterProjectsByAttribute({ category });
     });
   });
 
@@ -598,11 +621,14 @@ function openProjectDetailModal(proj) {
 
   modal.classList.add("open");
   modal.setAttribute("aria-hidden", "false");
+  document.documentElement.classList.add("lightbox-lock");
   document.body.classList.add("lightbox-lock");
+  window.addEventListener("wheel", preventProjectModalBackgroundScroll, { passive: false });
+  window.addEventListener("touchmove", preventProjectModalBackgroundScroll, { passive: false });
 }
 
 /**
- * Global function to filter the Projects grid by Skill Attribute, Sub-Name Attribute, or search query
+ * Global function to filter the Projects grid by Category
  */
 window.filterProjectsByAttribute = function (options = {}) {
   if (!projectsLoaded) {
@@ -611,83 +637,85 @@ window.filterProjectsByAttribute = function (options = {}) {
     return;
   }
 
-  const searchInput = document.getElementById("project-filter-input");
   const filterBar = document.getElementById("project-filter-bar");
-
-  if (options.skill) {
-    if (searchInput) searchInput.value = options.skill;
-    applyProjectLookupFilter({ type: "skill", value: options.skill });
-  } else if (options.subName) {
-    if (searchInput) searchInput.value = options.subName;
-    applyProjectLookupFilter({ type: "subName", value: options.subName });
-  } else if (typeof options.query === "string") {
-    if (searchInput) searchInput.value = options.query;
-    applyProjectLookupFilter({ type: "query", value: options.query });
-  }
+  const category = options.category || options.subName || "";
+  applyCategoryFilter(category);
 
   if (filterBar) {
     filterBar.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 };
 
-let currentActiveFilter = { type: "", value: "" };
+function applyCategoryFilter(rawCategory) {
+  const cleanCat = (rawCategory || "").trim().toLowerCase();
+  currentActiveCategory = cleanCat;
 
-function applyProjectLookupFilter(filterSpec) {
-  const rawVal = (filterSpec && filterSpec.value ? filterSpec.value : "").trim();
-  const lowerVal = rawVal.toLowerCase();
-  currentActiveFilter = {
-    type: rawVal ? filterSpec.type || "query" : "",
-    value: lowerVal
-  };
-
-  // Update Sub-Name attribute pills
-  document.querySelectorAll("#subname-pills-container .filter-pill").forEach((pill) => {
-    const isMatch =
-      currentActiveFilter.value &&
-      pill.dataset.subname.toLowerCase() === currentActiveFilter.value;
+  // Update Category pills
+  document.querySelectorAll("#category-pills-container .filter-pill").forEach((pill) => {
+    const pillCat = (pill.dataset.category || "").toLowerCase();
+    const isMatch = (!cleanCat && pillCat === "") || (cleanCat && pillCat === cleanCat);
     pill.classList.toggle("active", Boolean(isMatch));
   });
 
-  // Update Skill attribute pills
-  document.querySelectorAll("#skill-pills-container .filter-pill").forEach((pill) => {
-    const isMatch =
-      currentActiveFilter.value &&
-      pill.dataset.skill.toLowerCase() === currentActiveFilter.value;
-    pill.classList.toggle("active", Boolean(isMatch));
-  });
+  // Update mobile dropdown active readout label
+  const activeReadout = document.getElementById("categories-active-readout");
+  if (activeReadout) {
+    activeReadout.textContent = cleanCat ? `// ${rawCategory.trim().toUpperCase()}` : "// ALL";
+  }
 
   let visibleCount = 0;
 
   allLoadedProjects.forEach(({ card, proj }) => {
-    if (!lowerVal) {
+    if (!cleanCat) {
       card.style.display = "";
       visibleCount++;
       return;
     }
 
-    let matches = false;
-    if (currentActiveFilter.type === "subName") {
-      matches = (proj.subName || "").toLowerCase() === lowerVal;
-    } else if (currentActiveFilter.type === "skill") {
-      matches = proj.tags.some((t) => t.toLowerCase() === lowerVal);
-    } else {
-      const inTitle = (proj.title || "").toLowerCase().includes(lowerVal);
-      const inCode = (proj.code || "").toLowerCase().includes(lowerVal);
-      const inSubName = (proj.subName || "").toLowerCase().includes(lowerVal);
-      const inTags = proj.tags.some((t) => t.toLowerCase().includes(lowerVal));
-      matches = inTitle || inCode || inSubName || inTags;
-    }
-
+    const matches = (proj.subName || "").toLowerCase() === cleanCat;
     card.style.display = matches ? "" : "none";
     if (matches) visibleCount++;
   });
 
   const countBadge = document.getElementById("projects-count-badge");
   if (countBadge) {
-    countBadge.textContent = lowerVal
+    countBadge.textContent = cleanCat
       ? `SHOWING: ${visibleCount} / ${allLoadedProjects.length} PROJECTS`
       : `LOADED: ${allLoadedProjects.length} PROJECT${allLoadedProjects.length === 1 ? "" : "S"}`;
   }
+}
+
+/**
+ * Sets up the mobile-mode Categories dropdown ("// CATEGORIES ▾")
+ */
+function setupMobileCategoriesDropdown(filterBar) {
+  if (!filterBar) return;
+  const header = filterBar.querySelector("#categories-dropdown-header");
+  if (!header || header.dataset.dropdownBound === "true") return;
+
+  header.dataset.dropdownBound = "true";
+
+  const isMobileViewport = window.matchMedia("(max-width: 860px)").matches;
+  if (isMobileViewport) {
+    filterBar.classList.add("mobile-categories-collapsed");
+    header.setAttribute("aria-expanded", "false");
+  } else {
+    header.setAttribute("aria-expanded", "true");
+  }
+
+  const toggleDropdown = (e) => {
+    if (!window.matchMedia("(max-width: 860px)").matches) return;
+    e.preventDefault();
+    const isNowCollapsed = filterBar.classList.toggle("mobile-categories-collapsed");
+    header.setAttribute("aria-expanded", String(!isNowCollapsed));
+  };
+
+  header.addEventListener("click", toggleDropdown);
+  header.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      toggleDropdown(e);
+    }
+  });
 }
 
 async function loadAndRenderProjects() {
@@ -705,7 +733,6 @@ async function loadAndRenderProjects() {
     } = PORTFOLIO_CONFIG.projectsConfig;
     const normBase = normalizeFolder(baseFolder);
 
-    // Apply the 2-wide (or custom) CSS variable for the Projects grid
     document.documentElement.style.setProperty("--project-grid-cols", gridColumns || 2);
 
     container.innerHTML = "";
@@ -740,52 +767,30 @@ async function loadAndRenderProjects() {
       return;
     }
 
-    // Collect unique Sub-Name attributes & Skill attributes across all projects
-    const subNamesSet = new Set();
-    const skillsSet = new Set();
-
+    // Collect unique Categories across all projects
+    const categoriesSet = new Set();
     validProjects.forEach((proj) => {
-      if (proj.subName) subNamesSet.add(proj.subName);
-      proj.tags.forEach((t) => skillsSet.add(t));
+      if (proj.subName) categoriesSet.add(proj.subName);
     });
 
-    // Build unified Attribute Lookup Bar (Search Input + Sub-Name Attributes + Skill Attributes)
+    // Build Categories Bar (with mobile dropdown support)
     const filterBar = document.createElement("div");
     filterBar.id = "project-filter-bar";
     filterBar.className = "project-filter-bar";
     filterBar.innerHTML = `
-      <div class="filter-bar-inner">
-        <div class="filter-search-row">
-          <input
-            type="text"
-            id="project-filter-input"
-            class="project-filter-input"
-            placeholder="Search projects by title, sub-name (e.g. FSAE ELECTRIC), or skill attribute..."
-            autocomplete="off"
-            spellcheck="false"
-          />
-          <button type="button" id="project-filter-clear-btn" class="mini-action-btn" title="Clear active filter">CLEAR</button>
-        </div>
-
+      <div class="panel-header categories-dropdown-header" id="categories-dropdown-header" role="button" tabindex="0" aria-expanded="true">
+        <span class="panel-title">// CATEGORIES <span class="categories-dropdown-arrow" aria-hidden="true">&#9662;</span></span>
+        <span class="categories-active-readout" id="categories-active-readout">// ALL</span>
+      </div>
+      <div class="filter-bar-inner" id="categories-dropdown-body">
         <div class="filter-group-row">
-          <span class="filter-group-label">// SUB-NAME ATTRIBUTES:</span>
-          <div class="filter-pills" id="subname-pills-container">
-            ${Array.from(subNamesSet)
+          <span class="filter-group-label desktop-categories-label">// CATEGORIES:</span>
+          <div class="filter-pills" id="category-pills-container">
+            <button type="button" class="filter-pill subname-pill active" data-category="">// ALL</button>
+            ${Array.from(categoriesSet)
               .map(
-                (sub) =>
-                  `<button type="button" class="filter-pill subname-pill" data-subname="${sub}">// ${sub}</button>`
-              )
-              .join("")}
-          </div>
-        </div>
-
-        <div class="filter-group-row">
-          <span class="filter-group-label">// SKILL ATTRIBUTES:</span>
-          <div class="filter-pills" id="skill-pills-container">
-            ${Array.from(skillsSet)
-              .map(
-                (skill) =>
-                  `<button type="button" class="filter-pill skill-pill" data-skill="${skill}">${skill}</button>`
+                (cat) =>
+                  `<button type="button" class="filter-pill subname-pill" data-category="${cat}">// ${cat}</button>`
               )
               .join("")}
           </div>
@@ -794,7 +799,9 @@ async function loadAndRenderProjects() {
     `;
     container.appendChild(filterBar);
 
-    // Build the 2-wide (variable) Project Grid
+    setupMobileCategoriesDropdown(filterBar);
+
+    // Build the 2-wide Project Grid
     const gridEl = document.createElement("div");
     gridEl.id = "projects-grid";
     gridEl.className = "projects-grid";
@@ -809,47 +816,21 @@ async function loadAndRenderProjects() {
 
     countBadge.textContent = `LOADED: ${validProjects.length} PROJECT${validProjects.length === 1 ? "" : "S"}`;
 
-    // Bind Search & Attribute Pill events
-    const filterInput = document.getElementById("project-filter-input");
-    const clearBtn = document.getElementById("project-filter-clear-btn");
-
-    filterInput.addEventListener("input", () => {
-      applyProjectLookupFilter({ type: "query", value: filterInput.value });
-    });
-
-    clearBtn.addEventListener("click", () => {
-      filterInput.value = "";
-      applyProjectLookupFilter({ type: "", value: "" });
-    });
-
-    document.querySelectorAll("#subname-pills-container .filter-pill").forEach((pill) => {
+    // Bind Category Pill click events
+    document.querySelectorAll("#category-pills-container .filter-pill").forEach((pill) => {
       pill.addEventListener("click", () => {
-        const subName = pill.dataset.subname;
-        if (
-          currentActiveFilter.value === subName.toLowerCase() &&
-          currentActiveFilter.type === "subName"
-        ) {
-          filterInput.value = "";
-          applyProjectLookupFilter({ type: "", value: "" });
+        const cat = pill.dataset.category;
+        if (cat && currentActiveCategory === cat.toLowerCase()) {
+          applyCategoryFilter("");
         } else {
-          filterInput.value = subName;
-          applyProjectLookupFilter({ type: "subName", value: subName });
+          applyCategoryFilter(cat);
         }
-      });
-    });
 
-    document.querySelectorAll("#skill-pills-container .filter-pill").forEach((pill) => {
-      pill.addEventListener("click", () => {
-        const skill = pill.dataset.skill;
-        if (
-          currentActiveFilter.value === skill.toLowerCase() &&
-          currentActiveFilter.type === "skill"
-        ) {
-          filterInput.value = "";
-          applyProjectLookupFilter({ type: "", value: "" });
-        } else {
-          filterInput.value = skill;
-          applyProjectLookupFilter({ type: "skill", value: skill });
+        // Collapse mobile dropdown after selecting a category
+        if (window.matchMedia("(max-width: 860px)").matches) {
+          filterBar.classList.add("mobile-categories-collapsed");
+          const hdr = filterBar.querySelector("#categories-dropdown-header");
+          if (hdr) hdr.setAttribute("aria-expanded", "false");
         }
       });
     });

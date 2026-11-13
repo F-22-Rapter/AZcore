@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
-  <!-- Load script.js so PORTFOLIO_CONFIG skills & sub-name presets are synced -->
+  <!-- Load script.js so PORTFOLIO_CONFIG skills & category presets are synced -->
   <script defer src="script.js"></script>
   <style>
     .dev-stage {
@@ -134,7 +134,7 @@
       line-height: 1.5;
     }
 
-    /* --- Attribute Picker Containers (Sub-Name & Skills) --- */
+    /* --- Category & Skills Picker Containers --- */
     .dev-attr-picker-box {
       background: rgba(12, 14, 16, 0.92);
       border: 1px solid var(--border-cad);
@@ -556,7 +556,7 @@
       <!-- LEFT COLUMN: BUILDER CONTROLS -->
       <div class="cad-panel">
         <div class="panel-header">
-          <span class="panel-title">// 01. PROJECT METADATA, ATTRIBUTES &amp; SNAP-GRID CONTROLS</span>
+          <span class="panel-title">// 01. PROJECT METADATA, CATEGORY &amp; SNAP-GRID CONTROLS</span>
           <button type="button" id="reset-form-btn" class="mini-action-btn">NEW / CLEAR</button>
         </div>
 
@@ -571,13 +571,13 @@
           </div>
         </div>
 
-        <!-- PROJECT SUB-NAME ATTRIBUTE (e.g. FSAE ELECTRIC in PRJ-01 // FSAE ELECTRIC) -->
+        <!-- PROJECT CATEGORY (e.g. FSAE ELECTRIC in PRJ-01 // FSAE ELECTRIC) -->
         <div class="dev-field-group">
           <label class="dev-label" for="dev-subname">
-            PROJECT SUB-NAME ATTRIBUTE (SEARCHABLE CATEGORY)
+            PROJECT CATEGORY (CLICKABLE FILTER CATEGORY)
             <span id="dev-full-code-preview">PRJ-01 // FSAE ELECTRIC</span>
           </label>
-          <input type="text" id="dev-subname" class="dev-input" placeholder="e.g. FSAE ELECTRIC, FABRICATION, SIMULATION & CFD" value="FSAE ELECTRIC" />
+          <input type="text" id="dev-subname" class="dev-input" placeholder="e.g. FSAE ELECTRIC, FABRICATION, PROGRAMING" value="FSAE ELECTRIC" />
           <div id="dev-subname-picker" class="dev-attr-picker-box"></div>
         </div>
 
@@ -586,10 +586,10 @@
           <input type="text" id="dev-title" class="dev-input" placeholder="e.g. Coin Hunter 1.2 / Particle Simulator" />
         </div>
 
-        <!-- SKILL ATTRIBUTES WITH CLICKABLE SELECTOR LIST -->
+        <!-- PROJECT SKILLS WITH CLICKABLE SELECTOR LIST -->
         <div class="dev-field-group">
           <label class="dev-label" for="dev-tags">
-            SKILL ATTRIBUTES <span>CLICK SKILLS BELOW TO TOGGLE OR TYPE COMMA-SEPARATED</span>
+            PROJECT SKILLS (SHOWN WHEN PROJECT CARD IS OPEN) <span>CLICK SKILLS BELOW TO TOGGLE</span>
           </label>
           <input type="text" id="dev-tags" class="dev-input" placeholder="e.g. SolidWorks, Ansys Fluent CFD, Li-Ion Pack Assembly" />
           <div id="dev-skills-picker" class="dev-attr-picker-box"></div>
@@ -823,7 +823,7 @@
     }
 
     /**
-     * Renders the clickable Sub-Name Attribute selector pills in Dev Mode
+     * Renders the clickable Category selector pills in Dev Mode
      */
     function renderSubNameAttributePicker() {
       const box = document.getElementById("dev-subname-picker");
@@ -862,7 +862,7 @@
     }
 
     /**
-     * Renders the clickable Skill Attribute selector pills in Dev Mode (synced from PORTFOLIO_CONFIG.about.skills)
+     * Renders the clickable Skill selector pills in Dev Mode (synced from PORTFOLIO_CONFIG.about.skills)
      */
     function renderSkillsAttributePicker() {
       const box = document.getElementById("dev-skills-picker");
@@ -2005,7 +2005,7 @@
       const lines = [
         `TITLE: ${state.title || "Untitled Project"}`,
         `CODE: ${fullCode}`,
-        `SUBNAME: ${subClean}`
+        `CATEGORY: ${subClean}`
       ];
       if (state.tags.trim()) lines.push(`TAGS: ${state.tags.trim()}`);
       if (state.keys.trim()) lines.push(`CONTROLS: ${state.keys.trim()}`);
@@ -2398,13 +2398,16 @@
                 <div class="project-code">${fullCode}</div>
                 <h2 class="project-title" style="font-size:1.35rem;">${state.title || "Untitled Project"}</h2>
                 <p class="project-desc" style="font-size:0.88rem;">${state.desc || "Project description preview..."}</p>
-                <div class="project-tags">
-                  ${
-                    state.subName
-                      ? `<span class="skill-tag subname-tag-pill">// ${state.subName.toUpperCase()}</span>`
-                      : ""
-                  }
-                  ${tagsList.map((t) => `<span class="skill-tag">${t}</span>`).join("")}
+                <div class="project-detail-attr-group">
+                  <div class="skill-group-title">// CATEGORY &amp; SKILLS</div>
+                  <div class="project-tags">
+                    ${
+                      state.subName
+                        ? `<span class="skill-tag subname-tag-pill">// ${state.subName.toUpperCase()}</span>`
+                        : ""
+                    }
+                    ${tagsList.map((t) => `<span class="skill-tag">${t}</span>`).join("")}
+                  </div>
                 </div>
               </div>
             </div>

@@ -619,6 +619,7 @@ function openLightbox(items, startIndex = 0) {
   modal.classList.add("open");
   modal.setAttribute("aria-hidden", "false");
 
+  document.documentElement.classList.add("lightbox-lock");
   document.body.classList.add("lightbox-lock");
   window.addEventListener("wheel", preventBackgroundScroll, { passive: false });
   window.addEventListener("touchmove", preventBackgroundScroll, { passive: false });
@@ -699,10 +700,11 @@ function closeLightbox() {
   document.getElementById("lightbox-pdf-frame").src = "";
   document.getElementById("lightbox-loader").style.display = "none";
 
-  // Keep body scroll lock active if the Project Detail Modal is still open underneath
+  // Keep html & body scroll lock active if the Project Detail Modal is still open underneath
   const projDetailModal = document.getElementById("project-detail-modal");
   const isProjModalOpen = projDetailModal && projDetailModal.classList.contains("open");
   if (!isProjModalOpen) {
+    document.documentElement.classList.remove("lightbox-lock");
     document.body.classList.remove("lightbox-lock");
   }
 

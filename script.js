@@ -81,7 +81,7 @@ const PORTFOLIO_CONFIG = {
       "Coin hunter",
       "particle sim"
     ],
-    // Preset sub-name attributes available in Dev Mode & Project Lookup
+    // Preset categories available in Dev Mode & Project Category Filter
     defaultSubNames: [
       "FSAE ELECTRIC",
       "SIMULATION & CFD",
@@ -101,12 +101,12 @@ const PORTFOLIO_CONFIG = {
   }
 };
 
-// Expose config & attribute helpers globally for dev.html and sub-modules
+// Expose config & helpers globally for dev.html and sub-modules
 window.PORTFOLIO_CONFIG = PORTFOLIO_CONFIG;
 
 /**
  * Returns a deduplicated flat array of all skills defined in PORTFOLIO_CONFIG.about.skills
- * Used by both the Projects skill lookup bar and the Dev Mode clickable attribute selector.
+ * Used by the Dev Mode clickable skill selector.
  */
 window.getAllPortfolioSkills = function () {
   const skills = [];
@@ -121,7 +121,7 @@ window.getAllPortfolioSkills = function () {
 };
 
 /**
- * Extracts the sub-name attribute from a project CODE string (e.g. "PRJ-01 // FSAE ELECTRIC" -> "FSAE ELECTRIC")
+ * Extracts the category from a project CODE string (e.g. "PRJ-01 // FSAE ELECTRIC" -> "FSAE ELECTRIC")
  */
 window.extractProjectSubName = function (codeStr, explicitSubName = "") {
   if (explicitSubName && explicitSubName.trim()) {
@@ -136,27 +136,31 @@ window.extractProjectSubName = function (codeStr, explicitSubName = "") {
 };
 
 /**
- * Returns default project sub-name attributes for Dev Mode & Project Lookup
+ * Returns default project categories for Dev Mode & Project Category Filter
  */
 window.getAllPortfolioSubNames = function () {
   return [...(PORTFOLIO_CONFIG.projectsConfig.defaultSubNames || [])];
 };
+window.getAllPortfolioCategories = window.getAllPortfolioSubNames;
 
 /**
- * Helper to convert "IIT" and "Illinois Institute of Technology" into clickable links
+ * Helper to convert "IIT", "iit", "Illinois Institute of Technology", and "Illinois Instetute of Technology"
+ * into clickable red links that underline on hover.
  */
 function linkifyIITText(rawHtml, iitUrl) {
   if (!iitUrl || !rawHtml) return rawHtml;
   let output = rawHtml.replace(
-    /Illinois Institute of Technology/g,
-    `<a href="${iitUrl}" target="_blank" rel="noopener noreferrer" class="iit-link">Illinois Institute of Technology</a>`
+    /Illinois Inst(?:i|e)tute of Technology/gi,
+    (match) => `<a href="${iitUrl}" target="_blank" rel="noopener noreferrer" class="iit-link">${match}</a>`
   );
   output = output.replace(
-    /\bIIT\b/g,
-    `<a href="${iitUrl}" target="_blank" rel="noopener noreferrer" class="iit-link">IIT</a>`
+    /\bIIT\b/gi,
+    (match) => `<a href="${iitUrl}" target="_blank" rel="noopener noreferrer" class="iit-link">${match}</a>`
   );
   return output;
 }
+
+window.linkifyIITText = linkifyIITText;
 
 /**
  * ============================================================================
@@ -221,7 +225,7 @@ async function renderAboutSection() {
     }
   }
 
-  // Render Skills Grid (clicking any skill jumps to Projects and filters by that skill attribute)
+  // Render Skills Grid
   const skillsGridEl = document.getElementById("about-skills-grid");
   if (skillsGridEl) {
     skillsGridEl.innerHTML = cfg.skills
@@ -234,23 +238,13 @@ async function renderAboutSection() {
               .map((item) =>
                 item === "new-row"
                   ? `<div class="skill-row-break"></div>`
-                  : `<button type="button" class="skill-tag skill-tag-clickable" data-skill-filter="${item}" title="Filter projects using ${item}">${item}</button>`
+                  : `<span class="skill-tag">${item}</span>`
               )
               .join("")}
           </div>
         </div>`
       )
       .join("");
-
-    skillsGridEl.querySelectorAll(".skill-tag-clickable").forEach((tagBtn) => {
-      tagBtn.addEventListener("click", () => {
-        const skillName = tagBtn.dataset.skillFilter;
-        switchTab(1);
-        if (typeof window.filterProjectsByAttribute === "function") {
-          window.filterProjectsByAttribute({ skill: skillName });
-        }
-      });
-    });
   }
 
   // Configure Mobile "Skills" Dropdown with Down Arrow

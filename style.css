@@ -34,9 +34,10 @@ html, body {
   min-height: 100vh;
 }
 
+html.lightbox-lock,
 body.lightbox-lock {
   overflow: hidden !important;
-  touch-action: none;
+  overscroll-behavior: none !important;
 }
 
 code {
@@ -1741,31 +1742,27 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
 }
 
 /* ==========================================================================
-   12. IIT CLICKABLE LINKS & MOBILE SKILLS DROPDOWN
+   12. IIT CLICKABLE LINKS (RED + UNDERLINE ON HOVER) & MOBILE DROPDOWNS
    ========================================================================== */
-.iit-link {
-  color: var(--accent);
-  text-decoration: none;
-  transition: color 0.2s ease, border-color 0.2s ease;
-}
-
-.iit-link:hover {
-  color: #ff4422;
-  border-color: #ff4422;
-}
-
+.iit-link,
 .spec-val .iit-link {
-  color: var(--text-main);
-  border-bottom-color: var(--accent);
+  color: var(--accent);
   font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s ease, text-decoration-color 0.2s ease;
 }
 
+.iit-link:hover,
 .spec-val .iit-link:hover {
   color: var(--accent);
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-underline-offset: 3px;
 }
 
-/* Mobile Skills Dropdown ("// SKILLS" with down arrow) */
-.skills-dropdown-arrow {
+/* Mobile Skills & Categories Dropdown Arrows */
+.skills-dropdown-arrow,
+.categories-dropdown-arrow {
   display: none;
   font-size: 0.85rem;
   margin-left: 6px;
@@ -1773,8 +1770,24 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+.categories-dropdown-header {
+  display: none;
+}
+
+.categories-active-readout {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-main);
+  background: rgba(217, 40, 4, 0.15);
+  border: 1px solid var(--accent);
+  padding: 3px 9px;
+  letter-spacing: 0.06em;
+}
+
 @media (max-width: 860px) {
-  .skills-dropdown-header {
+  .skills-dropdown-header,
+  .categories-dropdown-header {
+    display: flex;
     cursor: pointer;
     user-select: none;
     -webkit-user-select: none;
@@ -1782,52 +1795,48 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
     transition: background 0.2s ease;
   }
 
-  .skills-dropdown-header:hover {
+  .skills-dropdown-header:hover,
+  .categories-dropdown-header:hover {
     background: rgba(217, 40, 4, 0.06);
   }
 
-  .skills-dropdown-arrow {
+  .skills-dropdown-arrow,
+  .categories-dropdown-arrow {
     display: inline-block;
   }
 
-  .cad-panel.mobile-skills-collapsed .panel-header {
+  .cad-panel.mobile-skills-collapsed .panel-header,
+  .project-filter-bar.mobile-categories-collapsed .categories-dropdown-header {
     margin-bottom: 0;
     border-bottom: none;
     padding-bottom: 0;
   }
 
-  .cad-panel.mobile-skills-collapsed .skills-dropdown-arrow {
+  .cad-panel.mobile-skills-collapsed .skills-dropdown-arrow,
+  .project-filter-bar.mobile-categories-collapsed .categories-dropdown-arrow {
     transform: rotate(-90deg);
   }
 
-  .cad-panel.mobile-skills-collapsed .skills-grid {
+  .cad-panel.mobile-skills-collapsed .skills-grid,
+  .project-filter-bar.mobile-categories-collapsed .filter-bar-inner {
+    display: none;
+  }
+
+  .desktop-categories-label {
     display: none;
   }
 }
 
 /* ==========================================================================
-   13. ATTRIBUTE PILLS & UNIFIED PROJECT LOOKUP BAR
+   13. CATEGORY PILLS & PROJECT CATEGORY BAR
    ========================================================================== */
-.skill-tag-clickable,
-.project-skill-filter,
 .subname-tag-pill {
   cursor: pointer;
-  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
-}
-
-.skill-tag-clickable:hover,
-.project-skill-filter:hover {
-  background: var(--accent-soft);
-  border-color: var(--accent);
-  color: var(--text-main);
-  transform: translateY(-1px);
-}
-
-.subname-tag-pill {
   background: rgba(217, 40, 4, 0.15);
   border-color: var(--accent);
   color: #ffffff;
   font-weight: 700;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
 }
 
 .subname-tag-pill:hover {
@@ -1839,44 +1848,14 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
 .project-filter-bar {
   background: var(--bg-panel);
   border: 1px solid var(--border-cad);
-  padding: 18px 22px;
+  padding: 16px 22px;
   margin-bottom: 8px;
 }
 
 .filter-bar-inner {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-}
-
-.filter-search-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.project-filter-input {
-  flex: 1;
-  width: 100%;
-  padding: 10px 16px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border-cad);
-  color: var(--text-main);
-  font-family: var(--font-mono);
-  font-size: 0.84rem;
-  letter-spacing: 0.04em;
-  outline: none;
-  transition: border-color 0.25s ease, box-shadow 0.25s ease;
-}
-
-.project-filter-input::placeholder {
-  color: var(--text-muted);
-  opacity: 0.72;
-}
-
-.project-filter-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(217, 40, 4, 0.15);
+  gap: 12px;
 }
 
 .filter-group-row {
@@ -1888,24 +1867,24 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
 
 .filter-group-label {
   font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-size: 0.74rem;
   font-weight: 700;
   color: var(--accent);
   letter-spacing: 0.08em;
-  min-width: 170px;
+  margin-right: 6px;
 }
 
 .filter-pills {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
   flex: 1;
 }
 
 .filter-pill {
   font-family: var(--font-mono);
-  font-size: 0.72rem;
-  padding: 5px 11px;
+  font-size: 0.74rem;
+  padding: 6px 13px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.12);
   color: var(--text-muted);
@@ -2031,7 +2010,7 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
 }
 
 /* ==========================================================================
-   15. FULL PROJECT DETAIL MODAL (OPENS WHEN CLICKING A PROJECT CARD)
+   15. FULL PROJECT DETAIL MODAL (HIDDEN SCROLLBAR & LOCKED BACKGROUND)
    ========================================================================== */
 .project-detail-modal {
   position: fixed;
@@ -2047,6 +2026,7 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.3s ease, visibility 0.3s ease;
+  overscroll-behavior: contain;
 }
 
 .project-detail-modal.open {
@@ -2090,29 +2070,21 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   letter-spacing: 0.1em;
 }
 
-.subname-attr-badge {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  font-weight: 700;
-  padding: 4px 10px;
-  background: rgba(217, 40, 4, 0.16);
-  border: 1px solid var(--accent);
-  color: #ffffff;
-  cursor: pointer;
-  letter-spacing: 0.08em;
-  transition: background 0.2s ease;
-}
-
-.subname-attr-badge:hover {
-  background: var(--accent);
-}
-
 .project-detail-body {
   padding: 28px;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none; /* Firefox: hide scrollbar */
+  -ms-overflow-style: none; /* IE/Edge: hide scrollbar */
   display: flex;
   flex-direction: column;
   gap: 28px;
+}
+
+.project-detail-body::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Opera: hide scrollbar */
+  width: 0;
+  height: 0;
 }
 
 .project-detail-attr-group {
