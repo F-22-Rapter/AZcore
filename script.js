@@ -33,8 +33,9 @@ const PORTFOLIO_CONFIG = {
       subtitle: ""
     },
     bioParagraphs: [
-      "Hello! My name is Alex and ever since I was a kid ive always loved working on hands on projects",
-      "Currently I am studying Civil Engineering at IIT, working as High voltage lead for our FSAE team, and a photographer based in Chicago."
+      "Hello! My name is Alex and I started tinkering all the way back in 2015 when I took appart my first laptop.",
+      "Over the years I've worked on many different projects; from making a small scale tesla coil, to experimenting with basic pyrotechnic componds, and even attemed a internal combustion engine.",
+      "Currently I am studying Civil Engineering at IIT, working as High-Voltage lead for our FSAE team, and a photographer based in Chicago."
     ],
     quickSpecs: [
       { label: "DISCIPLINE", value: "Civil & Structural Engineering" },
