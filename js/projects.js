@@ -414,9 +414,9 @@ function preventProjectModalBackgroundScroll(e) {
 }
 
 /**
- * Ensures the Full Project Detail Modal exists in the DOM
- * - Desktop: Circular left/right arrow buttons on either side of the card
- * - Mobile: Always-visible directional arrow buttons pinned to the bottom corners
+ * Ensures the Full Project Detail Modal exists in the DOM:
+ * - Desktop: Circular left/right arrow buttons flanking the card
+ * - Mobile: Pinned bottom pagination bar with `< BACK`, progress dots, and `NEXT >`
  */
 function ensureProjectDetailModalExists() {
   let modal = document.getElementById("project-detail-modal");
@@ -442,7 +442,21 @@ function ensureProjectDetailModalExists() {
         </div>
         <button type="button" class="mini-action-btn lightbox-exit-btn" id="pmodal-close-btn">&#10005; CLOSE</button>
       </div>
+
       <div class="project-detail-body" id="pmodal-body"></div>
+
+      <!-- Pinned Mobile Bottom Pagination Bar (< BACK | DOTS | NEXT >) -->
+      <div class="pmodal-bottom-bar" id="pmodal-bottom-bar">
+        <button type="button" class="pmodal-bar-btn pmodal-bar-prev" id="pmodal-bar-prev" aria-label="Previous Project">
+          <span class="pmodal-bar-chevron" aria-hidden="true">&#10094;</span>
+          <span>BACK</span>
+        </button>
+        <div class="pmodal-bar-dots" id="pmodal-bar-dots" role="tablist" aria-label="Project Pagination"></div>
+        <button type="button" class="pmodal-bar-btn pmodal-bar-next" id="pmodal-bar-next" aria-label="Next Project">
+          <span>NEXT</span>
+          <span class="pmodal-bar-chevron" aria-hidden="true">&#10095;</span>
+        </button>
+      </div>
     </div>
 
     <button type="button" class="pmodal-floating-nav pmodal-floating-next" id="pmodal-next-btn" aria-label="Next Project">
@@ -454,19 +468,26 @@ function ensureProjectDetailModalExists() {
 
   const prevBtn = modal.querySelector("#pmodal-prev-btn");
   const nextBtn = modal.querySelector("#pmodal-next-btn");
+  const barPrevBtn = modal.querySelector("#pmodal-bar-prev");
+  const barNextBtn = modal.querySelector("#pmodal-bar-next");
   const closeBtn = modal.querySelector("#pmodal-close-btn");
 
-  prevBtn.addEventListener("click", (e) => {
+  const handlePrev = (e) => {
     e.stopPropagation();
     e.currentTarget.blur();
     stepProjectDetailModal(-1);
-  });
+  };
 
-  nextBtn.addEventListener("click", (e) => {
+  const handleNext = (e) => {
     e.stopPropagation();
     e.currentTarget.blur();
     stepProjectDetailModal(1);
-  });
+  };
+
+  prevBtn.addEventListener("click", handlePrev);
+  nextBtn.addEventListener("click", handleNext);
+  barPrevBtn.addEventListener("click", handlePrev);
+  barNextBtn.addEventListener("click", handleNext);
 
   closeBtn.addEventListener("click", closeProjectDetailModal);
 
@@ -525,6 +546,8 @@ function openProjectDetailModal(proj) {
   const counterEl = modal.querySelector("#pmodal-counter");
   const floatingPrevBtn = modal.querySelector("#pmodal-prev-btn");
   const floatingNextBtn = modal.querySelector("#pmodal-next-btn");
+  const bottomBar = modal.querySelector("#pmodal-bottom-bar");
+  const dotsContainer = modal.querySelector("#pmodal-bar-dots");
   const bodyEl = modal.querySelector("#pmodal-body");
 
   const navList = getActiveNavigableProjects();
@@ -540,12 +563,41 @@ function openProjectDetailModal(proj) {
   }
 
   if (floatingPrevBtn) {
-    floatingPrevBtn.style.display = totalCount > 1 ? "flex" : "none";
+    floatingPrevBtn.classList.toggle("is-hidden", totalCount <= 1);
     floatingPrevBtn.title = prevProj ? `Previous: ${prevProj.title}` : "Previous Project";
   }
   if (floatingNextBtn) {
-    floatingNextBtn.style.display = totalCount > 1 ? "flex" : "none";
+    floatingNextBtn.classList.toggle("is-hidden", totalCount <= 1);
     floatingNextBtn.title = nextProj ? `Next: ${nextProj.title}` : "Next Project";
+  }
+
+  if (bottomBar) {
+    bottomBar.classList.toggle("is-hidden", totalCount <= 1);
+  }
+
+  if (dotsContainer) {
+    dotsContainer.innerHTML = navList
+      .map(
+        (itemProj, idx) => `
+        <button
+          type="button"
+          class="pmodal-dot ${idx === currentIdx ? "active" : ""}"
+          data-idx="${idx}"
+          aria-label="Go to project ${idx + 1}: ${itemProj.title}"
+          title="${itemProj.title}"
+        ></button>`
+      )
+      .join("");
+
+    dotsContainer.querySelectorAll(".pmodal-dot").forEach((dotBtn) => {
+      dotBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const targetIdx = parseInt(dotBtn.dataset.idx, 10);
+        if (!isNaN(targetIdx) && navList[targetIdx]) {
+          openProjectDetailModal(navList[targetIdx]);
+        }
+      });
+    });
   }
 
   const mainAsset = proj.verifiedAssets[0];

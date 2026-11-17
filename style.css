@@ -2012,7 +2012,7 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
 }
 
 /* ==========================================================================
-   15. FULL PROJECT DETAIL MODAL (DESKTOP SIDE CIRCLES & MOBILE BOTTOM ARROWS)
+   15. FULL PROJECT DETAIL MODAL (DESKTOP SIDE CIRCLES & MOBILE PAGINATION BAR)
    ========================================================================== */
 .project-detail-modal {
   position: fixed;
@@ -2049,9 +2049,7 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   z-index: 10;
 }
 
-/* Floating Prev / Next Project Card Buttons:
-   - Desktop: Circular buttons flanking the left & right sides of the card
-   - Mobile (<= 920px): Always-visible directional buttons pinned to the bottom corners */
+/* Desktop Floating Circular Prev / Next Buttons on Left & Right of Card */
 .pmodal-floating-nav {
   position: fixed;
   top: 50%;
@@ -2076,6 +2074,10 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
               border-color 0.22s ease;
   -webkit-tap-highlight-color: transparent;
   outline: none;
+}
+
+.pmodal-floating-nav.is-hidden {
+  display: none !important;
 }
 
 .pmodal-floating-prev {
@@ -2109,6 +2111,88 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
 .pmodal-floating-nav:active {
   background: var(--accent);
   transform: translateY(-50%) scale(0.95);
+}
+
+/* Mobile Pinned Bottom Pagination Bar (< BACK | DOTS | NEXT >) — Hidden on Desktop */
+.pmodal-bottom-bar {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px;
+  background: #181c20;
+  border-top: 1px solid var(--border-cad);
+  flex-shrink: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.pmodal-bottom-bar.is-hidden {
+  display: none !important;
+}
+
+.pmodal-bar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.18s ease, color 0.18s ease, transform 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+
+.pmodal-bar-btn:hover,
+.pmodal-bar-btn:active {
+  background: var(--accent-soft);
+  color: #ffffff;
+}
+
+.pmodal-bar-btn:active {
+  transform: scale(0.95);
+}
+
+.pmodal-bar-chevron {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+.pmodal-bar-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pmodal-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.22);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: background 0.22s ease, transform 0.22s ease, box-shadow 0.22s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pmodal-dot:hover {
+  background: rgba(217, 40, 4, 0.6);
+}
+
+.pmodal-dot.active {
+  background: var(--accent);
+  transform: scale(1.3);
+  box-shadow: 0 0 8px rgba(217, 40, 4, 0.8);
 }
 
 .project-detail-topbar {
@@ -2156,6 +2240,7 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   display: flex;
   flex-direction: column;
   gap: 28px;
+  flex: 1;
 }
 
 .project-detail-body::-webkit-scrollbar {
@@ -2190,42 +2275,20 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
 }
 
 /* Mobile & Tablet Project Detail Modal:
-   Pin the two directional arrow buttons to the bottom-left and bottom-right corners
-   so they are always visible without scrolling */
+   Hide the desktop side circles and show the pinned bottom pagination bar (< BACK | dots | NEXT >) */
 @media (max-width: 920px) {
   .project-detail-dialog {
     width: 95vw;
     max-height: 90vh;
-  }
-
-  .project-detail-body {
-    padding-bottom: 84px; /* Space at bottom so content never hides behind floating arrows */
+    max-height: 90dvh;
   }
 
   .pmodal-floating-nav {
-    top: auto;
-    bottom: 20px;
-    transform: none;
-    width: 68px;
-    height: 48px;
-    border-radius: 10px;
-    background: rgba(18, 21, 24, 0.94);
-    border: 2px solid var(--accent);
-    font-size: 1.4rem;
-    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.9), 0 0 14px rgba(217, 40, 4, 0.32);
+    display: none !important;
   }
 
-  .pmodal-floating-prev {
-    left: 20px;
-  }
-
-  .pmodal-floating-next {
-    right: 20px;
-  }
-
-  .pmodal-floating-nav:active {
-    background: var(--accent);
-    transform: scale(0.95);
+  .pmodal-bottom-bar {
+    display: flex;
   }
 }
 
@@ -2243,10 +2306,17 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   .stage-container { padding: 92px calc(var(--side-bar-width) + 12px) 60px; }
   .project-card { padding: 16px; }
   .project-detail-body {
-    padding: 16px 16px 84px;
+    padding: 16px;
   }
   .project-detail-topbar { padding: 10px 12px; }
   .project-detail-code { font-size: 0.7rem; }
+  .pmodal-bottom-bar {
+    padding: 10px 14px;
+  }
+  .pmodal-bar-btn {
+    font-size: 0.78rem;
+    padding: 6px 8px;
+  }
   .stl-preview-container { height: 280px; min-height: 240px; }
   .insta-grid { grid-template-columns: 1fr; }
 
@@ -2255,6 +2325,11 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
     padding: 1vh 2vw;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
+  }
+  .project-detail-dialog {
+    width: 96vw;
+    max-height: 92vh;
+    max-height: 92dvh;
   }
   .lightbox-backdrop-hint { display: none; }
   .lightbox-content-wrapper {
