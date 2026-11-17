@@ -20,6 +20,12 @@ const GRID_ROWS = 4;
 const PORTFOLIO_CONFIG = {
   brandName: "AZCORE",
 
+  // -------------------- SIDE NAVIGATION WIDTH CONFIG --------------------
+  sideNavConfig: {
+    desktopWidth: "58px", // <--- VARIABLE: Side nav bar width on desktop
+    mobileWidth: "46px"   // <--- VARIABLE: Side nav bar width on mobile (<= 680px)
+  },
+
   // -------------------- TAB 1: ABOUT ME & RESUME CONFIG --------------------
   about: {
     iitUrl: "https://www.iit.edu/",
@@ -106,6 +112,26 @@ const PORTFOLIO_CONFIG = {
 window.PORTFOLIO_CONFIG = PORTFOLIO_CONFIG;
 
 /**
+ * Applies the configured desktop & mobile side navigation widths to CSS root variables
+ */
+function applySideNavWidthVariables() {
+  const navCfg = PORTFOLIO_CONFIG.sideNavConfig || {};
+  const desktopW = navCfg.desktopWidth || "58px";
+  const mobileW = navCfg.mobileWidth || "46px";
+
+  document.documentElement.style.setProperty("--side-bar-width-desktop", desktopW);
+  document.documentElement.style.setProperty("--side-bar-width-mobile", mobileW);
+
+  const isNarrowMobile = window.matchMedia("(max-width: 680px)").matches;
+  document.documentElement.style.setProperty(
+    "--side-bar-width",
+    isNarrowMobile ? mobileW : desktopW
+  );
+}
+
+window.applySideNavWidthVariables = applySideNavWidthVariables;
+
+/**
  * Returns a deduplicated flat array of all skills defined in PORTFOLIO_CONFIG.about.skills
  * Used by the Dev Mode clickable skill selector.
  */
@@ -162,7 +188,7 @@ function linkifyIITText(rawHtml, iitUrl) {
   output = output.replace(
     /(<a[^>]*>.*?<\/a>|<[^>]+>)|(\bIIT\b)/gi,
     (match, tagOrLink, iitMatch) => {
-      if (tagOrLink) return tagOrLink;                     // already a tag/link — keep as-is
+      if (tagOrLink) return tagOrLink; // already a tag/link — keep as-is
       return `<a href="${iitUrl}" target="_blank" rel="noopener noreferrer" class="iit-link">${iitMatch}</a>`;
     }
   );
@@ -188,7 +214,9 @@ async function renderAboutSection() {
   const captionEl = document.getElementById("about-name-caption");
   if (captionEl) captionEl.textContent = cfg.name;
 
-  // Apply CSS Grid column variables for both Photography and Projects
+  // Apply Side Nav Width & CSS Grid column variables
+  applySideNavWidthVariables();
+
   document.documentElement.style.setProperty(
     "--photo-grid-cols",
     PORTFOLIO_CONFIG.photographyConfig.gridColumns || 5
@@ -433,6 +461,9 @@ window.currentTabIndex = currentTabIndex;
  * ============================================================================
  */
 window.addEventListener("DOMContentLoaded", () => {
+  applySideNavWidthVariables();
+  window.addEventListener("resize", applySideNavWidthVariables, { passive: true });
+
   // Only run main portfolio DOM setup when on index.html
   if (!document.getElementById("tab-about")) return;
 

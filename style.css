@@ -13,7 +13,9 @@
   --border-cad: rgba(255, 255, 255, 0.14);
   --font-sans: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
-  --side-bar-width: 58px;
+  --side-bar-width-desktop: 58px; /* <--- Desktop side nav bar width */
+  --side-bar-width-mobile: 46px;  /* <--- Mobile side nav bar width (<= 680px) */
+  --side-bar-width: var(--side-bar-width-desktop);
   --photo-grid-cols: 5;
   --project-grid-cols: 2;
 }
@@ -278,7 +280,7 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
 }
 
 /* ==========================================================================
-   5. FADED SIDE NAVIGATION BARS (FIXED STICKY RED HOVER ON MOBILE)
+   5. FADED SIDE NAVIGATION BARS (CONFIGURABLE WIDTH FOR DESKTOP & MOBILE)
    ========================================================================== */
 .side-nav-bar {
   position: fixed;
@@ -291,7 +293,7 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   color: var(--text-muted);
   cursor: pointer;
   opacity: 0.38;
-  transition: opacity 0.25s ease, background 0.25s ease, color 0.25s ease;
+  transition: opacity 0.25s ease, background 0.25s ease, color 0.25s ease, width 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -2010,7 +2012,7 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
 }
 
 /* ==========================================================================
-   15. FULL PROJECT DETAIL MODAL (HIDDEN SCROLLBAR & LOCKED BACKGROUND)
+   15. FULL PROJECT DETAIL MODAL (DESKTOP SIDE CIRCLES & MOBILE BOTTOM ARROWS)
    ========================================================================== */
 .project-detail-modal {
   position: fixed;
@@ -2035,7 +2037,7 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
 }
 
 .project-detail-dialog {
-  width: min(1320px, 94vw);
+  width: min(1240px, calc(100vw - 170px));
   max-height: 90vh;
   background: #14171a;
   border: 1px solid var(--border-cad);
@@ -2043,6 +2045,70 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
+  z-index: 10;
+}
+
+/* Floating Prev / Next Project Card Buttons:
+   - Desktop: Circular buttons flanking the left & right sides of the card
+   - Mobile (<= 920px): Always-visible directional buttons pinned to the bottom corners */
+.pmodal-floating-nav {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(20, 23, 26, 0.9);
+  border: 2px solid var(--accent);
+  color: var(--text-main);
+  font-family: var(--font-mono);
+  font-size: 1.45rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 1900;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.8), 0 0 16px rgba(217, 40, 4, 0.22);
+  transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+              background 0.22s ease,
+              box-shadow 0.22s ease,
+              border-color 0.22s ease;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+
+.pmodal-floating-prev {
+  left: max(18px, calc(50vw - 620px - 74px));
+}
+
+.pmodal-floating-next {
+  right: max(18px, calc(50vw - 620px - 74px));
+}
+
+.pmodal-nav-arrow {
+  line-height: 1;
+  transition: transform 0.22s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .pmodal-floating-nav:hover {
+    background: var(--accent);
+    border-color: #ffffff;
+    transform: translateY(-50%) scale(1.1);
+    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.9), 0 0 24px rgba(217, 40, 4, 0.65);
+  }
+  .pmodal-floating-prev:hover .pmodal-nav-arrow {
+    transform: translateX(-3px);
+  }
+  .pmodal-floating-next:hover .pmodal-nav-arrow {
+    transform: translateX(3px);
+  }
+}
+
+.pmodal-floating-nav:active {
+  background: var(--accent);
+  transform: translateY(-50%) scale(0.95);
 }
 
 .project-detail-topbar {
@@ -2061,6 +2127,7 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+  min-width: 0;
 }
 
 .project-detail-code {
@@ -2068,6 +2135,16 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   font-size: 0.78rem;
   color: var(--text-muted);
   letter-spacing: 0.1em;
+}
+
+.project-detail-counter {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-main);
+  background: rgba(217, 40, 4, 0.14);
+  border: 1px solid rgba(217, 40, 4, 0.5);
+  padding: 2px 8px;
+  letter-spacing: 0.08em;
 }
 
 .project-detail-body {
@@ -2112,18 +2189,64 @@ body.photo-theme-active .cad-grid-minor { opacity: 0.22; }
   .header-telemetry { display: none; }
 }
 
+/* Mobile & Tablet Project Detail Modal:
+   Pin the two directional arrow buttons to the bottom-left and bottom-right corners
+   so they are always visible without scrolling */
+@media (max-width: 920px) {
+  .project-detail-dialog {
+    width: 95vw;
+    max-height: 90vh;
+  }
+
+  .project-detail-body {
+    padding-bottom: 84px; /* Space at bottom so content never hides behind floating arrows */
+  }
+
+  .pmodal-floating-nav {
+    top: auto;
+    bottom: 20px;
+    transform: none;
+    width: 68px;
+    height: 48px;
+    border-radius: 10px;
+    background: rgba(18, 21, 24, 0.94);
+    border: 2px solid var(--accent);
+    font-size: 1.4rem;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.9), 0 0 14px rgba(217, 40, 4, 0.32);
+  }
+
+  .pmodal-floating-prev {
+    left: 20px;
+  }
+
+  .pmodal-floating-next {
+    right: 20px;
+  }
+
+  .pmodal-floating-nav:active {
+    background: var(--accent);
+    transform: scale(0.95);
+  }
+}
+
 @media (max-width: 760px) {
   .projects-grid { grid-template-columns: 1fr; }
   .filter-group-label { min-width: 100%; }
 }
 
 @media (max-width: 680px) {
-  :root { --side-bar-width: 34px; }
+  :root {
+    --side-bar-width: var(--side-bar-width-mobile, 46px);
+  }
   .site-header { padding: 0 14px; }
   .brand-tag { display: none; }
   .stage-container { padding: 92px calc(var(--side-bar-width) + 12px) 60px; }
-  .project-card,
-  .project-detail-body { padding: 16px; }
+  .project-card { padding: 16px; }
+  .project-detail-body {
+    padding: 16px 16px 84px;
+  }
+  .project-detail-topbar { padding: 10px 12px; }
+  .project-detail-code { font-size: 0.7rem; }
   .stl-preview-container { height: 280px; min-height: 240px; }
   .insta-grid { grid-template-columns: 1fr; }
 

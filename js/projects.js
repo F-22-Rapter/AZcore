@@ -14,6 +14,7 @@ let projectsLoadingPromise = null;
 let allLoadedProjects = [];
 let pendingProjectFilter = null;
 let currentActiveCategory = "";
+let currentOpenProjectRef = null;
 
 function parseProjectTextFile(rawText, folderPath) {
   const lines = rawText.replace(/\r\n/g, "\n").split("\n");
@@ -366,6 +367,35 @@ function createCompactProjectGridCard(proj, idx) {
 }
 
 /**
+ * Returns the currently visible list of projects (respects active category filter if set)
+ */
+function getActiveNavigableProjects() {
+  const visible = allLoadedProjects
+    .filter((entry) => entry.card && entry.card.style.display !== "none")
+    .map((entry) => entry.proj);
+  return visible.length > 0 ? visible : allLoadedProjects.map((entry) => entry.proj);
+}
+
+/**
+ * Steps to the previous (-1) or next (+1) project card inside the Project Detail Modal
+ */
+function stepProjectDetailModal(delta) {
+  if (!currentOpenProjectRef) return;
+  const list = getActiveNavigableProjects();
+  if (list.length <= 1) return;
+
+  const currentIdx = list.indexOf(currentOpenProjectRef);
+  const nextIdx =
+    currentIdx === -1
+      ? 0
+      : (currentIdx + delta + list.length) % list.length;
+
+  openProjectDetailModal(list[nextIdx]);
+}
+
+window.stepProjectDetailModal = stepProjectDetailModal;
+
+/**
  * Prevents background page scrolling when the Project Detail Modal is open,
  * while allowing internal scrolling inside #pmodal-body.
  */
@@ -385,6 +415,8 @@ function preventProjectModalBackgroundScroll(e) {
 
 /**
  * Ensures the Full Project Detail Modal exists in the DOM
+ * - Desktop: Circular left/right arrow buttons on either side of the card
+ * - Mobile: Always-visible directional arrow buttons pinned to the bottom corners
  */
 function ensureProjectDetailModalExists() {
   let modal = document.getElementById("project-detail-modal");
@@ -398,20 +430,44 @@ function ensureProjectDetailModalExists() {
   modal.setAttribute("aria-hidden", "true");
 
   modal.innerHTML = `
+    <button type="button" class="pmodal-floating-nav pmodal-floating-prev" id="pmodal-prev-btn" aria-label="Previous Project">
+      <span class="pmodal-nav-arrow" aria-hidden="true">&#8592;</span>
+    </button>
+
     <div class="project-detail-dialog">
       <div class="project-detail-topbar">
         <div class="project-detail-topbar-left">
           <span class="project-detail-code" id="pmodal-code">PRJ // ARCHIVE</span>
+          <span class="project-detail-counter" id="pmodal-counter">1 / 1</span>
         </div>
         <button type="button" class="mini-action-btn lightbox-exit-btn" id="pmodal-close-btn">&#10005; CLOSE</button>
       </div>
       <div class="project-detail-body" id="pmodal-body"></div>
     </div>
+
+    <button type="button" class="pmodal-floating-nav pmodal-floating-next" id="pmodal-next-btn" aria-label="Next Project">
+      <span class="pmodal-nav-arrow" aria-hidden="true">&#8594;</span>
+    </button>
   `;
 
   document.body.appendChild(modal);
 
+  const prevBtn = modal.querySelector("#pmodal-prev-btn");
+  const nextBtn = modal.querySelector("#pmodal-next-btn");
   const closeBtn = modal.querySelector("#pmodal-close-btn");
+
+  prevBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    e.currentTarget.blur();
+    stepProjectDetailModal(-1);
+  });
+
+  nextBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    e.currentTarget.blur();
+    stepProjectDetailModal(1);
+  });
+
   closeBtn.addEventListener("click", closeProjectDetailModal);
 
   modal.addEventListener("click", (e) => {
@@ -421,8 +477,16 @@ function ensureProjectDetailModalExists() {
   window.addEventListener("keydown", (e) => {
     const lbModal = document.getElementById("lightbox-modal");
     const lbOpen = lbModal && lbModal.classList.contains("open");
-    if (e.key === "Escape" && modal.classList.contains("open") && !lbOpen) {
+    if (!modal.classList.contains("open") || lbOpen) return;
+
+    if (e.key === "Escape") {
       closeProjectDetailModal();
+    } else if (e.key === "ArrowLeft") {
+      e.preventDefault();
+      stepProjectDetailModal(-1);
+    } else if (e.key === "ArrowRight") {
+      e.preventDefault();
+      stepProjectDetailModal(1);
     }
   });
 
@@ -434,6 +498,7 @@ function closeProjectDetailModal() {
   if (!modal) return;
   modal.classList.remove("open");
   modal.setAttribute("aria-hidden", "true");
+  currentOpenProjectRef = null;
 
   const lbModal = document.getElementById("lightbox-modal");
   const isLbOpen = lbModal && lbModal.classList.contains("open");
@@ -453,11 +518,35 @@ function closeProjectDetailModal() {
  * Opens the full project details (main stage, full description, category & skills, and full media gallery)
  */
 function openProjectDetailModal(proj) {
+  currentOpenProjectRef = proj;
+
   const modal = ensureProjectDetailModalExists();
   const codeEl = modal.querySelector("#pmodal-code");
+  const counterEl = modal.querySelector("#pmodal-counter");
+  const floatingPrevBtn = modal.querySelector("#pmodal-prev-btn");
+  const floatingNextBtn = modal.querySelector("#pmodal-next-btn");
   const bodyEl = modal.querySelector("#pmodal-body");
 
+  const navList = getActiveNavigableProjects();
+  const currentIdx = navList.indexOf(proj);
+  const totalCount = navList.length;
+  const prevProj = totalCount > 1 ? navList[(currentIdx - 1 + totalCount) % totalCount] : null;
+  const nextProj = totalCount > 1 ? navList[(currentIdx + 1) % totalCount] : null;
+
   codeEl.textContent = proj.code || "PRJ // ARCHIVE";
+  if (counterEl) {
+    counterEl.textContent = totalCount > 0 ? `${currentIdx + 1} / ${totalCount}` : "";
+    counterEl.style.display = totalCount > 1 ? "inline-block" : "none";
+  }
+
+  if (floatingPrevBtn) {
+    floatingPrevBtn.style.display = totalCount > 1 ? "flex" : "none";
+    floatingPrevBtn.title = prevProj ? `Previous: ${prevProj.title}` : "Previous Project";
+  }
+  if (floatingNextBtn) {
+    floatingNextBtn.style.display = totalCount > 1 ? "flex" : "none";
+    floatingNextBtn.title = nextProj ? `Next: ${nextProj.title}` : "Next Project";
+  }
 
   const mainAsset = proj.verifiedAssets[0];
   const isImageMain = isImageAsset(mainAsset.type);
@@ -533,6 +622,8 @@ function openProjectDetailModal(proj) {
       <div class="project-gallery-grid" id="pmodal-gallery-grid"></div>
     </div>
   `;
+
+  bodyEl.scrollTop = 0;
 
   // Populate Main Stage inside Modal
   const mainWrap = bodyEl.querySelector("#pmodal-main-stage");
