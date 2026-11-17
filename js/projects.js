@@ -483,15 +483,20 @@ function openProjectDetailModal(proj) {
   const formattedDesc =
     typeof window.linkifyIITText === "function"
       ? window.linkifyIITText(rawDesc, iitUrl)
-      : rawDesc
-          .replace(
+      : (() => {
+          let d = rawDesc.replace(
             /Illinois Inst(?:i|e)tute of Technology/gi,
             (match) => `<a href="${iitUrl}" target="_blank" rel="noopener noreferrer" class="iit-link">${match}</a>`
-          )
-          .replace(
-            /\bIIT\b/gi,
-            (match) => `<a href="${iitUrl}" target="_blank" rel="noopener noreferrer" class="iit-link">${match}</a>`
           );
+          d = d.replace(
+            /(<a[^>]*>.*?<\/a>|<[^>]+>)|(\bIIT\b)/gi,
+            (match, tagOrLink, iitMatch) => {
+              if (tagOrLink) return tagOrLink;
+              return `<a href="${iitUrl}" target="_blank" rel="noopener noreferrer" class="iit-link">${iitMatch}</a>`;
+            }
+          );
+          return d;
+        })();
 
   bodyEl.innerHTML = `
     <div class="project-top-layout">

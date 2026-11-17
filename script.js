@@ -149,13 +149,21 @@ window.getAllPortfolioCategories = window.getAllPortfolioSubNames;
  */
 function linkifyIITText(rawHtml, iitUrl) {
   if (!iitUrl || !rawHtml) return rawHtml;
+
+  // First pass: linkify the full name
   let output = rawHtml.replace(
     /Illinois Inst(?:i|e)tute of Technology/gi,
     (match) => `<a href="${iitUrl}" target="_blank" rel="noopener noreferrer" class="iit-link">${match}</a>`
   );
+
+  // Second pass: linkify standalone "IIT" only in text nodes (outside HTML tags)
+  // Split on tags so we don't corrupt attributes like class="iit-link" or urls containing "iit"
   output = output.replace(
-    /\bIIT\b/gi,
-    (match) => `<a href="${iitUrl}" target="_blank" rel="noopener noreferrer" class="iit-link">${match}</a>`
+    /(<a[^>]*>.*?<\/a>|<[^>]+>)|(\bIIT\b)/gi,
+    (match, tagOrLink, iitMatch) => {
+      if (tagOrLink) return tagOrLink;                     // already a tag/link — keep as-is
+      return `<a href="${iitUrl}" target="_blank" rel="noopener noreferrer" class="iit-link">${iitMatch}</a>`;
+    }
   );
   return output;
 }
