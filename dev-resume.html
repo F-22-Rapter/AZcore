@@ -700,13 +700,27 @@ ${inputs}
       const args = [];
       let i = startIndex;
       while (args.length < count && i < str.length) {
-        while (i < str.length && /\s/.test(str[i])) i++;
-        if (str[i] !== "{") break;
+        // Skip whitespace AND LaTeX line comments (% ... \n)
+        while (i < str.length) {
+          if (/\s/.test(str[i])) { i++; continue; }
+          if (str[i] === "%") {
+            const nl = str.indexOf("\n", i);
+            i = nl === -1 ? str.length : nl + 1;
+            continue;
+          }
+          break;
+        }
+        if (i >= str.length || str[i] !== "{") break;
         let depth = 0;
         let argStart = i + 1;
         for (; i < str.length; i++) {
-          if (str[i] === "{" && str[i - 1] !== "\\") depth++;
-          else if (str[i] === "}" && str[i - 1] !== "\\") {
+          const ch = str[i];
+          // Count consecutive preceding backslashes to decide if this brace is escaped
+          let bs = 0;
+          for (let k = i - 1; k >= 0 && str[k] === "\\"; k--) bs++;
+          const escaped = bs % 2 === 1;
+          if (ch === "{" && !escaped) depth++;
+          else if (ch === "}" && !escaped) {
             depth--;
             if (depth === 0) {
               args.push(str.slice(argStart, i));
