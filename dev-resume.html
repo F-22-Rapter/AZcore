@@ -94,7 +94,6 @@
       align-items: start;
     }
 
-    /* --- LEFT INSPECTOR --- */
     .inspector-col {
       display: flex;
       flex-direction: column;
@@ -201,7 +200,6 @@
     }
     .fs-log-box.visible { display: block; }
 
-    /* --- RIGHT RESUME SHEET CANVAS --- */
     .sheet-viewport {
       display: flex;
       flex-direction: column;
@@ -232,7 +230,6 @@
       background: rgba(231, 76, 60, 0.15);
     }
 
-    /* US LETTER SHEET (8.5in x 11in = 816px x 1056px @ 96dpi) */
     .cv-sheet {
       position: relative;
       width: 816px;
@@ -247,7 +244,6 @@
       box-sizing: border-box;
     }
 
-    /* 1-Page Boundary Guide Line */
     .page-break-guide {
       position: absolute;
       left: 0;
@@ -269,25 +265,18 @@
       padding: 1px 6px;
     }
 
-    /* Editable highlight */
     [contenteditable="true"] {
       outline: none;
       border-radius: 2px;
       transition: background 0.12s ease, box-shadow 0.12s ease;
     }
-    [contenteditable="true"]:hover {
-      background: rgba(217, 40, 4, 0.07);
-    }
+    [contenteditable="true"]:hover { background: rgba(217, 40, 4, 0.07); }
     [contenteditable="true"]:focus {
       background: rgba(217, 40, 4, 0.11);
       box-shadow: 0 0 0 1px rgba(217, 40, 4, 0.5);
     }
 
-    /* --- AWESOME-CV TYPOGRAPHY --- */
-    .cv-header {
-      text-align: center;
-      margin-bottom: 10px;
-    }
+    .cv-header { text-align: center; margin-bottom: 10px; }
     .cv-name {
       font-family: 'Roboto', sans-serif;
       font-size: 2.55em;
@@ -307,14 +296,9 @@
       font-size: 0.78em;
       color: #444444;
     }
-    .cv-contact-item {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
+    .cv-contact-item { display: inline-flex; align-items: center; gap: 4px; }
     .cv-contact-sep { color: #999; }
 
-    /* Draggable Section Spacing Handle */
     .spacing-drag-handle {
       position: relative;
       height: 10px;
@@ -329,9 +313,7 @@
       user-select: none;
     }
     .spacing-drag-handle:hover,
-    .spacing-drag-handle.dragging {
-      opacity: 1;
-    }
+    .spacing-drag-handle.dragging { opacity: 1; }
     .spacing-drag-handle::before {
       content: "";
       position: absolute;
@@ -388,31 +370,18 @@
     }
     .cv-section-block:hover .cv-section-add-btn { opacity: 1; }
 
-    /* Skills Table */
-    .cv-skills-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 2px;
-    }
-    .cv-skill-row {
-      position: relative;
-    }
-    .cv-skill-row td {
-      padding: 1.5px 0;
-      vertical-align: top;
-    }
+    .cv-skills-table { width: 100%; border-collapse: collapse; margin-top: 2px; }
+    .cv-skill-row { position: relative; }
+    .cv-skill-row td { padding: 1.5px 0; vertical-align: top; }
     .cv-skill-cat {
-      width: 120px;
+      width: 125px;
       text-align: right;
       padding-right: 14px !important;
       font-weight: 700;
       color: #222222;
       font-size: 0.92em;
     }
-    .cv-skill-list {
-      color: #333333;
-      font-size: 0.92em;
-    }
+    .cv-skill-list { color: #333333; font-size: 0.92em; }
     .cv-skill-actions {
       width: 36px;
       text-align: right;
@@ -421,7 +390,6 @@
     }
     .cv-skill-row:hover .cv-skill-actions { opacity: 1; }
 
-    /* Entry (Education / Experience / Involvement) */
     .cv-entry {
       position: relative;
       margin-bottom: var(--cv-entry-gap);
@@ -431,9 +399,7 @@
       border: 1px solid transparent;
       border-radius: 3px;
     }
-    .cv-entry:hover {
-      border-color: rgba(217, 40, 4, 0.25);
-    }
+    .cv-entry:hover { border-color: rgba(217, 40, 4, 0.25); }
 
     .cv-entry-controls {
       position: absolute;
@@ -458,48 +424,20 @@
     }
     .mini-cv-btn:hover { background: #d92804; border-color: #d92804; color: #fff; }
 
-    .cv-entry-row1 {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 12px;
-    }
-    .cv-entry-org {
-      font-weight: 700;
-      font-size: 0.98em;
-      color: #222222;
-    }
-    .cv-entry-loc {
-      font-style: italic;
-      font-size: 0.88em;
-      color: #444444;
-      text-align: right;
-    }
-
+    .cv-entry-row1,
     .cv-entry-row2 {
       display: flex;
       justify-content: space-between;
       align-items: baseline;
       gap: 12px;
-      margin-top: 1px;
     }
-    .cv-entry-role {
-      font-size: 0.78em;
-      text-transform: uppercase;
-      letter-spacing: 0.02em;
-      color: #555555;
-    }
-    .cv-entry-date {
-      font-style: italic;
-      font-size: 0.82em;
-      color: #555555;
-      text-align: right;
-    }
+    .cv-entry-row2 { margin-top: 1px; }
+    .cv-entry-org { font-weight: 700; font-size: 0.98em; color: #222222; }
+    .cv-entry-loc { font-style: italic; font-size: 0.88em; color: #444444; text-align: right; }
+    .cv-entry-role { font-size: 0.78em; text-transform: uppercase; letter-spacing: 0.02em; color: #555555; }
+    .cv-entry-date { font-style: italic; font-size: 0.82em; color: #555555; text-align: right; }
 
-    .cv-bullets {
-      margin: 3px 0 0 16px;
-      padding: 0;
-    }
+    .cv-bullets { margin: 3px 0 0 16px; padding: 0; }
     .cv-bullet-item {
       position: relative;
       margin-bottom: var(--cv-bullet-gap);
@@ -527,7 +465,6 @@
       .cv-sheet { width: 100%; }
     }
 
-    /* EXACT VECTOR PRINT CSS FOR INSTANT PDF EXPORT */
     @media print {
       @page { size: letter; margin: 0; }
       body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
@@ -568,7 +505,6 @@
   </header>
 
   <main class="dev-stage">
-    <!-- MOUNT BANNER -->
     <div class="fs-banner">
       <div class="fs-status">
         <span id="fs-dot" class="fs-dot"></span>
@@ -590,7 +526,6 @@
     </div>
 
     <div class="workspace-grid">
-      <!-- LEFT: LAYOUT SLIDERS, SECTION MANAGER, RAW LATEX INSPECTOR -->
       <aside class="inspector-col">
         <div class="cad-panel">
           <div class="panel-header">
@@ -641,11 +576,10 @@
         </div>
       </aside>
 
-      <!-- RIGHT: INTERACTIVE AWESOME-CV SHEET -->
       <section class="sheet-viewport">
         <div class="sheet-toolbar">
           <span>CLICK ANY TEXT TO EDIT INLINE &bull; HOVER ENTRIES FOR CONTROLS &bull; DRAG BETWEEN SECTIONS FOR \vspace</span>
-          <span id="page-status-pill" class="page-status-pill">FITS 1 PAGE</span>
+          <span id="page-status-pill" class="page-status-pill">LOADING...</span>
         </div>
 
         <div id="cv-sheet" class="cv-sheet">
@@ -657,9 +591,6 @@
   </main>
 
   <script>
-    // =========================================================================
-    // STATE (Pre-loaded with current resume; overwritten on AZcore folder mount)
-    // =========================================================================
     const resumeState = {
       rootHandle: null,
       resumeDirHandle: null,
@@ -681,89 +612,10 @@
         linkedin: "zhuk-alex"
       },
       sections: [
-        {
-          id: "education",
-          file: "cv/education.tex",
-          title: "Education",
-          type: "entries",
-          enabled: true,
-          vspaceMm: 0,
-          items: [
-            {
-              org: "Illinois Institute of Technology",
-              role: "B.S. in Civil Engineering GPA 4.0",
-              loc: "Chicago, IL",
-              date: "Expected May 2029",
-              bullets: []
-            }
-          ]
-        },
-        {
-          id: "skills",
-          file: "cv/skills.tex",
-          title: "Skills",
-          type: "skills",
-          enabled: true,
-          vspaceMm: 0,
-          items: [
-            { category: "CAD", list: "SolidWorks | AutoCAD | Inventor | Revit | Blender" },
-            { category: "Software", list: "Ansys Fluent | Visual Studio Code | MATLAB | Unity" },
-            { category: "Fabrication", list: "Lathe Machining | Mill Machining | Soldering | Metal working" },
-            { category: "Digital Media", list: "Photoshop | Lightroom | Davinci Resolve | Microsoft 365" },
-            { category: "Languages", list: "English | Ukrainian | Russian" },
-            { category: "Code", list: "Python | Javascript | C#" }
-          ]
-        },
-        {
-          id: "experience",
-          file: "cv/experience.tex",
-          title: "Experience",
-          type: "entries",
-          enabled: true,
-          vspaceMm: 0,
-          items: [
-            {
-              org: "IIT Motorsports (Formula SAE)",
-              role: "Vice President & High Voltage Team Lead",
-              loc: "Chicago, IL",
-              date: "August 2025 to Present",
-              bullets: [
-                "Directed workflow and project timelines for a 50-member team Formula SAE team, establishing a comprehensive 2-year vehicle build schedule.",
-                "Led a 6-person specialized sub-team in the end-to-end design and mechanical integration of a 2026 electric tractive battery system."
-              ]
-            },
-            {
-              org: "AZcore (FSAE)",
-              role: "LARP (Lithium Array Rechargeable Pack)",
-              loc: "Chicago, IL",
-              date: "August 2026 to Present",
-              bullets: [
-                "Engineered a modular multi-plate battery assembly utilizing standardized commercial off-the-shelf components, streamlining machining and assembly cycles while increasing mechanical performance compared to previous iterations.",
-                "Optimized battery module architecture using SolidWorks, successfully increasing pack density by 6% and overall performance by 4%.",
-                "Developed and validated a custom active cooling system for a 72s6p accumulator module using ANSYS Fluent Conjugate Heat Transfer (CHT) simulations, reducing operating temperatures by 5°C and boosting thermal efficiency by 7%."
-              ]
-            },
-            {
-              org: "American Society of Civil Engineers Steel Bridge",
-              role: "Fabrication Team Member",
-              loc: "Chicago, IL",
-              date: "August 2025 to Present",
-              bullets: [
-                "Manufactured structural steel components for the competition bridge, utilizing shop tools and mill machinery to meet precise design specifications.",
-                "Collaborated with 6 team leads to review bridge design to ensure all components were properly drafted."
-              ]
-            },
-            {
-              org: "Structural Engineers Association of Illinois",
-              role: "VP of Membership",
-              loc: "Chicago, IL",
-              date: "December 2025 to Present",
-              bullets: [
-                "Drafted a comprehensive 2026-2027 events calendar, including technical workshops, site visits, and structural design competitions to increase member engagement."
-              ]
-            }
-          ]
-        }
+        { id: "education", file: "cv/education.tex", title: "Education", type: "entries", enabled: true, vspaceMm: 0, items: [] },
+        { id: "skills", file: "cv/skills.tex", title: "Skills", type: "skills", enabled: true, vspaceMm: 0, items: [] },
+        { id: "experience", file: "cv/experience.tex", title: "Experience", type: "entries", enabled: true, vspaceMm: 0, items: [] },
+        { id: "involvement", file: "cv/Involvment.tex", title: "Involvement", type: "skills", enabled: true, vspaceMm: 0, items: [] }
       ]
     };
 
@@ -774,11 +626,13 @@
       return String(str || "")
         .replace(/\\/g, "\\textbackslash{}")
         .replace(/([%&$#_])/g, "\\$1")
-        .replace(/°/g, "$^{\\circ}$");
+        .replace(/°/g, "$^{\\circ}$")
+        .replace(/Δ/g, "$\\Delta$");
     }
 
     function unescapeTex(str) {
       return String(str || "")
+        .replace(/\$\\Delta\$/g, "Δ")
         .replace(/\$?\^\{?\\circ\}?\$?/g, "°")
         .replace(/\\([%&$#_])/g, "$1")
         .replace(/\\textbackslash\{\}/g, "\\")
@@ -822,9 +676,7 @@ ${inputs}
     function generateSectionTex(sec) {
       if (sec.type === "skills") {
         const rows = sec.items
-          .map(
-            (r) => `  \\cvskill\n    {${escapeTex(r.category)}}\n    {${escapeTex(r.list)}}`
-          )
+          .map((r) => `  \\cvskill\n    {${escapeTex(r.category)}}\n    {${escapeTex(r.list)}}`)
           .join("\n\n");
         return `\\cvsection{${escapeTex(sec.title)}}\n\n\\begin{cvskills}\n${rows}\n\\end{cvskills}\n`;
       }
@@ -842,7 +694,7 @@ ${inputs}
     }
 
     // =========================================================================
-    // LATEX PARSING (When mounting AZcore/assets/resume/)
+    // LATEX PARSING
     // =========================================================================
     function extractBraceArgs(str, startIndex, count) {
       const args = [];
@@ -867,6 +719,24 @@ ${inputs}
       return { args, endIndex: i };
     }
 
+    function parseMainTexHeader(tex) {
+      const nameIdx = tex.indexOf("\\name");
+      if (nameIdx !== -1) {
+        const { args } = extractBraceArgs(tex, nameIdx + 5, 2);
+        if (args.length === 2) {
+          resumeState.header.firstName = unescapeTex(args[0]);
+          resumeState.header.lastName = unescapeTex(args[1]);
+        }
+      }
+      ["mobile", "email", "homepage", "linkedin"].forEach((cmd) => {
+        const idx = tex.indexOf(`\\${cmd}`);
+        if (idx !== -1) {
+          const { args } = extractBraceArgs(tex, idx + cmd.length + 1, 1);
+          if (args.length === 1) resumeState.header[cmd] = unescapeTex(args[0]);
+        }
+      });
+    }
+
     function parseSkillsTex(tex) {
       const items = [];
       let idx = 0;
@@ -877,7 +747,7 @@ ${inputs}
         if (args.length === 2) {
           items.push({ category: unescapeTex(args[0]), list: unescapeTex(args[1]) });
         }
-        idx = endIndex;
+        idx = endIndex > idx ? endIndex : idx + 8;
       }
       return items;
     }
@@ -907,6 +777,34 @@ ${inputs}
         idx = endIndex > idx ? endIndex : idx + 8;
       }
       return items;
+    }
+
+    // =========================================================================
+    // AUTO-LOAD LIVE .TEX FILES FROM REPO ON PAGE OPEN
+    // =========================================================================
+    async function loadLiveTexFromRepo() {
+      let loaded = 0;
+      try {
+        const mainRes = await fetch("assets/resume/main.tex", { cache: "no-store" });
+        if (mainRes.ok) parseMainTexHeader(await mainRes.text());
+      } catch (_) {}
+
+      for (const sec of resumeState.sections) {
+        try {
+          const res = await fetch(`assets/resume/${sec.file}`, { cache: "no-store" });
+          if (!res.ok) continue;
+          const txt = await res.text();
+          const parsed = sec.type === "skills" ? parseSkillsTex(txt) : parseEntriesTex(txt);
+          if (parsed.length) {
+            sec.items = parsed;
+            loaded++;
+          }
+        } catch (_) {}
+      }
+      renderAll();
+      if (loaded > 0) {
+        logMsg(`Loaded ${loaded} live .tex section(s) from assets/resume/cv/. Mount AZcore folder to save edits.`);
+      }
     }
 
     // =========================================================================
@@ -947,9 +845,7 @@ ${inputs}
       if (!files.includes(resumeState.activeTexTab)) resumeState.activeTexTab = "main.tex";
 
       tabBar.innerHTML = files
-        .map(
-          (f) => `<button type="button" class="tex-tab-btn ${f === resumeState.activeTexTab ? "active" : ""}" data-file="${f}">${f.replace("cv/", "")}</button>`
-        )
+        .map((f) => `<button type="button" class="tex-tab-btn ${f === resumeState.activeTexTab ? "active" : ""}" data-file="${f}">${f.replace("cv/", "")}</button>`)
         .join("");
 
       tabBar.querySelectorAll(".tex-tab-btn").forEach((btn) => {
@@ -1104,7 +1000,6 @@ ${inputs}
     }
 
     function bindSheetEvents(root) {
-      // Header edits
       root.querySelectorAll("[data-bind]").forEach((el) => {
         el.addEventListener("input", () => {
           const [, key] = el.dataset.bind.split(".");
@@ -1113,7 +1008,6 @@ ${inputs}
         });
       });
 
-      // Section title edits
       root.querySelectorAll("[data-sec-title]").forEach((el) => {
         el.addEventListener("input", () => {
           resumeState.sections[el.dataset.secTitle].title = el.textContent.trim();
@@ -1122,7 +1016,6 @@ ${inputs}
         });
       });
 
-      // Skill edits
       root.querySelectorAll("[data-skill-cat]").forEach((el) => {
         el.addEventListener("input", () => {
           const [s, r] = el.dataset.skillCat.split(":").map(Number);
@@ -1138,7 +1031,6 @@ ${inputs}
         });
       });
 
-      // Entry field edits
       root.querySelectorAll("[data-entry-field]").forEach((el) => {
         el.addEventListener("input", () => {
           const [s, e, field] = el.dataset.entryField.split(":");
@@ -1148,7 +1040,6 @@ ${inputs}
         });
       });
 
-      // Bullet edits
       root.querySelectorAll("[data-bullet]").forEach((el) => {
         el.addEventListener("input", () => {
           const [s, e, b] = el.dataset.bullet.split(":").map(Number);
@@ -1158,12 +1049,11 @@ ${inputs}
         });
       });
 
-      // Add / Delete / Reorder controls
       root.querySelectorAll("[data-add-item]").forEach((btn) => {
         btn.addEventListener("click", () => {
           const sec = resumeState.sections[Number(btn.dataset.addItem)];
           if (sec.type === "skills") {
-            sec.items.push({ category: "Category", list: "Skill 1 | Skill 2" });
+            sec.items.push({ category: "Category", list: "Item 1 | Item 2" });
           } else {
             sec.items.unshift({
               org: "Organization Name",
@@ -1212,7 +1102,6 @@ ${inputs}
         });
       });
 
-      // Draggable Section \vspace{} Handles
       root.querySelectorAll(".spacing-drag-handle").forEach((handle) => {
         handle.addEventListener("mousedown", (e) => {
           e.preventDefault();
@@ -1285,7 +1174,11 @@ ${inputs}
         document.getElementById("fs-status-title").textContent = `CONNECTED TO /${root.name} — WRITE ACCESS UNLOCKED`;
         document.getElementById("save-tex-btn").disabled = false;
 
-        // Try loading existing .tex files from assets/resume/cv/
+        try {
+          const mainFh = await resumeDir.getFileHandle("main.tex");
+          parseMainTexHeader(await (await mainFh.getFile()).text());
+        } catch (_) {}
+
         let loadedCount = 0;
         for (const sec of resumeState.sections) {
           const fname = sec.file.replace(/^cv\//, "");
@@ -1301,11 +1194,7 @@ ${inputs}
         }
 
         renderAll();
-        logMsg(
-          loadedCount > 0
-            ? `Mounted /${root.name} and loaded ${loadedCount} existing .tex section(s) from assets/resume/cv/.`
-            : `Mounted /${root.name}. Click "SAVE .TEX TO DISK" to initialize assets/resume/ with these files.`
-        );
+        logMsg(`Mounted /${root.name} and loaded ${loadedCount} .tex section(s) from assets/resume/cv/.`);
       } catch (err) {
         if (err.name !== "AbortError") logMsg(`Mount failed: ${err.message}`, true);
       }
@@ -1337,9 +1226,6 @@ ${inputs}
       }
     }
 
-    // =========================================================================
-    // INIT LISTENERS
-    // =========================================================================
     window.addEventListener("DOMContentLoaded", () => {
       document.getElementById("mount-btn").addEventListener("click", mountAzcoreFolder);
       document.getElementById("save-tex-btn").addEventListener("click", saveAllTexToDisk);
@@ -1377,6 +1263,7 @@ ${inputs}
       });
 
       renderAll();
+      loadLiveTexFromRepo();
     });
   </script>
 </body>

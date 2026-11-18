@@ -21,7 +21,12 @@ jobs:
         with:
           working_directory: assets/resume
           root_file: main.tex
-          compiler: xelatex
+          latexmk_use_xelatex: true
+          pre_compile: |
+            mkdir -p /usr/local/share/fonts/source-sans
+            curl -sL https://github.com/adobe-fonts/source-sans/releases/download/3.052R/OTF-source-sans-3.052R.zip -o /tmp/ss3.zip
+            unzip -qo /tmp/ss3.zip -d /usr/local/share/fonts/source-sans
+            fc-cache -fv
 
       - name: Copy PDF to assets/about/resume.pdf
         run: |
