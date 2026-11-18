@@ -1,0 +1,36 @@
+name: Build Resume PDF
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'assets/resume/**'
+
+permissions:
+  contents: write
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout AZcore
+        uses: actions/checkout@v4
+
+      - name: Compile awesome-cv with XeLaTeX
+        uses: xu-cheng/latex-action@v3
+        with:
+          working_directory: assets/resume
+          root_file: main.tex
+          compiler: xelatex
+
+      - name: Copy PDF to assets/about/resume.pdf
+        run: |
+          mkdir -p assets/about
+          cp assets/resume/main.pdf assets/about/resume.pdf
+
+      - name: Commit updated resume.pdf
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add assets/about/resume.pdf
+          git diff --quiet && git diff --staged --quiet || (git commit -m "chore: rebuild assets/about/resume.pdf" && git push)
