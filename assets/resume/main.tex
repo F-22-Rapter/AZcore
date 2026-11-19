@@ -12,14 +12,13 @@
 \renewenvironment{cvskills}{%
   \vspace{\acvSectionContentTopSkip}
   \vspace{-2.0mm}
-  \begin{flushleft}
-    \hspace*{-1.0mm}%
-    \setlength{\tabcolsep}{1.60mm}%
-    \setlength{\extrarowheight}{0pt}
-    \begin{tabular*}{\dimexpr\textwidth-(-1.0mm)\relax}{@{\extracolsep{\fill}} >{\raggedleft\arraybackslash}p{26.0mm} L{\dimexpr\textwidth-(26.0mm)-(-1.0mm)-(3.2mm)-2mm\relax}}
+  \par\noindent
+  \hspace*{-1.0mm}%
+  \setlength{\tabcolsep}{1.60mm}%
+  \setlength{\extrarowheight}{0pt}%
+  \begin{tabular*}{\dimexpr\textwidth-(-1.0mm)\relax}{@{\extracolsep{\fill}} >{\raggedleft\arraybackslash}p{26.0mm} >{\raggedright\arraybackslash}p{\dimexpr\textwidth-(26.0mm)-(-1.0mm)-(3.2mm)-2mm\relax}}
 }{%
-    \end{tabular*}
-  \end{flushleft}
+  \end{tabular*}\par
 }
 
 \name{Alexander}{Zhuk}

@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400&family=Source+Sans+3:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
   <link rel="stylesheet" href="style.css" />
   <style id="dynamic-print-page">
     @media print { @page { size: letter; margin: 0; } }
@@ -343,6 +344,9 @@
       flex-shrink: 0;
     }
 
+    /* =========================================================================
+       AWESOME-CV.CLS MATCHING STYLES
+       ========================================================================= */
     .cv-sheet {
       position: relative;
       width: var(--cv-page-w);
@@ -352,10 +356,11 @@
       padding: var(--cv-margin-top) var(--cv-margin-x) var(--cv-margin-bottom) var(--cv-margin-x);
       box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6);
       font-family: 'Source Sans 3', 'Roboto', sans-serif;
-      font-size: calc(12px * var(--cv-font-scale));
-      line-height: 1.22;
+      font-size: calc(9pt * var(--cv-font-scale));
+      line-height: 1.2;
       box-sizing: border-box;
       transform-origin: top left;
+      -webkit-font-smoothing: antialiased;
     }
 
     .page-break-guide {
@@ -388,28 +393,29 @@
       box-shadow: 0 0 0 1px rgba(217, 40, 4, 0.5);
     }
 
-    .cv-header { text-align: center; margin-bottom: 14px; }
+    /* Header (\makecvheader) */
+    .cv-header { text-align: center; margin-bottom: 3.5mm; }
     .cv-name {
       font-family: 'Roboto', sans-serif;
-      font-size: 42.6px;
+      font-size: 32pt;
       line-height: 1.05;
-      letter-spacing: -0.01em;
-      margin-bottom: 3px;
+      letter-spacing: -0.015em;
+      margin-bottom: 1.2mm;
     }
-    .cv-first-name { font-weight: 300; color: #5d5d5d; }
+    .cv-first-name { font-weight: 300; color: #5D5D5D; }
     .cv-last-name { font-weight: 700; color: #333333; }
     .cv-position {
-      font-size: 10.1px;
+      font-size: 7.6pt;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.04em;
       color: var(--cv-awesome);
-      margin-bottom: 2px;
+      margin-bottom: 0.4mm;
     }
     .cv-address {
-      font-size: 10.7px;
+      font-size: 8pt;
       font-style: italic;
       color: #999999;
-      margin-bottom: 2px;
+      margin-bottom: 0.4mm;
     }
 
     .cv-contact {
@@ -417,13 +423,18 @@
       justify-content: center;
       align-items: center;
       flex-wrap: wrap;
-      gap: 4px 10px;
-      font-size: 9.5px;
+      gap: 2px 7px;
+      font-family: 'Roboto', sans-serif;
+      font-size: 6.8pt;
+      font-weight: 400;
       color: #333333;
+      margin-top: 1mm;
     }
     .cv-contact-item { display: inline-flex; align-items: center; gap: 4px; }
-    .cv-contact-sep { color: #999; }
+    .cv-contact-item i { font-size: 7.2pt; color: #333333; }
+    .cv-contact-sep { color: #5D5D5D; margin: 0 2px; }
 
+    /* Section Drag Handle */
     .spacing-drag-handle {
       position: relative;
       height: 8px;
@@ -458,23 +469,24 @@
       letter-spacing: 0.04em;
     }
 
+    /* Sections (\cvsection) */
     .cv-section-block {
       position: relative;
       margin-top: var(--cv-section-gap);
     }
 
     .cv-section-heading {
-    position: relative;
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-    margin-bottom: 5px;
+      position: relative;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-bottom: 2.2mm;
     }
     .cv-section-title {
       font-family: 'Source Sans 3', sans-serif;
-      font-size: 21.3px;
+      font-size: 16pt;
       font-weight: 700;
-      line-height: 1.08;
+      line-height: 1.05;
       color: #333333;
       white-space: nowrap;
     }
@@ -482,44 +494,45 @@
     .cv-section-rule {
       flex: 1;
       height: 0.9pt;
-      background: #5d5d5d;
-      transform: translateY(-2px);
+      background: #5D5D5D;
+      transform: translateY(-1.5px);
     }
     .cv-section-add-btn {
-    position: absolute;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    opacity: 0;
-    pointer-events: none;
-    background: #1f2326;
-    color: #fff;
-    border: 1px solid #d92804;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 9px;
-    padding: 1px 6px;
-    cursor: pointer;
-    transition: opacity 0.15s ease;
-    z-index: 5;
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      opacity: 0;
+      pointer-events: none;
+      background: #1f2326;
+      color: #fff;
+      border: 1px solid #d92804;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      padding: 1px 6px;
+      cursor: pointer;
+      transition: opacity 0.15s ease;
+      z-index: 5;
     }
     .cv-section-block:hover .cv-section-add-btn {
-    opacity: 1;
-    pointer-events: auto;
+      opacity: 1;
+      pointer-events: auto;
     }
 
     .cv-subsection-heading {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin: 6px 0 3px;
+      margin: 2mm 0 1mm;
     }
     .cv-subsection-title {
-      font-size: 16px;
+      font-size: 12pt;
       font-variant: small-caps;
       color: #333333;
       font-weight: 600;
     }
 
+    /* Skills / Involvement (\begin{cvskills}) */
     .cv-skills-wrap {
       position: relative;
     }
@@ -529,19 +542,20 @@
       margin-left: var(--cv-skill-offset-x);
       table-layout: fixed;
       border-collapse: collapse;
-      margin-top: 1px;
+      margin-top: 0;
     }
 
     .cv-honors-table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 1px;
+      margin-top: 0;
     }
 
     .cv-skill-row,
     .cv-honor-row { position: relative; }
     .cv-skill-row td,
-    .cv-honor-row td { padding: 1px 0; vertical-align: top; }
+    .cv-honor-row td { padding: 0.7px 0; vertical-align: top; line-height: 1.24; }
+
     .cv-skill-cat {
       width: var(--cv-skill-cat-w);
       box-sizing: border-box;
@@ -549,16 +563,16 @@
       padding-right: var(--cv-skill-gap) !important;
       font-weight: 700;
       color: #414141;
-      font-size: 13px;
+      font-size: 10pt;
     }
     .cv-skill-list {
       color: #333333;
-      font-size: 12px;
+      font-size: 9pt;
       font-weight: 300;
       word-wrap: break-word;
     }
     .cv-skill-actions {
-      width: 30px;
+      width: 24px;
       text-align: right;
       opacity: 0;
       transition: opacity 0.15s ease;
@@ -604,36 +618,38 @@
       pointer-events: none;
     }
 
+    /* Honors (\begin{cvhonors}) */
     .cv-honor-date {
-      width: 60px;
+      width: 54px;
       text-align: center;
-      color: #5d5d5d;
-      font-size: 12px;
+      color: #5D5D5D;
+      font-size: 9pt;
     }
     .cv-honor-main {
-      color: #5d5d5d;
-      font-size: 12px;
-      padding-right: 10px !important;
+      color: #5D5D5D;
+      font-size: 9pt;
+      padding-right: 8px !important;
     }
     .cv-honor-pos {
       font-weight: 700;
       color: #414141;
     }
     .cv-honor-loc {
-      width: 115px;
+      width: 110px;
       text-align: right;
       font-style: italic;
       font-weight: 300;
       color: var(--cv-awesome);
-      font-size: 12px;
+      font-size: 9pt;
     }
 
+    /* Entries (\cventry) */
     .cv-entry {
       position: relative;
       margin-bottom: var(--cv-entry-gap);
-      padding: 1px 4px;
-      margin-left: -4px;
-      margin-right: -4px;
+      padding: 0 3px;
+      margin-left: -3px;
+      margin-right: -3px;
       border: 1px solid transparent;
       border-radius: 3px;
     }
@@ -668,22 +684,29 @@
       display: flex;
       justify-content: space-between;
       align-items: baseline;
-      gap: 12px;
+      gap: 10px;
     }
-    .cv-entry-org { font-weight: 700; font-size: 13.3px; color: #414141; }
-    .cv-entry-loc { font-style: italic; font-weight: 300; font-size: 12px; color: var(--cv-awesome); text-align: right; }
-    .cv-entry-role { font-size: 10.6px; text-transform: uppercase; letter-spacing: 0.02em; color: #5d5d5d; }
-    .cv-entry-date { font-style: italic; font-weight: 300; font-size: 10.6px; color: #5d5d5d; text-align: right; }
+    .cv-entry-org { font-weight: 700; font-size: 10pt; color: #414141; line-height: 1.22; }
+    .cv-entry-loc { font-style: italic; font-weight: 300; font-size: 9pt; color: var(--cv-awesome); text-align: right; }
+    .cv-entry-role { font-size: 8pt; font-weight: 400; text-transform: uppercase; letter-spacing: 0.015em; color: #5D5D5D; line-height: 1.25; }
+    .cv-entry-date { font-style: italic; font-weight: 300; font-size: 8pt; color: #5D5D5D; text-align: right; }
 
-    .cv-bullets { margin: 2px 0 0 15px; padding: 0; }
+    /* Bullets (\begin{cvitems}) */
+    .cv-bullets { margin: 1.5px 0 0 13px; padding: 0; }
     .cv-bullet-item {
       position: relative;
       margin-bottom: var(--cv-bullet-gap);
-      font-size: 12px;
+      font-size: 9pt;
       font-weight: 300;
-      line-height: 1.24;
+      line-height: 1.25;
       color: #333333;
-      padding-right: 16px;
+      padding-right: 12px;
+      hyphens: auto;
+      -webkit-hyphens: auto;
+    }
+    .cv-bullet-item::marker {
+      font-size: 7.5pt;
+      color: #333333;
     }
     .cv-bullet-del {
       position: absolute;
@@ -699,6 +722,7 @@
     }
     .cv-bullet-item:hover .cv-bullet-del { opacity: 1; }
 
+    /* Footer (\makecvfooter) */
     .cv-footer {
       position: absolute;
       left: var(--cv-margin-x);
@@ -707,7 +731,7 @@
       display: grid;
       grid-template-columns: 1fr auto 1fr;
       align-items: center;
-      font-size: 10.6px;
+      font-size: 8pt;
       font-variant: small-caps;
       color: #999999;
     }
@@ -1089,14 +1113,13 @@
 \\renewenvironment{cvskills}{%
   \\vspace{\\acvSectionContentTopSkip}
   \\vspace{-2.0mm}
-  \\begin{flushleft}
-    \\hspace*{${sp.skillOffsetMm.toFixed(1)}mm}%
-    \\setlength{\\tabcolsep}{${(sp.skillGapMm / 2).toFixed(2)}mm}%
-    \\setlength{\\extrarowheight}{0pt}
-    \\begin{tabular*}{\\dimexpr\\textwidth-(${sp.skillOffsetMm.toFixed(1)}mm)\\relax}{@{\\extracolsep{\\fill}} >{\\raggedleft\\arraybackslash}p{${sp.skillCatWidthMm.toFixed(1)}mm} L{\\dimexpr\\textwidth-(${sp.skillCatWidthMm.toFixed(1)}mm)-(${sp.skillOffsetMm.toFixed(1)}mm)-(${sp.skillGapMm.toFixed(1)}mm)-2mm\\relax}}
+  \\par\\noindent
+  \\hspace*{${sp.skillOffsetMm.toFixed(1)}mm}%
+  \\setlength{\\tabcolsep}{${(sp.skillGapMm / 2).toFixed(2)}mm}%
+  \\setlength{\\extrarowheight}{0pt}%
+  \\begin{tabular*}{\\dimexpr\\textwidth-(${sp.skillOffsetMm.toFixed(1)}mm)\\relax}{@{\\extracolsep{\\fill}} >{\\raggedleft\\arraybackslash}p{${sp.skillCatWidthMm.toFixed(1)}mm} >{\\raggedright\\arraybackslash}p{\\dimexpr\\textwidth-(${sp.skillCatWidthMm.toFixed(1)}mm)-(${sp.skillOffsetMm.toFixed(1)}mm)-(${sp.skillGapMm.toFixed(1)}mm)-2mm\\relax}}
 }{%
-    \\end{tabular*}
-  \\end{flushleft}
+  \\end{tabular*}\\par
 }`;
 
       const inputs = resumeState.sections
@@ -1561,11 +1584,11 @@ ${inputs}
 
       const h = resumeState.header;
       const contactItems = [
-        h.mobile ? `<span class="cv-contact-item">&#128241; <span contenteditable="true" data-bind="header.mobile">${h.mobile}</span></span>` : "",
-        h.email ? `<span class="cv-contact-item">&#9993; <span contenteditable="true" data-bind="header.email">${h.email}</span></span>` : "",
-        h.homepage ? `<span class="cv-contact-item">&#8962; <span contenteditable="true" data-bind="header.homepage">${h.homepage}</span></span>` : "",
-        h.github ? `<span class="cv-contact-item">gh <span contenteditable="true" data-bind="header.github">${h.github}</span></span>` : "",
-        h.linkedin ? `<span class="cv-contact-item">in <span contenteditable="true" data-bind="header.linkedin">${h.linkedin}</span></span>` : ""
+        h.mobile ? `<span class="cv-contact-item"><i class="fa-solid fa-mobile-screen-button"></i> <span contenteditable="true" data-bind="header.mobile">${h.mobile}</span></span>` : "",
+        h.email ? `<span class="cv-contact-item"><i class="fa-solid fa-envelope"></i> <span contenteditable="true" data-bind="header.email">${h.email}</span></span>` : "",
+        h.homepage ? `<span class="cv-contact-item"><i class="fa-solid fa-house"></i> <span contenteditable="true" data-bind="header.homepage">${h.homepage}</span></span>` : "",
+        h.github ? `<span class="cv-contact-item"><i class="fa-brands fa-github"></i> <span contenteditable="true" data-bind="header.github">${h.github}</span></span>` : "",
+        h.linkedin ? `<span class="cv-contact-item"><i class="fa-brands fa-linkedin"></i> <span contenteditable="true" data-bind="header.linkedin">${h.linkedin}</span></span>` : ""
       ].filter(Boolean).join(`<span class="cv-contact-sep">|</span>`);
 
       let html = `
