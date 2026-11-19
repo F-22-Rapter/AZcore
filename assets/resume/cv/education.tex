@@ -1,13 +1,25 @@
+% AZCORE_SEC_LAYOUT: contentSkip=2.5mm, entryGap=1.50mm, bulletGap=0.25mm
 \cvsection{Education}
 
+{%
+\renewcommand{\acvSectionContentTopSkip}{2.5mm}%
+\renewenvironment{cvitems}{%
+  \vspace{-4.0mm}%
+  \begin{justify}%
+  \begin{itemize}[leftmargin=2ex, nosep, itemsep=0.25mm]%
+    \setlength{\parskip}{0pt}%
+    \renewcommand{\labelitemi}{\bullet}%
+}{%
+  \end{itemize}%
+  \end{justify}%
+  \vspace{1.0mm}%
+}%
 \begin{cventries}
   \cventry
     {B.S. in Civil Engineering GPA 4.0}
     {Illinois Institute of Technology}
     {Chicago, IL}
     {Expected May 2029}
-    {
-      \begin{cvitems}
-      \end{cvitems}
-    }
+    {}
 \end{cventries}
+}

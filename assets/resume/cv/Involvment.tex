@@ -1,5 +1,18 @@
+% AZCORE_SEC_LAYOUT: contentSkip=2.5mm, offset=-2.0mm, catw=25.0mm, gap=2.0mm, rowStretch=0.95
 \cvsection{Involvement}
 
+{%
+\renewenvironment{cvskills}{%
+  \par\vspace{2.5mm}%
+  \setlength{\parskip}{0pt}%
+  \renewcommand{\arraystretch}{0.95}%
+  \noindent\hspace*{-2.0mm}%
+  \setlength{\tabcolsep}{1.00mm}%
+  \setlength{\extrarowheight}{0pt}%
+  \begin{tabular*}{\dimexpr\textwidth-(-2.0mm)\relax}{@{\extracolsep{\fill}} >{\raggedleft\arraybackslash}p{25.0mm} >{\raggedright\arraybackslash}p{\dimexpr\textwidth-(25.0mm)-(-2.0mm)-(2.0mm)-2mm\relax}}%
+}{%
+  \end{tabular*}\par%
+}%
 \begin{cvskills}
   \cvskill
     {Project Teams}
@@ -17,3 +30,4 @@
     {Media}
     {Photography Club}
 \end{cvskills}
+}

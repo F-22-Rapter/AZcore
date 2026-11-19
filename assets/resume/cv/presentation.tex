@@ -1,5 +1,19 @@
+% AZCORE_SEC_LAYOUT: contentSkip=2.5mm, entryGap=1.50mm, bulletGap=0.25mm
 \cvsection{Presentation}
 
+{%
+\renewcommand{\acvSectionContentTopSkip}{2.5mm}%
+\renewenvironment{cvitems}{%
+  \vspace{-4.0mm}%
+  \begin{justify}%
+  \begin{itemize}[leftmargin=2ex, nosep, itemsep=0.25mm]%
+    \setlength{\parskip}{0pt}%
+    \renewcommand{\labelitemi}{\bullet}%
+}{%
+  \end{itemize}%
+  \end{justify}%
+  \vspace{1.0mm}%
+}%
 \begin{cventries}
   \cventry
     {Presenter for <Hosting Web Application for Free utilizing GitHub, Netlify and CloudFlare>}
@@ -35,3 +49,4 @@
       \end{cvitems}
     }
 \end{cventries}
+}

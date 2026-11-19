@@ -1,5 +1,18 @@
+% AZCORE_SEC_LAYOUT: contentSkip=2.5mm, offset=-4.0mm, catw=25.0mm, gap=2.0mm, rowStretch=0.95
 \cvsection{Skills}
 
+{%
+\renewenvironment{cvskills}{%
+  \par\vspace{2.5mm}%
+  \setlength{\parskip}{0pt}%
+  \renewcommand{\arraystretch}{0.95}%
+  \noindent\hspace*{-4.0mm}%
+  \setlength{\tabcolsep}{1.00mm}%
+  \setlength{\extrarowheight}{0pt}%
+  \begin{tabular*}{\dimexpr\textwidth-(-4.0mm)\relax}{@{\extracolsep{\fill}} >{\raggedleft\arraybackslash}p{25.0mm} >{\raggedright\arraybackslash}p{\dimexpr\textwidth-(25.0mm)-(-4.0mm)-(2.0mm)-2mm\relax}}%
+}{%
+  \end{tabular*}\par%
+}%
 \begin{cvskills}
   \cvskill
     {CAD}
@@ -25,3 +38,4 @@
     {Code}
     {Python | Javascript | C\#}
 \end{cvskills}
+}
