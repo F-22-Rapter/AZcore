@@ -1273,31 +1273,30 @@ ${inputs}
       el.value = value;
       form.appendChild(el);
     }
-    function patchClsForTexlive(clsText) {
-    return clsText
-      .replace(
-        /\\newfontfamily\\bodyfont\[[^\]]*\]\{[^}]*Source Sans 3[^}]*\}/g,
-        "\\newfontfamily\\bodyfont[Extension=.otf, UprightFont=*-Regular, ItalicFont=*-It, BoldFont=*-Bold, BoldItalicFont=*-BoldIt]{SourceSansPro}"
-      )
-      .replace(
-        /\\newfontfamily\\bodyfontlight\[[^\]]*\]\{[^}]*Source Sans 3[^}]*\}/g,
-        "\\newfontfamily\\bodyfontlight[Extension=.otf, UprightFont=*-Light, ItalicFont=*-LightIt, BoldFont=*-Semibold, BoldItalicFont=*-SemiboldIt]{SourceSansPro}"
-      )
-      .replace(
-        /\\setmainfont\[[^\]]*\]\{[^}]*Source Sans 3[^}]*\}/g,
-        "\\setmainfont[Extension=.otf, UprightFont=*-Regular, ItalicFont=*-It, BoldFont=*-Bold, BoldItalicFont=*-BoldIt]{SourceSansPro}"
-      )
-      .replace(
-        /\\newfontfamily\\headerfont\[[^\]]*\]\{[^}]*Roboto[^}]*\}/g,
-        "\\newfontfamily\\headerfont[Extension=.otf, UprightFont=*-Regular, ItalicFont=*-Italic, BoldFont=*-Bold, BoldItalicFont=*-BoldItalic]{Roboto}"
-      )
-      .replace(
-        /\\newfontfamily\\headerfontlight\[[^\]]*\]\{[^}]*Roboto[^}]*\}/g,
-        "\\newfontfamily\\headerfontlight[Extension=.otf, UprightFont=*-Thin, ItalicFont=*-ThinItalic, BoldFont=*-Light, BoldItalicFont=*-LightItalic]{Roboto}"
-      )
-      .replace(/\{Source Sans 3\}/g, "[Extension=.otf, UprightFont=*-Regular, ItalicFont=*-It, BoldFont=*-Bold, BoldItalicFont=*-BoldIt]{SourceSansPro}");
-  }
-
+function patchClsForTexlive(clsText) {
+  return clsText
+    .replace(
+      /\\newfontfamily\\bodyfont\[[^\]]*\]\{[^}]*Source Sans 3[^}]*\}/g,
+      "\\newfontfamily\\bodyfont[Extension=.otf, UprightFont=*-Regular, ItalicFont=*-It, BoldFont=*-Bold, BoldItalicFont=*-BoldIt]{SourceSans3}"
+    )
+    .replace(
+      /\\newfontfamily\\bodyfontlight\[[^\]]*\]\{[^}]*Source Sans 3[^}]*\}/g,
+      "\\newfontfamily\\bodyfontlight[Extension=.otf, UprightFont=*-Light, ItalicFont=*-LightIt, BoldFont=*-Semibold, BoldItalicFont=*-SemiboldIt]{SourceSans3}"
+    )
+    .replace(
+      /\\setmainfont\[[^\]]*\]\{[^}]*Source Sans 3[^}]*\}/g,
+      "\\setmainfont[Extension=.otf, UprightFont=*-Regular, ItalicFont=*-It, BoldFont=*-Bold, BoldItalicFont=*-BoldIt]{SourceSans3}"
+    )
+    .replace(
+      /\\newfontfamily\\headerfont\[[^\]]*\]\{[^}]*Roboto[^}]*\}/g,
+      "\\newfontfamily\\headerfont[Extension=.otf, UprightFont=*-Regular, ItalicFont=*-Italic, BoldFont=*-Bold, BoldItalicFont=*-BoldItalic]{Roboto}"
+    )
+    .replace(
+      /\\newfontfamily\\headerfontlight\[[^\]]*\]\{[^}]*Roboto[^}]*\}/g,
+      "\\newfontfamily\\headerfontlight[Extension=.otf, UprightFont=*-Thin, ItalicFont=*-ThinItalic, BoldFont=*-Light, BoldItalicFont=*-LightItalic]{Roboto}"
+    )
+    .replace(/\{Source Sans 3\}/g, "[Extension=.otf, UprightFont=*-Regular, ItalicFont=*-It, BoldFont=*-Bold, BoldItalicFont=*-BoldIt]{SourceSans3}");
+}
     function enterTexRenderMode() {
       if (!resumeState.mounted) return;
       resumeState.isRendered = true;
