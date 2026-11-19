@@ -111,6 +111,9 @@
     .dev-btn:disabled { opacity: 0.4; cursor: not-allowed; }
     .dev-btn.success-btn { background: rgba(46, 204, 113, 0.18); border-color: #2ecc71; }
     .dev-btn.success-btn:hover:not(:disabled) { background: #27ae60; color: #fff; }
+    .dev-btn.render-btn { background: rgba(52, 152, 219, 0.2); border-color: #3498db; }
+    .dev-btn.render-btn:hover:not(:disabled) { background: #2980b9; color: #fff; }
+    .dev-btn.render-btn.is-back { background: var(--accent); border-color: var(--accent); color: #fff; }
     .dev-btn.secondary { background: rgba(255, 255, 255, 0.05); border-color: var(--border-cad); }
     .dev-btn.secondary:hover:not(:disabled) { border-color: var(--accent); background: rgba(217, 40, 4, 0.15); }
 
@@ -328,6 +331,11 @@
       color: #ff7675;
       background: rgba(231, 76, 60, 0.15);
     }
+    .page-status-pill.rendering {
+      border-color: #3498db;
+      color: #74b9ff;
+      background: rgba(52, 152, 219, 0.15);
+    }
 
     .sheet-fit-area {
       flex: 1;
@@ -337,6 +345,55 @@
       align-items: flex-start;
       overflow: auto;
       padding: 4px 8px 8px;
+    }
+
+    /* Real XeLaTeX Render Stage */
+    .tex-render-stage {
+      position: relative;
+      flex: 1;
+      min-height: 0;
+      display: none;
+      flex-direction: column;
+      background: #14171a;
+      border: 1px solid var(--border-cad);
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
+      overflow: hidden;
+    }
+    .tex-render-stage.active {
+      display: flex;
+    }
+    .tex-render-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #2b2f33;
+    }
+    .tex-render-loading {
+      position: absolute;
+      inset: 0;
+      background: rgba(18, 21, 24, 0.92);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      font-family: var(--font-mono);
+      color: var(--text-main);
+      z-index: 10;
+    }
+    .tex-render-loading.visible {
+      display: flex;
+    }
+    .tex-spinner {
+      width: 28px;
+      height: 28px;
+      border: 3px solid rgba(255, 255, 255, 0.12);
+      border-top-color: #3498db;
+      border-radius: 50%;
+      animation: texSpin 0.8s linear infinite;
+    }
+    @keyframes texSpin {
+      to { transform: rotate(360deg); }
     }
 
     .sheet-scale-wrapper {
@@ -745,13 +802,14 @@
       .workspace-grid { grid-template-columns: 1fr; overflow: visible; }
       .inspector-col { height: auto; overflow: visible; }
       .sheet-viewport { height: auto; overflow: visible; }
+      .tex-render-stage { min-height: 85vh; }
     }
 
     @media print {
       html, body { background: #fff !important; margin: 0 !important; padding: 0 !important; height: auto !important; overflow: visible !important; }
       .bg-canvas-layer, .site-header, .fs-banner, .inspector-col, .sheet-toolbar,
-      #page-break-guides, .spacing-drag-handle, .skill-col-drag-handle, .cv-section-add-btn,
-      .cv-entry-controls, .cv-bullet-del, .cv-skill-actions {
+      .tex-render-stage, #page-break-guides, .spacing-drag-handle, .skill-col-drag-handle,
+      .cv-section-add-btn, .cv-entry-controls, .cv-bullet-del, .cv-skill-actions {
         display: none !important;
       }
       .dev-stage, .workspace-grid, .sheet-viewport, .sheet-fit-area, .sheet-scale-wrapper {
@@ -809,6 +867,7 @@
 
       <div class="fs-controls">
         <button type="button" id="mount-btn" class="dev-btn">&#128193; MOUNT AZcore FOLDER</button>
+        <button type="button" id="render-tex-btn" class="dev-btn render-btn" disabled>&#9881; RENDER</button>
         <button type="button" id="save-tex-btn" class="dev-btn success-btn" disabled>&#128190; SAVE ALL .TEX TO DISK</button>
         <button type="button" id="print-pdf-btn" class="dev-btn secondary">&#128424; EXPORT VECTOR PDF</button>
       </div>
@@ -908,7 +967,7 @@
 
       <section class="sheet-viewport">
         <div class="sheet-toolbar">
-          <span>CLICK TEXT TO EDIT &bull; DRAG BETWEEN SECTIONS FOR \vspace &bull; DRAG SKILLS DIVIDER LEFT/RIGHT</span>
+          <span id="sheet-toolbar-hint">CLICK TEXT TO EDIT &bull; DRAG BETWEEN SECTIONS FOR \vspace &bull; DRAG SKILLS DIVIDER LEFT/RIGHT</span>
           <div class="sheet-toolbar-right">
             <button type="button" id="zoom-toggle-btn" class="mini-action-btn">ZOOM: FIT</button>
             <span id="page-status-pill" class="page-status-pill">WAITING FOR MOUNT</span>
@@ -923,9 +982,20 @@
             </div>
           </div>
         </div>
+
+        <div id="tex-render-stage" class="tex-render-stage">
+          <div id="tex-render-loading" class="tex-render-loading">
+            <div class="tex-spinner"></div>
+            <div style="font-size:0.78rem; font-weight:700; letter-spacing:0.08em;">COMPILING VIA XELATEX...</div>
+            <div style="font-size:0.66rem; color:var(--text-muted);">Submitting .tex &amp; awesome-cv.cls to texlive.net</div>
+          </div>
+          <iframe id="tex-render-iframe" name="tex-render-iframe" class="tex-render-iframe" title="Compiled XeLaTeX PDF"></iframe>
+        </div>
       </section>
     </div>
   </main>
+
+  <form id="tex-compile-form" method="POST" enctype="multipart/form-data" action="https://texlive.net/cgi-bin/latexcgi" target="tex-render-iframe" style="display:none;"></form>
 
   <script>
     const PX_PER_MM = 96 / 25.4; // 3.779527559
@@ -940,9 +1010,11 @@
 
     const resumeState = {
       mounted: false,
+      isRendered: false,
       rootHandle: null,
       resumeDirHandle: null,
       cvDirHandle: null,
+      supportFiles: {},
       activeTexTab: "main.tex",
       page: {
         size: "letterpaper",
@@ -994,7 +1066,7 @@
       const area = document.getElementById("sheet-fit-area");
       const wrapper = document.getElementById("sheet-scale-wrapper");
       const sheet = document.getElementById("cv-sheet");
-      if (!area || !wrapper || !sheet) return;
+      if (!area || !wrapper || !sheet || resumeState.isRendered) return;
 
       const spec = getPageSpec();
       const targetH = spec.hPx * resumeState.page.count;
@@ -1088,7 +1160,7 @@
       return num;
     }
 
-    function generateMainTex() {
+    function generateMainTex(inlineSections = false) {
       const h = resumeState.header;
       const f = resumeState.footer;
       const sp = resumeState.spacing;
@@ -1126,6 +1198,9 @@
         .filter((s) => s.enabled)
         .map((s) => {
           const vspace = s.vspaceMm !== 0 ? `\\vspace{${s.vspaceMm.toFixed(1)}mm}\n` : "";
+          if (inlineSections) {
+            return `${vspace}${generateSectionTex(s)}`;
+          }
           return `${vspace}\\input{${s.file}}`;
         })
         .join("\n");
@@ -1186,6 +1261,113 @@ ${inputs}
         .join("\n\n");
 
       return `\\cvsection{${escapeTex(sec.title)}}\n\n\\begin{cventries}\n${entries}\n\\end{cventries}\n`;
+    }
+
+    // =========================================================================
+    // XELATEX LIVE RENDERER (texlive.net CGI)
+    // =========================================================================
+    function appendFormField(form, name, value, isTextArea = false) {
+      const el = document.createElement(isTextArea ? "textarea" : "input");
+      if (!isTextArea) el.type = "hidden";
+      el.name = name;
+      el.value = value;
+      form.appendChild(el);
+    }
+    function patchClsForTexlive(clsText) {
+    return clsText
+      .replace(
+        /\\newfontfamily\\bodyfont\[[^\]]*\]\{[^}]*Source Sans 3[^}]*\}/g,
+        "\\newfontfamily\\bodyfont[Extension=.otf, UprightFont=*-Regular, ItalicFont=*-It, BoldFont=*-Bold, BoldItalicFont=*-BoldIt]{SourceSansPro}"
+      )
+      .replace(
+        /\\newfontfamily\\bodyfontlight\[[^\]]*\]\{[^}]*Source Sans 3[^}]*\}/g,
+        "\\newfontfamily\\bodyfontlight[Extension=.otf, UprightFont=*-Light, ItalicFont=*-LightIt, BoldFont=*-Semibold, BoldItalicFont=*-SemiboldIt]{SourceSansPro}"
+      )
+      .replace(
+        /\\setmainfont\[[^\]]*\]\{[^}]*Source Sans 3[^}]*\}/g,
+        "\\setmainfont[Extension=.otf, UprightFont=*-Regular, ItalicFont=*-It, BoldFont=*-Bold, BoldItalicFont=*-BoldIt]{SourceSansPro}"
+      )
+      .replace(
+        /\\newfontfamily\\headerfont\[[^\]]*\]\{[^}]*Roboto[^}]*\}/g,
+        "\\newfontfamily\\headerfont[Extension=.otf, UprightFont=*-Regular, ItalicFont=*-Italic, BoldFont=*-Bold, BoldItalicFont=*-BoldItalic]{Roboto}"
+      )
+      .replace(
+        /\\newfontfamily\\headerfontlight\[[^\]]*\]\{[^}]*Roboto[^}]*\}/g,
+        "\\newfontfamily\\headerfontlight[Extension=.otf, UprightFont=*-Thin, ItalicFont=*-ThinItalic, BoldFont=*-Light, BoldItalicFont=*-LightItalic]{Roboto}"
+      )
+      .replace(/\{Source Sans 3\}/g, "[Extension=.otf, UprightFont=*-Regular, ItalicFont=*-It, BoldFont=*-Bold, BoldItalicFont=*-BoldIt]{SourceSansPro}");
+  }
+
+    function enterTexRenderMode() {
+      if (!resumeState.mounted) return;
+      resumeState.isRendered = true;
+
+      const btn = document.getElementById("render-tex-btn");
+      const fitArea = document.getElementById("sheet-fit-area");
+      const renderStage = document.getElementById("tex-render-stage");
+      const loading = document.getElementById("tex-render-loading");
+      const zoomBtn = document.getElementById("zoom-toggle-btn");
+      const hint = document.getElementById("sheet-toolbar-hint");
+      const pill = document.getElementById("page-status-pill");
+      const form = document.getElementById("tex-compile-form");
+
+      btn.innerHTML = "&#8592; BACK";
+      btn.classList.add("is-back");
+      fitArea.style.display = "none";
+      zoomBtn.style.display = "none";
+      renderStage.classList.add("active");
+      loading.classList.add("visible");
+
+      hint.textContent = "LIVE XELATEX OUTPUT (TEXLIVE.NET) • CLICK BACK TO RETURN TO EDITOR";
+      pill.className = "page-status-pill rendering";
+      pill.textContent = "COMPILING XELATEX...";
+
+      form.innerHTML = "";
+      appendFormField(form, "engine", "xelatex");
+      appendFormField(form, "return", "pdfjs");
+
+      // Submit inlined document.tex so subdirectory cv/ paths never fail on the CGI server
+      appendFormField(form, "filename[]", "document.tex");
+      appendFormField(form, "filecontents[]", generateMainTex(true), true);
+
+      for (const [fname, content] of Object.entries(resumeState.supportFiles)) {
+        const payload = fname.toLowerCase() === "awesome-cv.cls"
+          ? patchClsForTexlive(content)
+          : content;
+        appendFormField(form, "filename[]", fname);
+        appendFormField(form, "filecontents[]", payload, true);
+      }
+
+      form.submit();
+    }
+
+    function exitTexRenderMode() {
+      resumeState.isRendered = false;
+
+      const btn = document.getElementById("render-tex-btn");
+      const fitArea = document.getElementById("sheet-fit-area");
+      const renderStage = document.getElementById("tex-render-stage");
+      const loading = document.getElementById("tex-render-loading");
+      const zoomBtn = document.getElementById("zoom-toggle-btn");
+      const hint = document.getElementById("sheet-toolbar-hint");
+
+      btn.innerHTML = "&#9881; RENDER";
+      btn.classList.remove("is-back");
+      renderStage.classList.remove("active");
+      loading.classList.remove("visible");
+      fitArea.style.display = "flex";
+      zoomBtn.style.display = "";
+      hint.innerHTML = "CLICK TEXT TO EDIT &bull; DRAG BETWEEN SECTIONS FOR \\vspace &bull; DRAG SKILLS DIVIDER LEFT/RIGHT";
+
+      requestAnimationFrame(checkPageOverflow);
+    }
+
+    function toggleTexRender() {
+      if (resumeState.isRendered) {
+        exitTexRenderMode();
+      } else {
+        enterTexRenderMode();
+      }
     }
 
     // =========================================================================
@@ -1449,6 +1631,8 @@ ${inputs}
     }
 
     function checkPageOverflow() {
+      if (resumeState.isRendered) return;
+
       const pill = document.getElementById("page-status-pill");
       const bodyWrap = document.getElementById("cv-body-wrap");
 
@@ -1505,7 +1689,7 @@ ${inputs}
       });
 
       if (resumeState.activeTexTab === "main.tex") {
-        area.value = generateMainTex();
+        area.value = generateMainTex(false);
       } else {
         const sec = resumeState.sections.find((s) => s.file === resumeState.activeTexTab);
         area.value = sec ? generateSectionTex(sec) : "";
@@ -1950,10 +2134,18 @@ ${inputs}
         resumeState.resumeDirHandle = resumeDir;
         resumeState.cvDirHandle = cvDir;
         resumeState.mounted = true;
+        resumeState.supportFiles = {};
+
+        for await (const [name, handle] of resumeDir.entries()) {
+          if (handle.kind === "file" && /\.(cls|sty)$/i.test(name)) {
+            resumeState.supportFiles[name] = await (await handle.getFile()).text();
+          }
+        }
 
         document.getElementById("fs-dot").classList.add("connected");
         document.getElementById("fs-status-title").textContent = `CONNECTED TO /${root.name} — WRITE ACCESS UNLOCKED`;
         document.getElementById("save-tex-btn").disabled = false;
+        document.getElementById("render-tex-btn").disabled = false;
 
         const mainFh = await resumeDir.getFileHandle("main.tex");
         const activeInputs = parseMainTex(await (await mainFh.getFile()).text());
@@ -1985,11 +2177,13 @@ ${inputs}
         }
 
         resumeState.sections = orderedSections;
+        if (resumeState.isRendered) exitTexRenderMode();
         renderAll();
         logMsg(
           `Mounted /${root.name}\n` +
           `• Active sections in main.tex: ${usedFiles.size}\n` +
-          `• Inactive sections discovered in cv/: ${orderedSections.length - usedFiles.size}`
+          `• Inactive sections discovered in cv/: ${orderedSections.length - usedFiles.size}\n` +
+          `• Support files loaded for XeLaTeX: ${Object.keys(resumeState.supportFiles).join(", ") || "none"}`
         );
       } catch (err) {
         if (err.name !== "AbortError") logMsg(`Mount failed: ${err.message}`, true);
@@ -2006,7 +2200,7 @@ ${inputs}
     async function saveAllTexToDisk() {
       if (!resumeState.resumeDirHandle || !resumeState.cvDirHandle) return;
       try {
-        await writeTextFile(resumeState.resumeDirHandle, "main.tex", generateMainTex());
+        await writeTextFile(resumeState.resumeDirHandle, "main.tex", generateMainTex(false));
         for (const sec of resumeState.sections) {
           const fname = sec.file.replace(/^cv\//, "");
           await writeTextFile(resumeState.cvDirHandle, fname, generateSectionTex(sec));
@@ -2024,8 +2218,20 @@ ${inputs}
 
     window.addEventListener("DOMContentLoaded", () => {
       document.getElementById("mount-btn").addEventListener("click", mountAzcoreFolder);
+      document.getElementById("render-tex-btn").addEventListener("click", toggleTexRender);
       document.getElementById("save-tex-btn").addEventListener("click", saveAllTexToDisk);
-      document.getElementById("print-pdf-btn").addEventListener("click", () => window.print());
+      document.getElementById("print-pdf-btn").addEventListener("click", () => {
+        if (resumeState.isRendered) exitTexRenderMode();
+        window.print();
+      });
+
+      document.getElementById("tex-render-iframe").addEventListener("load", () => {
+        if (!resumeState.isRendered) return;
+        document.getElementById("tex-render-loading").classList.remove("visible");
+        const pill = document.getElementById("page-status-pill");
+        pill.className = "page-status-pill rendering";
+        pill.textContent = "XELATEX RENDERED";
+      });
 
       document.getElementById("zoom-toggle-btn").addEventListener("click", () => {
         zoomIndex = (zoomIndex + 1) % ZOOM_STEPS.length;
