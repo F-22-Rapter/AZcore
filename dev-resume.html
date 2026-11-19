@@ -1448,7 +1448,10 @@ ${entries}
         .replace(/\\RequirePackage\[skins\]\{tcolorbox\}/g, "")
         .replace(/\\RequirePackage\{unicode-math\}/g, "")
         .replace(/\\usepackage\{datetime\}/g, "")
-        .replace(/\\RequirePackage\{bookmark\}/g, "");
+        .replace(/\\RequirePackage\{bookmark\}/g, "")
+        .replace(/\\RequirePackage\{accsupp\}/g, "\\newcommand{\\BeginAccSupp}[1]{}\\newcommand{\\EndAccSupp}{}")
+        .replace(/\\RequirePackage\[[^\]]*\]\{hyperref\}/g, "\\newcommand{\\href}[2]{#2}\\newcommand{\\phantomsection}{}")
+        .replace(/\\hypersetup\{[\s\S]*?\}/g, "");
     }
 
     function appendFormField(doc, form, name, value, isTextArea = false) {
@@ -1468,7 +1471,7 @@ ${entries}
 
     function buildCompilePayload() {
       const files = {
-        "document.tex": generateMainTex(true)
+        "document.tex": "\\pdfvariable compresslevel=0 \\pdfvariable objcompresslevel=0\n" + generateMainTex(true)
       };
       for (const [fname, content] of Object.entries(resumeState.supportFiles)) {
         files[fname] = fname.toLowerCase() === "awesome-cv.cls"
@@ -1600,7 +1603,7 @@ ${entries}
       }
       if (resumeState.popoutTimer) clearTimeout(resumeState.popoutTimer);
       setPopoutStatus("EDIT DETECTED — SYNCING SOON...", true, false);
-      const delay = resumeState.localServerAvailable ? 300 : 1200;
+      const delay = resumeState.localServerAvailable ? 100 : 1200;
       resumeState.popoutTimer = setTimeout(() => {
         resumeState.popoutTimer = null;
         renderToPopout();
