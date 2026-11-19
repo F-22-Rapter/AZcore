@@ -84,28 +84,16 @@
   Renderer=HarfBuzz,
 }
 \setmainfont{Source Sans 3}[
-  UprightFont=*,
-  ItalicFont=* Italic,
-  BoldFont=* Bold,
-  BoldItalicFont=* Bold Italic,
   FontFace={l}{n}{Font=* Light},
-  FontFace={l}{it}{Font=* Italic},
+  FontFace={l}{it}{Font=* Light, FakeSlant=0.2},
 ]
 \setsansfont{Source Sans 3}[
-  UprightFont=*,
-  ItalicFont=* Italic,
-  BoldFont=* Bold,
-  BoldItalicFont=* Bold Italic,
   FontFace={l}{n}{Font=* Light},
-  FontFace={l}{it}{Font=* Italic},
+  FontFace={l}{it}{Font=* Light, FakeSlant=0.2},
 ]
 \newfontfamily\roboto{Roboto}[
-  UprightFont=*,
-  ItalicFont=* Italic,
-  BoldFont=* Bold,
-  BoldItalicFont=* Bold Italic,
   FontFace={l}{n}{Font=* Light},
-  FontFace={l}{it}{Font=* Light Italic},
+  FontFace={l}{it}{Font=* Light, FakeSlant=0.2},
 ]
 % Needed for the photo ID
 \RequirePackage[skins]{tcolorbox}
