@@ -816,7 +816,8 @@
       a4paper:     { wPx: 794, hPx: 1123, hLabel: "297 MM",  cssSize: "A4" }
     };
 
-    let zoomMode = "fit"; // "fit" | "100"
+    const ZOOM_STEPS = ["fit", 1, 1.25, 1.5, 1.75];
+    let zoomIndex = 0;
     let currentScale = 1;
 
     const resumeState = {
@@ -866,7 +867,7 @@
     }
 
     // =========================================================================
-    // AUTO-FIT SHEET SCALING
+    // AUTO-FIT & MULTI-STEP SHEET SCALING
     // =========================================================================
     function updateSheetScale() {
       const area = document.getElementById("sheet-fit-area");
@@ -879,10 +880,11 @@
       const availW = Math.max(280, area.clientWidth - 16);
       const availH = Math.max(280, area.clientHeight - 12);
 
-      if (zoomMode === "fit") {
-        currentScale = Math.min(availW / spec.wPx, availH / targetH, 1.05);
+      const mode = ZOOM_STEPS[zoomIndex];
+      if (mode === "fit") {
+        currentScale = Math.min(availW / spec.wPx, availH / targetH, 1.5);
       } else {
-        currentScale = 1;
+        currentScale = mode;
       }
 
       sheet.style.transform = `scale(${currentScale})`;
@@ -892,9 +894,9 @@
 
       const btn = document.getElementById("zoom-toggle-btn");
       if (btn) {
-        btn.textContent = zoomMode === "fit"
+        btn.textContent = mode === "fit"
           ? `ZOOM: FIT (${Math.round(currentScale * 100)}%)`
-          : `ZOOM: 100%`;
+          : `ZOOM: ${Math.round(currentScale * 100)}%`;
       }
     }
 
@@ -1833,7 +1835,7 @@ ${inputs}
       document.getElementById("print-pdf-btn").addEventListener("click", () => window.print());
 
       document.getElementById("zoom-toggle-btn").addEventListener("click", () => {
-        zoomMode = zoomMode === "fit" ? "100" : "fit";
+        zoomIndex = (zoomIndex + 1) % ZOOM_STEPS.length;
         updateSheetScale();
       });
 
