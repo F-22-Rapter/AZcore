@@ -62,7 +62,7 @@
 % Needed to manage colors
 \RequirePackage{xcolor}
 % Needed to use \ifxetex-\else-\fi statement
-\RequirePackage{ifxetex}
+\RequirePackage{iftex}
 % Needed to use \if-\then-\else statement
 \RequirePackage{xifthen}
 % Needed to strip chars from telephone number
