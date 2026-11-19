@@ -10,43 +10,65 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400&family=Source+Sans+3:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <style id="dynamic-print-page">
+    @media print { @page { size: letter; margin: 0; } }
+  </style>
   <style>
     :root {
-      --cv-section-gap: 14px;
-      --cv-entry-gap: 10px;
-      --cv-bullet-gap: 2px;
+      --cv-page-w: 816px;
+      --cv-page-h: 1056px;
+      --cv-sheet-min-h: 1056px;
+      --cv-section-gap: 11.3px;
+      --cv-entry-gap: 5.5px;
+      --cv-bullet-gap: 1px;
       --cv-margin-x: 14mm;
-      --cv-margin-y: 10mm;
+      --cv-margin-top: 8mm;
+      --cv-margin-bottom: 18mm;
+      --cv-awesome: #000000;
       --cv-font-scale: 1;
+    }
+
+    html, body {
+      height: 100%;
+    }
+
+    body.cad-theme {
+      overflow: hidden;
     }
 
     .dev-stage {
       position: relative;
       z-index: 10;
-      padding: 88px 28px 60px;
-      max-width: 1720px;
+      padding: 68px 20px 14px;
+      max-width: 1760px;
+      height: 100vh;
       margin: 0 auto;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow: hidden;
     }
 
     .fs-banner {
       background: rgba(24, 27, 30, 0.92);
       border: 1px solid var(--border-cad);
       border-left: 3px solid var(--accent);
-      padding: 14px 20px;
-      margin-bottom: 22px;
+      padding: 10px 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
-      gap: 14px;
+      gap: 12px;
+      flex-shrink: 0;
     }
 
     .fs-status {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       font-family: var(--font-mono);
-      font-size: 0.78rem;
+      font-size: 0.76rem;
     }
 
     .fs-dot {
@@ -54,6 +76,7 @@
       height: 10px;
       border-radius: 50%;
       background: #6c757d;
+      flex-shrink: 0;
     }
     .fs-dot.connected {
       background: #2ecc71;
@@ -71,9 +94,9 @@
       background: rgba(217, 40, 4, 0.18);
       color: var(--text-main);
       border: 1px solid var(--accent);
-      padding: 8px 14px;
+      padding: 7px 12px;
       font-family: var(--font-mono);
-      font-size: 0.74rem;
+      font-size: 0.72rem;
       font-weight: 700;
       letter-spacing: 0.06em;
       cursor: pointer;
@@ -90,31 +113,62 @@
     .workspace-grid {
       display: grid;
       grid-template-columns: 360px 1fr;
-      gap: 24px;
-      align-items: start;
+      gap: 18px;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
     }
 
     .inspector-col {
       display: flex;
       flex-direction: column;
-      gap: 18px;
-      position: sticky;
-      top: 82px;
-      max-height: calc(100vh - 104px);
+      gap: 14px;
+      height: 100%;
       overflow-y: auto;
       padding-right: 4px;
     }
 
-    .slider-row {
+    .page-config-row {
+      display: grid;
+      grid-template-columns: 1fr 84px;
+      gap: 8px;
       margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-cad);
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+    .page-config-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .page-config-field select,
+    .page-config-field input {
+      background: #0e1012;
+      color: var(--text-main);
+      border: 1px solid var(--border-cad);
+      padding: 5px 7px;
       font-family: var(--font-mono);
       font-size: 0.72rem;
+      outline: none;
+    }
+    .page-config-field select:focus,
+    .page-config-field input:focus {
+      border-color: var(--accent);
+    }
+
+    .slider-row {
+      margin-bottom: 10px;
+      font-family: var(--font-mono);
+      font-size: 0.71rem;
     }
     .slider-row-head {
       display: flex;
       justify-content: space-between;
       color: var(--text-muted);
-      margin-bottom: 4px;
+      margin-bottom: 3px;
     }
     .slider-row-head span:last-child { color: var(--accent); font-weight: 700; }
     .slider-row input[type="range"] {
@@ -123,23 +177,43 @@
       cursor: pointer;
     }
 
+    .theme-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border-cad);
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
     .section-order-list {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 5px;
     }
     .section-order-item {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 8px;
-      padding: 7px 10px;
+      padding: 6px 9px;
       background: rgba(14, 16, 18, 0.9);
       border: 1px solid var(--border-cad);
       font-family: var(--font-mono);
-      font-size: 0.73rem;
+      font-size: 0.71rem;
     }
-    .section-order-item.disabled-sec { opacity: 0.45; }
+    .section-order-item.disabled-sec { opacity: 0.48; }
+    .sec-type-badge {
+      font-size: 0.6rem;
+      padding: 1px 4px;
+      border: 1px solid var(--border-cad);
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
 
     .icon-btn {
       background: rgba(255, 255, 255, 0.05);
@@ -164,7 +238,7 @@
       color: var(--text-muted);
       padding: 4px 8px;
       font-family: var(--font-mono);
-      font-size: 0.68rem;
+      font-size: 0.66rem;
       cursor: pointer;
     }
     .tex-tab-btn.active {
@@ -176,46 +250,56 @@
 
     .tex-code-area {
       width: 100%;
-      min-height: 240px;
+      min-height: 200px;
       background: #0e1012;
       color: #dce3ea;
       border: 1px solid var(--border-cad);
       padding: 10px;
       font-family: var(--font-mono);
-      font-size: 0.72rem;
-      line-height: 1.45;
+      font-size: 0.71rem;
+      line-height: 1.42;
       resize: vertical;
       outline: none;
     }
 
     .fs-log-box {
-      padding: 10px 12px;
+      padding: 8px 10px;
       background: rgba(0, 0, 0, 0.4);
       border: 1px solid var(--border-cad);
       font-family: var(--font-mono);
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       color: var(--text-muted);
       white-space: pre-line;
       display: none;
     }
     .fs-log-box.visible { display: block; }
 
+    /* Viewport & Auto-Scale Stage */
     .sheet-viewport {
       display: flex;
       flex-direction: column;
-      align-items: center;
-      gap: 12px;
+      height: 100%;
+      min-height: 0;
+      gap: 8px;
+      overflow: hidden;
     }
 
     .sheet-toolbar {
       width: 100%;
-      max-width: 816px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 10px;
       font-family: var(--font-mono);
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .sheet-toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
     .page-status-pill {
@@ -223,6 +307,7 @@
       border: 1px solid #2ecc71;
       color: #2ecc71;
       background: rgba(46, 204, 113, 0.1);
+      white-space: nowrap;
     }
     .page-status-pill.overflow {
       border-color: #e74c3c;
@@ -230,31 +315,45 @@
       background: rgba(231, 76, 60, 0.15);
     }
 
+    .sheet-fit-area {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      overflow: auto;
+      padding: 4px 8px 8px;
+    }
+
+    .sheet-scale-wrapper {
+      position: relative;
+      flex-shrink: 0;
+    }
+
     .cv-sheet {
       position: relative;
-      width: 816px;
-      min-height: 1056px;
+      width: var(--cv-page-w);
+      min-height: var(--cv-sheet-min-h);
       background: #ffffff;
       color: #333333;
-      padding: var(--cv-margin-y) var(--cv-margin-x);
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.65);
+      padding: var(--cv-margin-top) var(--cv-margin-x) var(--cv-margin-bottom) var(--cv-margin-x);
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6);
       font-family: 'Source Sans 3', 'Roboto', sans-serif;
-      font-size: calc(13.2px * var(--cv-font-scale));
-      line-height: 1.32;
+      font-size: calc(12px * var(--cv-font-scale));
+      line-height: 1.22;
       box-sizing: border-box;
+      transform-origin: top left;
     }
 
     .page-break-guide {
       position: absolute;
       left: 0;
       right: 0;
-      top: 1056px;
       border-top: 2px dashed #d92804;
       pointer-events: none;
       z-index: 20;
     }
-    .page-break-guide::after {
-      content: "PAGE 1 END (11.0 IN)";
+    .page-break-label {
       position: absolute;
       right: 8px;
       top: -18px;
@@ -276,33 +375,46 @@
       box-shadow: 0 0 0 1px rgba(217, 40, 4, 0.5);
     }
 
-    .cv-header { text-align: center; margin-bottom: 10px; }
+    .cv-header { text-align: center; margin-bottom: 14px; }
     .cv-name {
       font-family: 'Roboto', sans-serif;
-      font-size: 2.55em;
-      line-height: 1.1;
+      font-size: 42.6px;
+      line-height: 1.05;
       letter-spacing: -0.01em;
-      margin-bottom: 5px;
+      margin-bottom: 3px;
     }
     .cv-first-name { font-weight: 300; color: #5d5d5d; }
-    .cv-last-name { font-weight: 700; color: #222222; }
+    .cv-last-name { font-weight: 700; color: #333333; }
+    .cv-position {
+      font-size: 10.1px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--cv-awesome);
+      margin-bottom: 2px;
+    }
+    .cv-address {
+      font-size: 10.7px;
+      font-style: italic;
+      color: #999999;
+      margin-bottom: 2px;
+    }
 
     .cv-contact {
       display: flex;
       justify-content: center;
       align-items: center;
       flex-wrap: wrap;
-      gap: 6px 10px;
-      font-size: 0.78em;
-      color: #444444;
+      gap: 4px 10px;
+      font-size: 9.5px;
+      color: #333333;
     }
     .cv-contact-item { display: inline-flex; align-items: center; gap: 4px; }
     .cv-contact-sep { color: #999; }
 
     .spacing-drag-handle {
       position: relative;
-      height: 10px;
-      margin: -5px 0;
+      height: 8px;
+      margin: -4px 0;
       cursor: ns-resize;
       display: flex;
       align-items: center;
@@ -342,19 +454,21 @@
       display: flex;
       align-items: baseline;
       gap: 8px;
-      margin-bottom: 6px;
+      margin-bottom: 5px;
     }
     .cv-section-title {
       font-family: 'Source Sans 3', sans-serif;
-      font-size: 1.38em;
+      font-size: 21.3px;
       font-weight: 700;
-      color: #111111;
+      line-height: 1.08;
+      color: #333333;
       white-space: nowrap;
     }
+    .cv-section-accent { color: var(--cv-awesome); }
     .cv-section-rule {
       flex: 1;
-      height: 1px;
-      background: #555555;
+      height: 0.9pt;
+      background: #5d5d5d;
       transform: translateY(-2px);
     }
     .cv-section-add-btn {
@@ -370,35 +484,81 @@
     }
     .cv-section-block:hover .cv-section-add-btn { opacity: 1; }
 
-    .cv-skills-table { width: 100%; border-collapse: collapse; margin-top: 2px; }
-    .cv-skill-row { position: relative; }
-    .cv-skill-row td { padding: 1.5px 0; vertical-align: top; }
-    .cv-skill-cat {
-      width: 125px;
-      text-align: right;
-      padding-right: 14px !important;
-      font-weight: 700;
-      color: #222222;
-      font-size: 0.92em;
+    .cv-subsection-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 6px 0 3px;
     }
-    .cv-skill-list { color: #333333; font-size: 0.92em; }
+    .cv-subsection-title {
+      font-size: 16px;
+      font-variant: small-caps;
+      color: #333333;
+      font-weight: 600;
+    }
+
+    .cv-skills-table,
+    .cv-honors-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1px;
+    }
+    .cv-skill-row,
+    .cv-honor-row { position: relative; }
+    .cv-skill-row td,
+    .cv-honor-row td { padding: 1px 0; vertical-align: top; }
+    .cv-skill-cat {
+      width: 120px;
+      text-align: right;
+      padding-right: 12px !important;
+      font-weight: 700;
+      color: #414141;
+      font-size: 13px;
+    }
+    .cv-skill-list { color: #333333; font-size: 12px; font-weight: 300; }
     .cv-skill-actions {
-      width: 36px;
+      width: 30px;
       text-align: right;
       opacity: 0;
       transition: opacity 0.15s ease;
     }
-    .cv-skill-row:hover .cv-skill-actions { opacity: 1; }
+    .cv-skill-row:hover .cv-skill-actions,
+    .cv-honor-row:hover .cv-skill-actions { opacity: 1; }
+
+    .cv-honor-date {
+      width: 60px;
+      text-align: center;
+      color: #5d5d5d;
+      font-size: 12px;
+    }
+    .cv-honor-main {
+      color: #5d5d5d;
+      font-size: 12px;
+      padding-right: 10px !important;
+    }
+    .cv-honor-pos {
+      font-weight: 700;
+      color: #414141;
+    }
+    .cv-honor-loc {
+      width: 115px;
+      text-align: right;
+      font-style: italic;
+      font-weight: 300;
+      color: var(--cv-awesome);
+      font-size: 12px;
+    }
 
     .cv-entry {
       position: relative;
       margin-bottom: var(--cv-entry-gap);
-      padding: 2px 4px;
+      padding: 1px 4px;
       margin-left: -4px;
       margin-right: -4px;
       border: 1px solid transparent;
       border-radius: 3px;
     }
+    .cv-entry:last-child { margin-bottom: 0; }
     .cv-entry:hover { border-color: rgba(217, 40, 4, 0.25); }
 
     .cv-entry-controls {
@@ -431,24 +591,25 @@
       align-items: baseline;
       gap: 12px;
     }
-    .cv-entry-row2 { margin-top: 1px; }
-    .cv-entry-org { font-weight: 700; font-size: 0.98em; color: #222222; }
-    .cv-entry-loc { font-style: italic; font-size: 0.88em; color: #444444; text-align: right; }
-    .cv-entry-role { font-size: 0.78em; text-transform: uppercase; letter-spacing: 0.02em; color: #555555; }
-    .cv-entry-date { font-style: italic; font-size: 0.82em; color: #555555; text-align: right; }
+    .cv-entry-org { font-weight: 700; font-size: 13.3px; color: #414141; }
+    .cv-entry-loc { font-style: italic; font-weight: 300; font-size: 12px; color: var(--cv-awesome); text-align: right; }
+    .cv-entry-role { font-size: 10.6px; text-transform: uppercase; letter-spacing: 0.02em; color: #5d5d5d; }
+    .cv-entry-date { font-style: italic; font-weight: 300; font-size: 10.6px; color: #5d5d5d; text-align: right; }
 
-    .cv-bullets { margin: 3px 0 0 16px; padding: 0; }
+    .cv-bullets { margin: 2px 0 0 15px; padding: 0; }
     .cv-bullet-item {
       position: relative;
       margin-bottom: var(--cv-bullet-gap);
-      font-size: 0.91em;
+      font-size: 12px;
+      font-weight: 300;
+      line-height: 1.24;
       color: #333333;
-      padding-right: 18px;
+      padding-right: 16px;
     }
     .cv-bullet-del {
       position: absolute;
       right: 0;
-      top: 1px;
+      top: 0;
       opacity: 0;
       background: none;
       border: none;
@@ -459,25 +620,50 @@
     }
     .cv-bullet-item:hover .cv-bullet-del { opacity: 1; }
 
-    @media (max-width: 1240px) {
-      .workspace-grid { grid-template-columns: 1fr; }
-      .inspector-col { position: static; max-height: none; }
-      .cv-sheet { width: 100%; }
+    .cv-footer {
+      position: absolute;
+      left: var(--cv-margin-x);
+      right: var(--cv-margin-x);
+      bottom: max(4mm, calc(var(--cv-margin-bottom) - 8mm));
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      font-size: 10.6px;
+      font-variant: small-caps;
+      color: #999999;
+    }
+    .cv-footer-left { text-align: left; }
+    .cv-footer-center { text-align: center; }
+    .cv-footer-right { text-align: right; }
+
+    @media (max-width: 1180px) {
+      body.cad-theme { overflow: auto; }
+      .dev-stage { height: auto; overflow: visible; }
+      .workspace-grid { grid-template-columns: 1fr; overflow: visible; }
+      .inspector-col { height: auto; overflow: visible; }
+      .sheet-viewport { height: auto; overflow: visible; }
     }
 
     @media print {
-      @page { size: letter; margin: 0; }
-      body { background: #fff !important; margin: 0 !important; padding: 0 !important; }
+      html, body { background: #fff !important; margin: 0 !important; padding: 0 !important; height: auto !important; overflow: visible !important; }
       .bg-canvas-layer, .site-header, .fs-banner, .inspector-col, .sheet-toolbar,
-      .page-break-guide, .spacing-drag-handle, .cv-section-add-btn,
+      #page-break-guides, .spacing-drag-handle, .cv-section-add-btn,
       .cv-entry-controls, .cv-bullet-del, .cv-skill-actions {
         display: none !important;
       }
-      .dev-stage { padding: 0 !important; margin: 0 !important; max-width: none !important; }
-      .workspace-grid { display: block !important; }
+      .dev-stage, .workspace-grid, .sheet-viewport, .sheet-fit-area, .sheet-scale-wrapper {
+        display: block !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: auto !important;
+        height: auto !important;
+        max-width: none !important;
+        overflow: visible !important;
+      }
       .cv-sheet {
-        width: 8.5in !important;
-        min-height: 11in !important;
+        transform: none !important;
+        width: var(--cv-page-w) !important;
+        min-height: var(--cv-sheet-min-h) !important;
         box-shadow: none !important;
         margin: 0 !important;
       }
@@ -510,17 +696,17 @@
         <span id="fs-dot" class="fs-dot"></span>
         <div>
           <div id="fs-status-title" style="font-weight:700; color:var(--text-main);">
-            READ-ONLY PREVIEW — MOUNT "AZcore" FOLDER TO UNLOCK DISK SAVING
+            READ-ONLY PREVIEW — MOUNT "AZcore" FOLDER TO LOAD LIVE .TEX FILES
           </div>
-          <div id="fs-status-sub" style="font-size:0.7rem; color:var(--text-muted);">
-            Reads/writes <code>assets/resume/*.tex</code> &bull; PDF target: <code>assets/about/resume.pdf</code>
+          <div id="fs-status-sub" style="font-size:0.68rem; color:var(--text-muted);">
+            Dynamically reads/writes <code>assets/resume/main.tex</code> &amp; all <code>assets/resume/cv/*.tex</code>
           </div>
         </div>
       </div>
 
       <div class="fs-controls">
         <button type="button" id="mount-btn" class="dev-btn">&#128193; MOUNT AZcore FOLDER</button>
-        <button type="button" id="save-tex-btn" class="dev-btn success-btn" disabled>&#128190; SAVE .TEX TO DISK</button>
+        <button type="button" id="save-tex-btn" class="dev-btn success-btn" disabled>&#128190; SAVE ALL .TEX TO DISK</button>
         <button type="button" id="print-pdf-btn" class="dev-btn secondary">&#128424; EXPORT VECTOR PDF</button>
       </div>
     </div>
@@ -529,8 +715,22 @@
       <aside class="inspector-col">
         <div class="cad-panel">
           <div class="panel-header">
-            <span class="panel-title">// 01. SPACING &amp; GEOMETRY</span>
+            <span class="panel-title">// 01. GEOMETRY &amp; THEME</span>
             <button type="button" id="reset-spacing-btn" class="mini-action-btn">RESET</button>
+          </div>
+
+          <div class="page-config-row">
+            <label class="page-config-field">
+              <span>PAGE SIZE</span>
+              <select id="sel-page-size">
+                <option value="letterpaper">US Letter (8.5 × 11 in)</option>
+                <option value="a4paper">A4 (210 × 297 mm)</option>
+              </select>
+            </label>
+            <label class="page-config-field">
+              <span>PAGES</span>
+              <input type="number" id="inp-page-count" min="1" max="6" step="1" value="1" />
+            </label>
           </div>
 
           <div class="slider-row">
@@ -538,29 +738,41 @@
             <input type="range" id="sl-sec-gap" min="-2" max="10" step="0.5" value="3" />
           </div>
           <div class="slider-row">
-            <div class="slider-row-head"><span>ENTRY GAP</span><span id="val-entry-gap">2.5mm</span></div>
-            <input type="range" id="sl-entry-gap" min="0" max="8" step="0.5" value="2.5" />
+            <div class="slider-row-head"><span>ENTRY GAP (PREVIEW)</span><span id="val-entry-gap">1.5mm</span></div>
+            <input type="range" id="sl-entry-gap" min="0" max="6" step="0.25" value="1.5" />
           </div>
           <div class="slider-row">
-            <div class="slider-row-head"><span>BULLET GAP</span><span id="val-bullet-gap">0.5mm</span></div>
-            <input type="range" id="sl-bullet-gap" min="0" max="4" step="0.25" value="0.5" />
+            <div class="slider-row-head"><span>BULLET GAP (PREVIEW)</span><span id="val-bullet-gap">0.25mm</span></div>
+            <input type="range" id="sl-bullet-gap" min="0" max="3" step="0.25" value="0.25" />
           </div>
           <div class="slider-row">
-            <div class="slider-row-head"><span>SIDE MARGINS</span><span id="val-margin-x">14mm</span></div>
+            <div class="slider-row-head"><span>LEFT / RIGHT MARGINS</span><span id="val-margin-x">14mm</span></div>
             <input type="range" id="sl-margin-x" min="8" max="22" step="1" value="14" />
           </div>
           <div class="slider-row">
-            <div class="slider-row-head"><span>TOP/BOTTOM MARGINS</span><span id="val-margin-y">10mm</span></div>
-            <input type="range" id="sl-margin-y" min="5" max="20" step="1" value="10" />
+            <div class="slider-row-head"><span>TOP MARGIN</span><span id="val-margin-top">8mm</span></div>
+            <input type="range" id="sl-margin-top" min="4" max="22" step="1" value="8" />
           </div>
-          <div style="font-family:var(--font-mono); font-size:0.68rem; color:var(--text-muted); margin-top:6px;">
-            Tip: Hover between any two sections on the resume sheet to drag individual <code>\vspace{}</code> offsets.
+          <div class="slider-row">
+            <div class="slider-row-head"><span>BOTTOM MARGIN</span><span id="val-margin-bottom">18mm</span></div>
+            <input type="range" id="sl-margin-bottom" min="6" max="25" step="1" value="18" />
+          </div>
+
+          <div class="theme-row">
+            <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+              <input type="checkbox" id="cb-sec-highlight" />
+              <span>3-LETTER ACCENT</span>
+            </label>
+            <label style="display:flex; align-items:center; gap:6px;">
+              <span>AWESOME COLOR</span>
+              <input type="color" id="color-awesome" value="#000000" style="width:26px; height:20px; border:none; background:none; cursor:pointer;" />
+            </label>
           </div>
         </div>
 
         <div class="cad-panel">
           <div class="panel-header">
-            <span class="panel-title">// 02. SECTIONS (main.tex)</span>
+            <span class="panel-title">// 02. DISCOVERED SECTIONS</span>
           </div>
           <div id="section-order-list" class="section-order-list"></div>
         </div>
@@ -578,51 +790,148 @@
 
       <section class="sheet-viewport">
         <div class="sheet-toolbar">
-          <span>CLICK ANY TEXT TO EDIT INLINE &bull; HOVER ENTRIES FOR CONTROLS &bull; DRAG BETWEEN SECTIONS FOR \vspace</span>
-          <span id="page-status-pill" class="page-status-pill">LOADING...</span>
+          <span>CLICK TEXT TO EDIT &bull; DRAG BETWEEN SECTIONS FOR \vspace</span>
+          <div class="sheet-toolbar-right">
+            <button type="button" id="zoom-toggle-btn" class="mini-action-btn">ZOOM: FIT</button>
+            <span id="page-status-pill" class="page-status-pill">WAITING FOR MOUNT</span>
+          </div>
         </div>
 
-        <div id="cv-sheet" class="cv-sheet">
-          <div class="page-break-guide"></div>
-          <div id="cv-sheet-content"></div>
+        <div id="sheet-fit-area" class="sheet-fit-area">
+          <div id="sheet-scale-wrapper" class="sheet-scale-wrapper">
+            <div id="cv-sheet" class="cv-sheet">
+              <div id="page-break-guides"></div>
+              <div id="cv-sheet-content"></div>
+            </div>
+          </div>
         </div>
       </section>
     </div>
   </main>
 
   <script>
+    const PX_PER_MM = 96 / 25.4; // 3.779527559
+    const PAGE_SIZES = {
+      letterpaper: { wPx: 816, hPx: 1056, hLabel: "11.0 IN", cssSize: "letter" },
+      a4paper:     { wPx: 794, hPx: 1123, hLabel: "297 MM",  cssSize: "A4" }
+    };
+
+    let zoomMode = "fit"; // "fit" | "100"
+    let currentScale = 1;
+
     const resumeState = {
       mounted: false,
       rootHandle: null,
       resumeDirHandle: null,
       cvDirHandle: null,
       activeTexTab: "main.tex",
+      page: {
+        size: "letterpaper",
+        count: 1
+      },
       spacing: {
         sectionTopMm: 3.0,
-        entryGapMm: 2.5,
-        bulletGapMm: 0.5,
+        entryGapMm: 1.5,
+        bulletGapMm: 0.25,
         marginXMm: 14,
-        marginYMm: 10
+        marginTopMm: 8,
+        marginBottomMm: 18
+      },
+      theme: {
+        awesomeHex: "000000",
+        sectionHighlight: false
       },
       header: {
         firstName: "",
         lastName: "",
+        position: "",
+        address: "",
         mobile: "",
         email: "",
         homepage: "",
+        github: "",
         linkedin: ""
       },
-      sections: [
-        { id: "education", file: "cv/education.tex", title: "Education", type: "entries", enabled: true, vspaceMm: 0, items: [] },
-        { id: "skills", file: "cv/skills.tex", title: "Skills", type: "skills", enabled: true, vspaceMm: 0, items: [] },
-        { id: "experience", file: "cv/experience.tex", title: "Experience", type: "entries", enabled: true, vspaceMm: 0, items: [] },
-        { id: "involvement", file: "cv/Involvment.tex", title: "Involvement", type: "skills", enabled: true, vspaceMm: 0, items: [] }
-      ]
+      footer: {
+        enabled: false,
+        left: "",
+        center: "",
+        right: ""
+      },
+      sections: []
     };
 
+    function getPageSpec() {
+      return PAGE_SIZES[resumeState.page.size] || PAGE_SIZES.letterpaper;
+    }
+
     // =========================================================================
-    // LATEX ESCAPING & SERIALIZATION
+    // AUTO-FIT SHEET SCALING
     // =========================================================================
+    function updateSheetScale() {
+      const area = document.getElementById("sheet-fit-area");
+      const wrapper = document.getElementById("sheet-scale-wrapper");
+      const sheet = document.getElementById("cv-sheet");
+      if (!area || !wrapper || !sheet) return;
+
+      const spec = getPageSpec();
+      const targetH = spec.hPx * resumeState.page.count;
+      const availW = Math.max(280, area.clientWidth - 16);
+      const availH = Math.max(280, area.clientHeight - 12);
+
+      if (zoomMode === "fit") {
+        currentScale = Math.min(availW / spec.wPx, availH / targetH, 1.05);
+      } else {
+        currentScale = 1;
+      }
+
+      sheet.style.transform = `scale(${currentScale})`;
+      const unscaledH = Math.max(targetH, sheet.scrollHeight);
+      wrapper.style.width = `${Math.round(spec.wPx * currentScale)}px`;
+      wrapper.style.height = `${Math.round(unscaledH * currentScale)}px`;
+
+      const btn = document.getElementById("zoom-toggle-btn");
+      if (btn) {
+        btn.textContent = zoomMode === "fit"
+          ? `ZOOM: FIT (${Math.round(currentScale * 100)}%)`
+          : `ZOOM: 100%`;
+      }
+    }
+
+    function renderPageBreakGuides() {
+      const container = document.getElementById("page-break-guides");
+      if (!container) return;
+      const spec = getPageSpec();
+      let html = "";
+      for (let p = 1; p <= resumeState.page.count; p++) {
+        html += `
+          <div class="page-break-guide" style="top:${spec.hPx * p}px;">
+            <span class="page-break-label">PAGE ${p} END (${spec.hLabel})</span>
+          </div>
+        `;
+      }
+      container.innerHTML = html;
+    }
+
+    // =========================================================================
+    // LATEX ESCAPING, COMMENT STRIPPING & SERIALIZATION
+    // =========================================================================
+    function stripLatexComments(tex) {
+      return tex
+        .split(/\r?\n/)
+        .map((line) => {
+          for (let i = 0; i < line.length; i++) {
+            if (line[i] === "%") {
+              let bs = 0;
+              for (let k = i - 1; k >= 0 && line[k] === "\\"; k--) bs++;
+              if (bs % 2 === 0) return line.slice(0, i);
+            }
+          }
+          return line;
+        })
+        .join("\n");
+    }
+
     function escapeTex(str) {
       return String(str || "")
         .replace(/\\/g, "\\textbackslash{}")
@@ -637,12 +946,46 @@
         .replace(/\$?\^\{?\\circ\}?\$?/g, "°")
         .replace(/\\([%&$#_])/g, "$1")
         .replace(/\\textbackslash\{\}/g, "\\")
+        .replace(/~/g, "\u00A0")
         .trim();
+    }
+
+    function escapeFooterTex(str) {
+      return escapeTex(str).replace(/\u00A0/g, "~");
+    }
+
+    function parseLengthToMm(valStr) {
+      const m = String(valStr || "").trim().match(/^(-?\d*\.?\d+)\s*(mm|cm|pt|in)?$/i);
+      if (!m) return null;
+      const num = parseFloat(m[1]);
+      const unit = (m[2] || "mm").toLowerCase();
+      if (unit === "cm") return num * 10;
+      if (unit === "in") return num * 25.4;
+      if (unit === "pt") return num * 0.3528;
+      return num;
     }
 
     function generateMainTex() {
       const h = resumeState.header;
+      const f = resumeState.footer;
       const sp = resumeState.spacing;
+      const th = resumeState.theme;
+
+      const headerLines = [
+        `\\name{${escapeTex(h.firstName)}}{${escapeTex(h.lastName)}}`,
+        h.position ? `\\position{${escapeTex(h.position)}}` : "",
+        h.address ? `\\address{${escapeTex(h.address)}}` : "",
+        h.homepage ? `\\homepage{${escapeTex(h.homepage)}}` : "",
+        h.email ? `\\email{${escapeTex(h.email)}}` : "",
+        h.mobile ? `\\mobile{${escapeTex(h.mobile)}}` : "",
+        h.github ? `\\github{${escapeTex(h.github)}}` : "",
+        h.linkedin ? `\\linkedin{${escapeTex(h.linkedin)}}` : ""
+      ].filter(Boolean).join("\n");
+
+      const footerBlock = f.enabled
+        ? `\n\\makecvfooter\n  {${escapeFooterTex(f.left)}}\n  {${escapeFooterTex(f.center)}}\n  {${escapeFooterTex(f.right)}}\n`
+        : "";
+
       const inputs = resumeState.sections
         .filter((s) => s.enabled)
         .map((s) => {
@@ -653,21 +996,18 @@
 
       return `%!TEX TS-program = xelatex
 %!TEX encoding = UTF-8 Unicode
-\\documentclass[11pt, letterpaper]{awesome-cv}
+\\documentclass[11pt, ${resumeState.page.size}]{awesome-cv}
 
-\\geometry{left=${sp.marginXMm}mm, top=${sp.marginYMm}mm, right=${sp.marginXMm}mm, bottom=${sp.marginYMm}mm, footskip=.5cm}
+\\geometry{left=${sp.marginXMm}mm, top=${sp.marginTopMm}mm, right=${sp.marginXMm}mm, bottom=${sp.marginBottomMm}mm, footskip=.5cm}
 \\renewcommand{\\acvSectionTopSkip}{${sp.sectionTopMm.toFixed(1)}mm}
-\\setbool{acvSectionColorHighlight}{false}
+\\definecolor{awesome}{HTML}{${th.awesomeHex.toUpperCase()}}
+\\setbool{acvSectionColorHighlight}{${th.sectionHighlight ? "true" : "false"}}
+\\renewcommand{\\acvHeaderSocialSep}{\\quad\\textbar\\quad}
 
-\\name{${escapeTex(h.firstName)}}{${escapeTex(h.lastName)}}
-\\mobile{${escapeTex(h.mobile)}}
-\\email{${escapeTex(h.email)}}
-\\homepage{${escapeTex(h.homepage)}}
-\\linkedin{${escapeTex(h.linkedin)}}
+${headerLines}
 
 \\begin{document}
-\\makecvheader
-
+\\makecvheader${footerBlock}
 ${inputs}
 
 \\end{document}
@@ -682,11 +1022,27 @@ ${inputs}
         return `\\cvsection{${escapeTex(sec.title)}}\n\n\\begin{cvskills}\n${rows}\n\\end{cvskills}\n`;
       }
 
+      if (sec.type === "honors") {
+        const blocks = sec.groups
+          .map((g) => {
+            const sub = g.subsection ? `\\cvsubsection{${escapeTex(g.subsection)}}\n\n` : "";
+            const rows = g.items
+              .map(
+                (r) =>
+                  `  \\cvhonor\n    {${escapeTex(r.position)}}\n    {${escapeTex(r.title)}}\n    {${escapeTex(r.location)}}\n    {${escapeTex(r.date)}}`
+              )
+              .join("\n\n");
+            return `${sub}\\begin{cvhonors}\n${rows}\n\\end{cvhonors}`;
+          })
+          .join("\n\n");
+        return `\\cvsection{${escapeTex(sec.title)}}\n\n${blocks}\n`;
+      }
+
       const entries = sec.items
         .map((e) => {
           const bullets = e.bullets && e.bullets.length
             ? `\\begin{cvitems}\n${e.bullets.map((b) => `        \\item {${escapeTex(b)}}`).join("\n")}\n      \\end{cvitems}`
-            : "";
+            : `\\begin{cvitems}\n      \\end{cvitems}`;
           return `  \\cventry\n    {${escapeTex(e.role)}}\n    {${escapeTex(e.org)}}\n    {${escapeTex(e.loc)}}\n    {${escapeTex(e.date)}}\n    {\n      ${bullets}\n    }`;
         })
         .join("\n\n");
@@ -701,22 +1057,12 @@ ${inputs}
       const args = [];
       let i = startIndex;
       while (args.length < count && i < str.length) {
-        // Skip whitespace AND LaTeX line comments (% ... \n)
-        while (i < str.length) {
-          if (/\s/.test(str[i])) { i++; continue; }
-          if (str[i] === "%") {
-            const nl = str.indexOf("\n", i);
-            i = nl === -1 ? str.length : nl + 1;
-            continue;
-          }
-          break;
-        }
+        while (i < str.length && /\s/.test(str[i])) i++;
         if (i >= str.length || str[i] !== "{") break;
         let depth = 0;
         let argStart = i + 1;
         for (; i < str.length; i++) {
           const ch = str[i];
-          // Count consecutive preceding backslashes to decide if this brace is escaped
           let bs = 0;
           for (let k = i - 1; k >= 0 && str[k] === "\\"; k--) bs++;
           const escaped = bs % 2 === 1;
@@ -734,7 +1080,39 @@ ${inputs}
       return { args, endIndex: i };
     }
 
-    function parseMainTexHeader(tex) {
+    function parseMainTex(rawTex) {
+      const tex = stripLatexComments(rawTex);
+
+      const docClassMatch = tex.match(/\\documentclass\[([^\]]+)\]\{awesome-cv\}/);
+      if (docClassMatch) {
+        resumeState.page.size = /\ba4paper\b/i.test(docClassMatch[1]) ? "a4paper" : "letterpaper";
+      }
+
+      const geoMatch = tex.match(/\\geometry\{([^}]+)\}/);
+      if (geoMatch) {
+        geoMatch[1].split(",").forEach((p) => {
+          const [k, v] = p.split("=").map((s) => s && s.trim());
+          const mm = parseLengthToMm(v);
+          if (mm === null) return;
+          if (k === "left") resumeState.spacing.marginXMm = Math.round(mm);
+          if (k === "top") resumeState.spacing.marginTopMm = Math.round(mm);
+          if (k === "bottom") resumeState.spacing.marginBottomMm = Math.round(mm);
+        });
+      }
+
+      const skipMatch = tex.match(/\\renewcommand\{\\acvSectionTopSkip\}\{([^}]+)\}/);
+      if (skipMatch) {
+        const mm = parseLengthToMm(skipMatch[1]);
+        if (mm !== null) resumeState.spacing.sectionTopMm = mm;
+      }
+
+      const colorMatch = tex.match(/\\definecolor\{awesome\}\{HTML\}\{([0-9A-Fa-f]{6})\}/);
+      if (colorMatch) resumeState.theme.awesomeHex = colorMatch[1];
+
+      const hlMatch = tex.match(/\\setbool\{acvSectionColorHighlight\}\{(true|false)\}/);
+      if (hlMatch) resumeState.theme.sectionHighlight = hlMatch[1] === "true";
+
+      Object.keys(resumeState.header).forEach((k) => (resumeState.header[k] = ""));
       const nameIdx = tex.indexOf("\\name");
       if (nameIdx !== -1) {
         const { args } = extractBraceArgs(tex, nameIdx + 5, 2);
@@ -743,31 +1121,100 @@ ${inputs}
           resumeState.header.lastName = unescapeTex(args[1]);
         }
       }
-      ["mobile", "email", "homepage", "linkedin"].forEach((cmd) => {
-        const idx = tex.indexOf(`\\${cmd}`);
-        if (idx !== -1) {
-          const { args } = extractBraceArgs(tex, idx + cmd.length + 1, 1);
+      ["position", "address", "mobile", "email", "homepage", "github", "linkedin"].forEach((cmd) => {
+        const rx = new RegExp(`\\\\${cmd}(?![a-zA-Z])`);
+        const m = rx.exec(tex);
+        if (m) {
+          const { args } = extractBraceArgs(tex, m.index + cmd.length + 1, 1);
           if (args.length === 1) resumeState.header[cmd] = unescapeTex(args[0]);
         }
       });
-    }
 
-    function parseSkillsTex(tex) {
-      const items = [];
-      let idx = 0;
-      while ((idx = tex.indexOf("\\cvskill", idx)) !== -1) {
-        const nextChar = tex[idx + 8];
-        if (nextChar && /[a-zA-Z]/.test(nextChar)) { idx += 8; continue; }
-        const { args, endIndex } = extractBraceArgs(tex, idx + 8, 2);
-        if (args.length === 2) {
-          items.push({ category: unescapeTex(args[0]), list: unescapeTex(args[1]) });
+      const footerIdx = tex.indexOf("\\makecvfooter");
+      if (footerIdx !== -1) {
+        const { args } = extractBraceArgs(tex, footerIdx + 13, 3);
+        if (args.length === 3) {
+          resumeState.footer = {
+            enabled: true,
+            left: unescapeTex(args[0]),
+            center: unescapeTex(args[1]),
+            right: unescapeTex(args[2])
+          };
         }
-        idx = endIndex > idx ? endIndex : idx + 8;
+      } else {
+        resumeState.footer = { enabled: false, left: "", center: "", right: "" };
       }
-      return items;
+
+      const activeInputs = [];
+      const bodyStart = tex.indexOf("\\begin{document}");
+      const bodyEnd = tex.indexOf("\\end{document}");
+      const body = bodyStart !== -1 ? tex.slice(bodyStart, bodyEnd !== -1 ? bodyEnd : undefined) : tex;
+
+      const tokenRx = /\\(vspace|input)\{([^}]+)\}/g;
+      let pendingVspace = 0;
+      let m;
+      while ((m = tokenRx.exec(body)) !== null) {
+        if (m[1] === "vspace") {
+          const mm = parseLengthToMm(m[2]);
+          if (mm !== null) pendingVspace = mm;
+        } else if (m[1] === "input") {
+          activeInputs.push({ file: m[2].trim(), vspaceMm: pendingVspace });
+          pendingVspace = 0;
+        }
+      }
+      return activeInputs;
     }
 
-    function parseEntriesTex(tex) {
+    function parseSectionFile(filePath, rawTex) {
+      const tex = stripLatexComments(rawTex);
+      const secMatch = tex.match(/\\cvsection\{([^}]+)\}/);
+      const title = secMatch ? unescapeTex(secMatch[1]) : filePath.replace(/^cv\/|\.tex$/g, "");
+
+      if (tex.includes("\\begin{cvhonors}") || tex.includes("\\cvhonor")) {
+        const groups = [];
+        let currentGroup = { subsection: "", items: [] };
+        const tokenRx = /\\(cvsubsection|cvhonor)(?![a-zA-Z])/g;
+        let m;
+        while ((m = tokenRx.exec(tex)) !== null) {
+          if (m[1] === "cvsubsection") {
+            const { args, endIndex } = extractBraceArgs(tex, m.index + 13, 1);
+            if (currentGroup.items.length || currentGroup.subsection) groups.push(currentGroup);
+            currentGroup = { subsection: args[0] ? unescapeTex(args[0]) : "", items: [] };
+            tokenRx.lastIndex = endIndex;
+          } else if (m[1] === "cvhonor") {
+            const { args, endIndex } = extractBraceArgs(tex, m.index + 8, 4);
+            if (args.length === 4) {
+              currentGroup.items.push({
+                position: unescapeTex(args[0]),
+                title: unescapeTex(args[1]),
+                location: unescapeTex(args[2]),
+                date: unescapeTex(args[3])
+              });
+            }
+            tokenRx.lastIndex = endIndex;
+          }
+        }
+        if (currentGroup.items.length || currentGroup.subsection || !groups.length) {
+          groups.push(currentGroup);
+        }
+        return { file: filePath, title, type: "honors", groups };
+      }
+
+      if (tex.includes("\\begin{cvskills}") || tex.includes("\\cvskill")) {
+        const items = [];
+        let idx = 0;
+        while ((idx = tex.indexOf("\\cvskill", idx)) !== -1) {
+          const nextChar = tex[idx + 8];
+          if (nextChar && /[a-zA-Z]/.test(nextChar)) { idx += 8; continue; }
+          const { args, endIndex } = extractBraceArgs(tex, idx + 8, 2);
+          if (args.length === 2) {
+            items.push({ category: unescapeTex(args[0]), list: unescapeTex(args[1]) });
+          }
+          idx = endIndex > idx ? endIndex : idx + 8;
+        }
+        return { file: filePath, title, type: "skills", items };
+      }
+
       const items = [];
       let idx = 0;
       while ((idx = tex.indexOf("\\cventry", idx)) !== -1) {
@@ -791,7 +1238,7 @@ ${inputs}
         }
         idx = endIndex > idx ? endIndex : idx + 8;
       }
-      return items;
+      return { file: filePath, title, type: "entries", items };
     }
 
     // =========================================================================
@@ -800,35 +1247,76 @@ ${inputs}
     function applySpacingCssVars() {
       const r = document.documentElement.style;
       const sp = resumeState.spacing;
-      r.setProperty("--cv-section-gap", `${(sp.sectionTopMm * 3.78).toFixed(1)}px`);
-      r.setProperty("--cv-entry-gap", `${(sp.entryGapMm * 3.78).toFixed(1)}px`);
-      r.setProperty("--cv-bullet-gap", `${(sp.bulletGapMm * 3.78).toFixed(1)}px`);
+      const spec = getPageSpec();
+
+      r.setProperty("--cv-page-w", `${spec.wPx}px`);
+      r.setProperty("--cv-page-h", `${spec.hPx}px`);
+      r.setProperty("--cv-sheet-min-h", `${spec.hPx * resumeState.page.count}px`);
+      r.setProperty("--cv-section-gap", `${(sp.sectionTopMm * PX_PER_MM).toFixed(1)}px`);
+      r.setProperty("--cv-entry-gap", `${(sp.entryGapMm * PX_PER_MM).toFixed(1)}px`);
+      r.setProperty("--cv-bullet-gap", `${(sp.bulletGapMm * PX_PER_MM).toFixed(1)}px`);
       r.setProperty("--cv-margin-x", `${sp.marginXMm}mm`);
-      r.setProperty("--cv-margin-y", `${sp.marginYMm}mm`);
+      r.setProperty("--cv-margin-top", `${sp.marginTopMm}mm`);
+      r.setProperty("--cv-margin-bottom", `${sp.marginBottomMm}mm`);
+      r.setProperty("--cv-awesome", `#${resumeState.theme.awesomeHex}`);
+
+      const printStyle = document.getElementById("dynamic-print-page");
+      if (printStyle) {
+        printStyle.textContent = `@media print { @page { size: ${spec.cssSize}; margin: 0; } }`;
+      }
+
+      document.getElementById("sel-page-size").value = resumeState.page.size;
+      document.getElementById("inp-page-count").value = resumeState.page.count;
 
       document.getElementById("val-sec-gap").textContent = `${sp.sectionTopMm.toFixed(1)}mm`;
-      document.getElementById("val-entry-gap").textContent = `${sp.entryGapMm.toFixed(1)}mm`;
+      document.getElementById("val-entry-gap").textContent = `${sp.entryGapMm.toFixed(2)}mm`;
       document.getElementById("val-bullet-gap").textContent = `${sp.bulletGapMm.toFixed(2)}mm`;
       document.getElementById("val-margin-x").textContent = `${sp.marginXMm}mm`;
-      document.getElementById("val-margin-y").textContent = `${sp.marginYMm}mm`;
+      document.getElementById("val-margin-top").textContent = `${sp.marginTopMm}mm`;
+      document.getElementById("val-margin-bottom").textContent = `${sp.marginBottomMm}mm`;
+
+      document.getElementById("sl-sec-gap").value = sp.sectionTopMm;
+      document.getElementById("sl-entry-gap").value = sp.entryGapMm;
+      document.getElementById("sl-bullet-gap").value = sp.bulletGapMm;
+      document.getElementById("sl-margin-x").value = sp.marginXMm;
+      document.getElementById("sl-margin-top").value = sp.marginTopMm;
+      document.getElementById("sl-margin-bottom").value = sp.marginBottomMm;
+      document.getElementById("cb-sec-highlight").checked = resumeState.theme.sectionHighlight;
+      document.getElementById("color-awesome").value = `#${resumeState.theme.awesomeHex}`;
+
+      renderPageBreakGuides();
     }
 
     function checkPageOverflow() {
-      const sheet = document.getElementById("cv-sheet");
       const pill = document.getElementById("page-status-pill");
-      if (!resumeState.mounted) {
+      const bodyWrap = document.getElementById("cv-body-wrap");
+
+      if (!resumeState.mounted || !bodyWrap) {
         pill.className = "page-status-pill";
         pill.textContent = "WAITING FOR MOUNT";
+        updateSheetScale();
         return;
       }
-      const h = sheet.scrollHeight;
-      if (h > 1060) {
+
+      const spec = getPageSpec();
+      const sp = resumeState.spacing;
+      const pages = resumeState.page.count;
+      const singlePagePrintableH = spec.hPx - (sp.marginTopMm + sp.marginBottomMm) * PX_PER_MM;
+      const totalPrintableH = singlePagePrintableH * pages;
+      const usedH = bodyWrap.offsetHeight;
+      const pageWord = pages === 1 ? "1 PAGE" : `${pages} PAGES`;
+
+      if (usedH > totalPrintableH + 2) {
+        const overMm = Math.max(1, Math.round((usedH - totalPrintableH) / PX_PER_MM));
         pill.className = "page-status-pill overflow";
-        pill.textContent = `OVERFLOW: +${Math.round((h - 1056) / 3.78)}mm OVER 1 PAGE`;
+        pill.textContent = `OVERFLOW: +${overMm}mm OVER ${pageWord}`;
       } else {
+        const pct = Math.min(100, Math.round((usedH / totalPrintableH) * 100));
         pill.className = "page-status-pill";
-        pill.textContent = `FITS 1 PAGE (${Math.round((h / 1056) * 100)}%)`;
+        pill.textContent = `FITS ${pageWord} (${pct}%)`;
       }
+
+      updateSheetScale();
     }
 
     function renderTexInspector() {
@@ -837,7 +1325,7 @@ ${inputs}
 
       if (!resumeState.mounted) {
         tabBar.innerHTML = "";
-        area.value = "% Mount AZcore folder to load and preview .tex output here.";
+        area.value = "% Mount AZcore folder to load assets/resume/main.tex and all cv/*.tex files.";
         return;
       }
 
@@ -865,13 +1353,19 @@ ${inputs}
 
     function renderSectionManager() {
       const list = document.getElementById("section-order-list");
+      if (!resumeState.mounted) {
+        list.innerHTML = `<div style="font-family:var(--font-mono); font-size:0.7rem; color:var(--text-muted);">Mount folder to discover cv/*.tex files.</div>`;
+        return;
+      }
       list.innerHTML = resumeState.sections
         .map(
           (s, idx) => `
           <div class="section-order-item ${s.enabled ? "" : "disabled-sec"}">
-            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <label style="display:flex; align-items:center; gap:7px; cursor:pointer; min-width:0;">
               <input type="checkbox" data-idx="${idx}" class="sec-toggle-cb" ${s.enabled ? "checked" : ""} />
-              <span>${s.title} <span style="color:var(--text-muted); font-size:0.65rem;">(${s.vspaceMm >= 0 ? "+" : ""}${s.vspaceMm.toFixed(1)}mm)</span></span>
+              <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${s.file}">${s.title}</span>
+              <span class="sec-type-badge">${s.type}</span>
+              <span style="color:var(--text-muted); font-size:0.64rem;">(${s.vspaceMm >= 0 ? "+" : ""}${s.vspaceMm.toFixed(1)}mm)</span>
             </label>
             <div style="display:flex; gap:3px;">
               <button type="button" class="icon-btn" data-move="up" data-idx="${idx}">&#8593;</button>
@@ -901,19 +1395,25 @@ ${inputs}
       });
     }
 
+    function renderSectionTitleHtml(title) {
+      if (resumeState.theme.sectionHighlight && title.length > 3) {
+        return `<span class="cv-section-accent">${title.slice(0, 3)}</span>${title.slice(3)}`;
+      }
+      return title;
+    }
+
     function renderSheet() {
       const root = document.getElementById("cv-sheet-content");
 
-      // ── Unmounted placeholder ──
       if (!resumeState.mounted) {
         root.innerHTML = `
-          <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:800px; text-align:center; gap:18px; opacity:0.7;">
+          <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:860px; text-align:center; gap:18px; opacity:0.7;">
             <div style="font-size:64px;">&#128193;</div>
             <div style="font-family:'JetBrains Mono',monospace; font-size:1.1rem; font-weight:700; color:#555;">
               NO DATA LOADED
             </div>
-            <div style="font-family:'Source Sans 3',sans-serif; font-size:0.92rem; color:#888; max-width:380px; line-height:1.5;">
-              Click <strong style="color:#d92804;">MOUNT AZcore FOLDER</strong> above to load your <code>assets/resume/*.tex</code> files and populate the resume.
+            <div style="font-family:'Source Sans 3',sans-serif; font-size:0.92rem; color:#888; max-width:400px; line-height:1.5;">
+              Click <strong style="color:#d92804;">MOUNT AZcore FOLDER</strong> above to dynamically load <code>assets/resume/main.tex</code> and all <code>assets/resume/cv/*.tex</code> files.
             </div>
           </div>
         `;
@@ -921,25 +1421,26 @@ ${inputs}
         return;
       }
 
-      // ── Normal render (mounted) ──
       const h = resumeState.header;
+      const contactItems = [
+        h.mobile ? `<span class="cv-contact-item">&#128241; <span contenteditable="true" data-bind="header.mobile">${h.mobile}</span></span>` : "",
+        h.email ? `<span class="cv-contact-item">&#9993; <span contenteditable="true" data-bind="header.email">${h.email}</span></span>` : "",
+        h.homepage ? `<span class="cv-contact-item">&#8962; <span contenteditable="true" data-bind="header.homepage">${h.homepage}</span></span>` : "",
+        h.github ? `<span class="cv-contact-item">gh <span contenteditable="true" data-bind="header.github">${h.github}</span></span>` : "",
+        h.linkedin ? `<span class="cv-contact-item">in <span contenteditable="true" data-bind="header.linkedin">${h.linkedin}</span></span>` : ""
+      ].filter(Boolean).join(`<span class="cv-contact-sep">|</span>`);
 
       let html = `
-        <div class="cv-header">
-          <div class="cv-name">
-            <span class="cv-first-name" contenteditable="true" data-bind="header.firstName">${h.firstName}</span>
-            <span class="cv-last-name" contenteditable="true" data-bind="header.lastName">${h.lastName}</span>
+        <div id="cv-body-wrap" class="cv-body-wrap">
+          <div class="cv-header">
+            <div class="cv-name">
+              <span class="cv-first-name" contenteditable="true" data-bind="header.firstName">${h.firstName}</span>
+              <span class="cv-last-name" contenteditable="true" data-bind="header.lastName">${h.lastName}</span>
+            </div>
+            ${h.position ? `<div class="cv-position" contenteditable="true" data-bind="header.position">${h.position}</div>` : ""}
+            ${h.address ? `<div class="cv-address" contenteditable="true" data-bind="header.address">${h.address}</div>` : ""}
+            <div class="cv-contact">${contactItems}</div>
           </div>
-          <div class="cv-contact">
-            <span class="cv-contact-item">&#128241; <span contenteditable="true" data-bind="header.mobile">${h.mobile}</span></span>
-            <span class="cv-contact-sep">|</span>
-            <span class="cv-contact-item">&#9993; <span contenteditable="true" data-bind="header.email">${h.email}</span></span>
-            <span class="cv-contact-sep">|</span>
-            <span class="cv-contact-item">&#8962; <span contenteditable="true" data-bind="header.homepage">${h.homepage}</span></span>
-            <span class="cv-contact-sep">|</span>
-            <span class="cv-contact-item">in <span contenteditable="true" data-bind="header.linkedin">${h.linkedin}</span></span>
-          </div>
-        </div>
       `;
 
       resumeState.sections.forEach((sec, sIdx) => {
@@ -949,11 +1450,11 @@ ${inputs}
           <div class="spacing-drag-handle" data-sec-idx="${sIdx}" title="Drag vertically to adjust \\vspace{} before ${sec.title}">
             <span class="spacing-drag-pill">&#8597; \\vspace{${sec.vspaceMm.toFixed(1)}mm}</span>
           </div>
-          <div class="cv-section-block" style="margin-top: calc(var(--cv-section-gap) + ${(sec.vspaceMm * 3.78).toFixed(1)}px);">
+          <div class="cv-section-block" style="margin-top: calc(var(--cv-section-gap) + ${(sec.vspaceMm * PX_PER_MM).toFixed(1)}px);">
             <div class="cv-section-heading">
-              <span class="cv-section-title" contenteditable="true" data-sec-title="${sIdx}">${sec.title}</span>
+              <span class="cv-section-title" contenteditable="true" data-sec-title="${sIdx}">${renderSectionTitleHtml(sec.title)}</span>
               <div class="cv-section-rule"></div>
-              <button type="button" class="cv-section-add-btn" data-add-item="${sIdx}">+ ADD ${sec.type === "skills" ? "ROW" : "ENTRY"}</button>
+              <button type="button" class="cv-section-add-btn" data-add-item="${sIdx}">+ ADD ${sec.type === "skills" ? "ROW" : sec.type === "honors" ? "HONOR" : "ENTRY"}</button>
             </div>
         `;
 
@@ -971,6 +1472,32 @@ ${inputs}
             `;
           });
           html += `</table>`;
+        } else if (sec.type === "honors") {
+          sec.groups.forEach((g, gIdx) => {
+            if (g.subsection) {
+              html += `
+                <div class="cv-subsection-heading">
+                  <span class="cv-subsection-title" contenteditable="true" data-honor-sub="${sIdx}:${gIdx}">${g.subsection}</span>
+                </div>
+              `;
+            }
+            html += `<table class="cv-honors-table">`;
+            g.items.forEach((item, iIdx) => {
+              html += `
+                <tr class="cv-honor-row">
+                  <td class="cv-honor-date" contenteditable="true" data-honor-field="${sIdx}:${gIdx}:${iIdx}:date">${item.date}</td>
+                  <td class="cv-honor-main">
+                    <span class="cv-honor-pos" contenteditable="true" data-honor-field="${sIdx}:${gIdx}:${iIdx}:position">${item.position}</span>${item.title ? ", " : ""}<span contenteditable="true" data-honor-field="${sIdx}:${gIdx}:${iIdx}:title">${item.title}</span>
+                  </td>
+                  <td class="cv-honor-loc" contenteditable="true" data-honor-field="${sIdx}:${gIdx}:${iIdx}:location">${item.location}</td>
+                  <td class="cv-skill-actions">
+                    <button type="button" class="mini-cv-btn" data-del-honor="${sIdx}:${gIdx}:${iIdx}">&times;</button>
+                  </td>
+                </tr>
+              `;
+            });
+            html += `</table>`;
+          });
         } else {
           sec.items.forEach((entry, eIdx) => {
             html += `
@@ -1012,6 +1539,18 @@ ${inputs}
         html += `</div>`;
       });
 
+      html += `</div>`;
+
+      if (resumeState.footer.enabled) {
+        html += `
+          <div class="cv-footer">
+            <span class="cv-footer-left" contenteditable="true" data-bind="footer.left">${resumeState.footer.left}</span>
+            <span class="cv-footer-center" contenteditable="true" data-bind="footer.center">${resumeState.footer.center}</span>
+            <span class="cv-footer-right" contenteditable="true" data-bind="footer.right">${resumeState.footer.right}</span>
+          </div>
+        `;
+      }
+
       root.innerHTML = html;
       bindSheetEvents(root);
       requestAnimationFrame(checkPageOverflow);
@@ -1020,8 +1559,8 @@ ${inputs}
     function bindSheetEvents(root) {
       root.querySelectorAll("[data-bind]").forEach((el) => {
         el.addEventListener("input", () => {
-          const [, key] = el.dataset.bind.split(".");
-          resumeState.header[key] = el.textContent.trim();
+          const [group, key] = el.dataset.bind.split(".");
+          resumeState[group][key] = el.textContent;
           renderTexInspector();
         });
       });
@@ -1049,6 +1588,31 @@ ${inputs}
         });
       });
 
+      root.querySelectorAll("[data-honor-sub]").forEach((el) => {
+        el.addEventListener("input", () => {
+          const [s, g] = el.dataset.honorSub.split(":").map(Number);
+          resumeState.sections[s].groups[g].subsection = el.textContent.trim();
+          renderTexInspector();
+        });
+      });
+
+      root.querySelectorAll("[data-honor-field]").forEach((el) => {
+        el.addEventListener("input", () => {
+          const [s, g, i, field] = el.dataset.honorField.split(":");
+          resumeState.sections[s].groups[g].items[i][field] = el.textContent.trim();
+          renderTexInspector();
+          checkPageOverflow();
+        });
+      });
+
+      root.querySelectorAll("[data-del-honor]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const [s, g, i] = btn.dataset.delHonor.split(":").map(Number);
+          resumeState.sections[s].groups[g].items.splice(i, 1);
+          renderAll();
+        });
+      });
+
       root.querySelectorAll("[data-entry-field]").forEach((el) => {
         el.addEventListener("input", () => {
           const [s, e, field] = el.dataset.entryField.split(":");
@@ -1072,6 +1636,9 @@ ${inputs}
           const sec = resumeState.sections[Number(btn.dataset.addItem)];
           if (sec.type === "skills") {
             sec.items.push({ category: "Category", list: "Item 1 | Item 2" });
+          } else if (sec.type === "honors") {
+            if (!sec.groups.length) sec.groups.push({ subsection: "", items: [] });
+            sec.groups[0].items.unshift({ position: "Award / Cert", title: "Issuer / Event", location: "", date: "2026" });
           } else {
             sec.items.unshift({
               org: "Organization Name",
@@ -1129,12 +1696,12 @@ ${inputs}
           handle.classList.add("dragging");
 
           const onMove = (ev) => {
-            const deltaMm = (ev.clientY - startY) / 3.78;
+            const deltaMm = (ev.clientY - startY) / (PX_PER_MM * currentScale);
             const snapped = Math.round((startMm + deltaMm) * 2) / 2;
             resumeState.sections[sIdx].vspaceMm = Math.max(-10, Math.min(20, snapped));
             const nextBlock = handle.nextElementSibling;
             if (nextBlock) {
-              nextBlock.style.marginTop = `calc(var(--cv-section-gap) + ${(resumeState.sections[sIdx].vspaceMm * 3.78).toFixed(1)}px)`;
+              nextBlock.style.marginTop = `calc(var(--cv-section-gap) + ${(resumeState.sections[sIdx].vspaceMm * PX_PER_MM).toFixed(1)}px)`;
             }
             handle.querySelector(".spacing-drag-pill").textContent =
               `↕ \\vspace{${resumeState.sections[sIdx].vspaceMm.toFixed(1)}mm}`;
@@ -1163,7 +1730,7 @@ ${inputs}
     }
 
     // =========================================================================
-    // FILE SYSTEM ACCESS API (Mount AZcore -> Read & Write assets/resume/)
+    // FILE SYSTEM ACCESS API (Dynamic Discovery from assets/resume/ & cv/)
     // =========================================================================
     function logMsg(msg, isErr = false) {
       const box = document.getElementById("fs-log-box");
@@ -1180,9 +1747,9 @@ ${inputs}
       }
       try {
         const root = await window.showDirectoryPicker({ mode: "readwrite" });
-        const assetsDir = await root.getDirectoryHandle("assets", { create: true });
-        const resumeDir = await assetsDir.getDirectoryHandle("resume", { create: true });
-        const cvDir = await resumeDir.getDirectoryHandle("cv", { create: true });
+        const assetsDir = await root.getDirectoryHandle("assets");
+        const resumeDir = await assetsDir.getDirectoryHandle("resume");
+        const cvDir = await resumeDir.getDirectoryHandle("cv");
 
         resumeState.rootHandle = root;
         resumeState.resumeDirHandle = resumeDir;
@@ -1193,27 +1760,42 @@ ${inputs}
         document.getElementById("fs-status-title").textContent = `CONNECTED TO /${root.name} — WRITE ACCESS UNLOCKED`;
         document.getElementById("save-tex-btn").disabled = false;
 
-        try {
-          const mainFh = await resumeDir.getFileHandle("main.tex");
-          parseMainTexHeader(await (await mainFh.getFile()).text());
-        } catch (_) {}
+        const mainFh = await resumeDir.getFileHandle("main.tex");
+        const activeInputs = parseMainTex(await (await mainFh.getFile()).text());
 
-        let loadedCount = 0;
-        for (const sec of resumeState.sections) {
-          const fname = sec.file.replace(/^cv\//, "");
-          try {
-            const fh = await cvDir.getFileHandle(fname);
-            const txt = await (await fh.getFile()).text();
-            const parsed = sec.type === "skills" ? parseSkillsTex(txt) : parseEntriesTex(txt);
-            if (parsed.length) {
-              sec.items = parsed;
-              loadedCount++;
-            }
-          } catch (_) {}
+        const discoveredMap = new Map();
+        for await (const [name, handle] of cvDir.entries()) {
+          if (handle.kind === "file" && name.toLowerCase().endsWith(".tex")) {
+            const raw = await (await handle.getFile()).text();
+            const filePath = `cv/${name}`;
+            discoveredMap.set(filePath, parseSectionFile(filePath, raw));
+          }
         }
 
+        const orderedSections = [];
+        const usedFiles = new Set();
+
+        for (const inp of activeInputs) {
+          const sec = discoveredMap.get(inp.file);
+          if (sec) {
+            orderedSections.push({ ...sec, enabled: true, vspaceMm: inp.vspaceMm });
+            usedFiles.add(inp.file);
+          }
+        }
+
+        for (const [filePath, sec] of discoveredMap.entries()) {
+          if (!usedFiles.has(filePath)) {
+            orderedSections.push({ ...sec, enabled: false, vspaceMm: 0 });
+          }
+        }
+
+        resumeState.sections = orderedSections;
         renderAll();
-        logMsg(`Mounted /${root.name} and loaded ${loadedCount} .tex section(s) from assets/resume/cv/.`);
+        logMsg(
+          `Mounted /${root.name}\n` +
+          `• Active sections in main.tex: ${usedFiles.size}\n` +
+          `• Inactive sections discovered in cv/: ${orderedSections.length - usedFiles.size}`
+        );
       } catch (err) {
         if (err.name !== "AbortError") logMsg(`Mount failed: ${err.message}`, true);
       }
@@ -1250,6 +1832,25 @@ ${inputs}
       document.getElementById("save-tex-btn").addEventListener("click", saveAllTexToDisk);
       document.getElementById("print-pdf-btn").addEventListener("click", () => window.print());
 
+      document.getElementById("zoom-toggle-btn").addEventListener("click", () => {
+        zoomMode = zoomMode === "fit" ? "100" : "fit";
+        updateSheetScale();
+      });
+
+      document.getElementById("sel-page-size").addEventListener("change", (e) => {
+        resumeState.page.size = e.target.value;
+        applySpacingCssVars();
+        renderTexInspector();
+        checkPageOverflow();
+      });
+
+      document.getElementById("inp-page-count").addEventListener("input", (e) => {
+        const val = parseInt(e.target.value, 10);
+        resumeState.page.count = Math.max(1, Math.min(6, isNaN(val) ? 1 : val));
+        applySpacingCssVars();
+        checkPageOverflow();
+      });
+
       document.getElementById("copy-tex-btn").addEventListener("click", (e) => {
         navigator.clipboard.writeText(document.getElementById("tex-code-area").value);
         e.target.textContent = "COPIED";
@@ -1268,18 +1869,31 @@ ${inputs}
       bindSlider("sl-entry-gap", "entryGapMm");
       bindSlider("sl-bullet-gap", "bulletGapMm");
       bindSlider("sl-margin-x", "marginXMm");
-      bindSlider("sl-margin-y", "marginYMm");
+      bindSlider("sl-margin-top", "marginTopMm");
+      bindSlider("sl-margin-bottom", "marginBottomMm");
 
-      document.getElementById("reset-spacing-btn").addEventListener("click", () => {
-        resumeState.spacing = { sectionTopMm: 3, entryGapMm: 2.5, bulletGapMm: 0.5, marginXMm: 14, marginYMm: 10 };
-        resumeState.sections.forEach((s) => (s.vspaceMm = 0));
-        document.getElementById("sl-sec-gap").value = 3;
-        document.getElementById("sl-entry-gap").value = 2.5;
-        document.getElementById("sl-bullet-gap").value = 0.5;
-        document.getElementById("sl-margin-x").value = 14;
-        document.getElementById("sl-margin-y").value = 10;
+      document.getElementById("cb-sec-highlight").addEventListener("change", (e) => {
+        resumeState.theme.sectionHighlight = e.target.checked;
         renderAll();
       });
+
+      document.getElementById("color-awesome").addEventListener("input", (e) => {
+        resumeState.theme.awesomeHex = e.target.value.replace("#", "").toUpperCase();
+        applySpacingCssVars();
+        renderTexInspector();
+      });
+
+      document.getElementById("reset-spacing-btn").addEventListener("click", () => {
+        resumeState.page = { size: "letterpaper", count: 1 };
+        resumeState.spacing = { sectionTopMm: 3, entryGapMm: 1.5, bulletGapMm: 0.25, marginXMm: 14, marginTopMm: 8, marginBottomMm: 18 };
+        resumeState.sections.forEach((s) => (s.vspaceMm = 0));
+        renderAll();
+      });
+
+      window.addEventListener("resize", updateSheetScale);
+      if ("ResizeObserver" in window) {
+        new ResizeObserver(updateSheetScale).observe(document.getElementById("sheet-fit-area"));
+      }
 
       renderAll();
     });
