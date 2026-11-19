@@ -592,6 +592,7 @@
 
   <script>
     const resumeState = {
+      mounted: false,
       rootHandle: null,
       resumeDirHandle: null,
       cvDirHandle: null,
@@ -604,12 +605,12 @@
         marginYMm: 10
       },
       header: {
-        firstName: "Alexander",
-        lastName: "Zhuk",
-        mobile: "(+1) 773-630-2171",
-        email: "azhuk0707@gmail.com",
-        homepage: "azcore.studio",
-        linkedin: "zhuk-alex"
+        firstName: "",
+        lastName: "",
+        mobile: "",
+        email: "",
+        homepage: "",
+        linkedin: ""
       },
       sections: [
         { id: "education", file: "cv/education.tex", title: "Education", type: "entries", enabled: true, vspaceMm: 0, items: [] },
@@ -794,34 +795,6 @@ ${inputs}
     }
 
     // =========================================================================
-    // AUTO-LOAD LIVE .TEX FILES FROM REPO ON PAGE OPEN
-    // =========================================================================
-    async function loadLiveTexFromRepo() {
-      let loaded = 0;
-      try {
-        const mainRes = await fetch("assets/resume/main.tex", { cache: "no-store" });
-        if (mainRes.ok) parseMainTexHeader(await mainRes.text());
-      } catch (_) {}
-
-      for (const sec of resumeState.sections) {
-        try {
-          const res = await fetch(`assets/resume/${sec.file}`, { cache: "no-store" });
-          if (!res.ok) continue;
-          const txt = await res.text();
-          const parsed = sec.type === "skills" ? parseSkillsTex(txt) : parseEntriesTex(txt);
-          if (parsed.length) {
-            sec.items = parsed;
-            loaded++;
-          }
-        } catch (_) {}
-      }
-      renderAll();
-      if (loaded > 0) {
-        logMsg(`Loaded ${loaded} live .tex section(s) from assets/resume/cv/. Mount AZcore folder to save edits.`);
-      }
-    }
-
-    // =========================================================================
     // RENDER UI & SHEET
     // =========================================================================
     function applySpacingCssVars() {
@@ -843,6 +816,11 @@ ${inputs}
     function checkPageOverflow() {
       const sheet = document.getElementById("cv-sheet");
       const pill = document.getElementById("page-status-pill");
+      if (!resumeState.mounted) {
+        pill.className = "page-status-pill";
+        pill.textContent = "WAITING FOR MOUNT";
+        return;
+      }
       const h = sheet.scrollHeight;
       if (h > 1060) {
         pill.className = "page-status-pill overflow";
@@ -855,6 +833,14 @@ ${inputs}
 
     function renderTexInspector() {
       const tabBar = document.getElementById("tex-tab-bar");
+      const area = document.getElementById("tex-code-area");
+
+      if (!resumeState.mounted) {
+        tabBar.innerHTML = "";
+        area.value = "% Mount AZcore folder to load and preview .tex output here.";
+        return;
+      }
+
       const files = ["main.tex", ...resumeState.sections.map((s) => s.file)];
       if (!files.includes(resumeState.activeTexTab)) resumeState.activeTexTab = "main.tex";
 
@@ -869,7 +855,6 @@ ${inputs}
         });
       });
 
-      const area = document.getElementById("tex-code-area");
       if (resumeState.activeTexTab === "main.tex") {
         area.value = generateMainTex();
       } else {
@@ -918,6 +903,25 @@ ${inputs}
 
     function renderSheet() {
       const root = document.getElementById("cv-sheet-content");
+
+      // ── Unmounted placeholder ──
+      if (!resumeState.mounted) {
+        root.innerHTML = `
+          <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:800px; text-align:center; gap:18px; opacity:0.7;">
+            <div style="font-size:64px;">&#128193;</div>
+            <div style="font-family:'JetBrains Mono',monospace; font-size:1.1rem; font-weight:700; color:#555;">
+              NO DATA LOADED
+            </div>
+            <div style="font-family:'Source Sans 3',sans-serif; font-size:0.92rem; color:#888; max-width:380px; line-height:1.5;">
+              Click <strong style="color:#d92804;">MOUNT AZcore FOLDER</strong> above to load your <code>assets/resume/*.tex</code> files and populate the resume.
+            </div>
+          </div>
+        `;
+        requestAnimationFrame(checkPageOverflow);
+        return;
+      }
+
+      // ── Normal render (mounted) ──
       const h = resumeState.header;
 
       let html = `
@@ -1183,6 +1187,7 @@ ${inputs}
         resumeState.rootHandle = root;
         resumeState.resumeDirHandle = resumeDir;
         resumeState.cvDirHandle = cvDir;
+        resumeState.mounted = true;
 
         document.getElementById("fs-dot").classList.add("connected");
         document.getElementById("fs-status-title").textContent = `CONNECTED TO /${root.name} — WRITE ACCESS UNLOCKED`;
@@ -1277,7 +1282,6 @@ ${inputs}
       });
 
       renderAll();
-      loadLiveTexFromRepo();
     });
   </script>
 </body>
