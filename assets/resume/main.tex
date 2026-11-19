@@ -2,11 +2,25 @@
 %!TEX encoding = UTF-8 Unicode
 \documentclass[11pt, letterpaper]{awesome-cv}
 
-\geometry{left=14mm, top=6mm, right=14mm, bottom=14mm, footskip=.5cm}
+\geometry{left=14mm, top=6mm, right=14mm, bottom=13mm, footskip=.5cm}
 \renewcommand{\acvSectionTopSkip}{3.0mm}
 \definecolor{awesome}{HTML}{000000}
 \setbool{acvSectionColorHighlight}{false}
 \renewcommand{\acvHeaderSocialSep}{\quad\textbar\quad}
+
+% AZCORE_SKILL_LAYOUT: offset=-1.0mm, catw=26.0mm, gap=3.2mm
+\renewenvironment{cvskills}{%
+  \vspace{\acvSectionContentTopSkip}
+  \vspace{-2.0mm}
+  \begin{flushleft}
+    \hspace*{-1.0mm}%
+    \setlength{\tabcolsep}{1.60mm}%
+    \setlength{\extrarowheight}{0pt}
+    \begin{tabular*}{\dimexpr\textwidth-(-1.0mm)\relax}{@{\extracolsep{\fill}} >{\raggedleft\arraybackslash}p{26.0mm} L{\dimexpr\textwidth-(26.0mm)-(-1.0mm)-(3.2mm)-2mm\relax}}
+}{%
+    \end{tabular*}
+  \end{flushleft}
+}
 
 \name{Alexander}{Zhuk}
 \homepage{azcore.studio}

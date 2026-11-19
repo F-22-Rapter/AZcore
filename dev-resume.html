@@ -24,6 +24,9 @@
       --cv-margin-x: 14mm;
       --cv-margin-top: 8mm;
       --cv-margin-bottom: 18mm;
+      --cv-skill-offset-x: 0px;
+      --cv-skill-cat-w: 121px;
+      --cv-skill-gap: 12px;
       --cv-awesome: #000000;
       --cv-font-scale: 1;
     }
@@ -175,6 +178,16 @@
       width: 100%;
       accent-color: var(--accent);
       cursor: pointer;
+    }
+
+    .slider-divider {
+      margin: 10px 0 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border-cad);
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      color: var(--text-muted);
+      letter-spacing: 0.06em;
     }
 
     .theme-row {
@@ -451,10 +464,11 @@
     }
 
     .cv-section-heading {
-      display: flex;
-      align-items: baseline;
-      gap: 8px;
-      margin-bottom: 5px;
+    position: relative;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 5px;
     }
     .cv-section-title {
       font-family: 'Source Sans 3', sans-serif;
@@ -472,17 +486,26 @@
       transform: translateY(-2px);
     }
     .cv-section-add-btn {
-      opacity: 0;
-      background: #1f2326;
-      color: #fff;
-      border: 1px solid #d92804;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 9px;
-      padding: 1px 6px;
-      cursor: pointer;
-      transition: opacity 0.15s ease;
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0;
+    pointer-events: none;
+    background: #1f2326;
+    color: #fff;
+    border: 1px solid #d92804;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    padding: 1px 6px;
+    cursor: pointer;
+    transition: opacity 0.15s ease;
+    z-index: 5;
     }
-    .cv-section-block:hover .cv-section-add-btn { opacity: 1; }
+    .cv-section-block:hover .cv-section-add-btn {
+    opacity: 1;
+    pointer-events: auto;
+    }
 
     .cv-subsection-heading {
       display: flex;
@@ -497,25 +520,43 @@
       font-weight: 600;
     }
 
-    .cv-skills-table,
+    .cv-skills-wrap {
+      position: relative;
+    }
+
+    .cv-skills-table {
+      width: calc(100% - var(--cv-skill-offset-x));
+      margin-left: var(--cv-skill-offset-x);
+      table-layout: fixed;
+      border-collapse: collapse;
+      margin-top: 1px;
+    }
+
     .cv-honors-table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 1px;
     }
+
     .cv-skill-row,
     .cv-honor-row { position: relative; }
     .cv-skill-row td,
     .cv-honor-row td { padding: 1px 0; vertical-align: top; }
     .cv-skill-cat {
-      width: 120px;
+      width: var(--cv-skill-cat-w);
+      box-sizing: border-box;
       text-align: right;
-      padding-right: 12px !important;
+      padding-right: var(--cv-skill-gap) !important;
       font-weight: 700;
       color: #414141;
       font-size: 13px;
     }
-    .cv-skill-list { color: #333333; font-size: 12px; font-weight: 300; }
+    .cv-skill-list {
+      color: #333333;
+      font-size: 12px;
+      font-weight: 300;
+      word-wrap: break-word;
+    }
     .cv-skill-actions {
       width: 30px;
       text-align: right;
@@ -524,6 +565,44 @@
     }
     .cv-skill-row:hover .cv-skill-actions,
     .cv-honor-row:hover .cv-skill-actions { opacity: 1; }
+
+    .skill-col-drag-handle {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: calc(var(--cv-skill-offset-x) + var(--cv-skill-cat-w) - (var(--cv-skill-gap) / 2));
+      width: 10px;
+      margin-left: -5px;
+      cursor: ew-resize;
+      opacity: 0;
+      z-index: 15;
+      user-select: none;
+      transition: opacity 0.15s ease;
+    }
+    .cv-skills-wrap:hover .skill-col-drag-handle,
+    .skill-col-drag-handle.dragging { opacity: 1; }
+    .skill-col-drag-handle::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      border-left: 1px dashed #d92804;
+    }
+    .skill-col-drag-pill {
+      position: absolute;
+      top: -15px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #d92804;
+      color: #fff;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8.5px;
+      padding: 1px 5px;
+      border-radius: 7px;
+      white-space: nowrap;
+      pointer-events: none;
+    }
 
     .cv-honor-date {
       width: 60px;
@@ -647,7 +726,7 @@
     @media print {
       html, body { background: #fff !important; margin: 0 !important; padding: 0 !important; height: auto !important; overflow: visible !important; }
       .bg-canvas-layer, .site-header, .fs-banner, .inspector-col, .sheet-toolbar,
-      #page-break-guides, .spacing-drag-handle, .cv-section-add-btn,
+      #page-break-guides, .spacing-drag-handle, .skill-col-drag-handle, .cv-section-add-btn,
       .cv-entry-controls, .cv-bullet-del, .cv-skill-actions {
         display: none !important;
       }
@@ -758,6 +837,21 @@
             <input type="range" id="sl-margin-bottom" min="6" max="25" step="1" value="18" />
           </div>
 
+          <div class="slider-divider">SKILLS &amp; INVOLVEMENT HORIZONTAL LAYOUT</div>
+
+          <div class="slider-row">
+            <div class="slider-row-head"><span>HORIZONTAL OFFSET (X)</span><span id="val-skill-offset">0.0mm</span></div>
+            <input type="range" id="sl-skill-offset" min="-10" max="40" step="0.5" value="0" />
+          </div>
+          <div class="slider-row">
+            <div class="slider-row-head"><span>LABEL COLUMN WIDTH</span><span id="val-skill-cat-w">32.0mm</span></div>
+            <input type="range" id="sl-skill-cat-w" min="15" max="65" step="0.5" value="32" />
+          </div>
+          <div class="slider-row">
+            <div class="slider-row-head"><span>LABEL / LIST GAP</span><span id="val-skill-gap">3.2mm</span></div>
+            <input type="range" id="sl-skill-gap" min="1" max="12" step="0.5" value="3.2" />
+          </div>
+
           <div class="theme-row">
             <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
               <input type="checkbox" id="cb-sec-highlight" />
@@ -790,7 +884,7 @@
 
       <section class="sheet-viewport">
         <div class="sheet-toolbar">
-          <span>CLICK TEXT TO EDIT &bull; DRAG BETWEEN SECTIONS FOR \vspace</span>
+          <span>CLICK TEXT TO EDIT &bull; DRAG BETWEEN SECTIONS FOR \vspace &bull; DRAG SKILLS DIVIDER LEFT/RIGHT</span>
           <div class="sheet-toolbar-right">
             <button type="button" id="zoom-toggle-btn" class="mini-action-btn">ZOOM: FIT</button>
             <span id="page-status-pill" class="page-status-pill">WAITING FOR MOUNT</span>
@@ -836,7 +930,10 @@
         bulletGapMm: 0.25,
         marginXMm: 14,
         marginTopMm: 8,
-        marginBottomMm: 18
+        marginBottomMm: 18,
+        skillOffsetMm: 0.0,
+        skillCatWidthMm: 32.0,
+        skillGapMm: 3.2
       },
       theme: {
         awesomeHex: "000000",
@@ -988,6 +1085,20 @@
         ? `\n\\makecvfooter\n  {${escapeFooterTex(f.left)}}\n  {${escapeFooterTex(f.center)}}\n  {${escapeFooterTex(f.right)}}\n`
         : "";
 
+      const skillEnvOverride = `% AZCORE_SKILL_LAYOUT: offset=${sp.skillOffsetMm.toFixed(1)}mm, catw=${sp.skillCatWidthMm.toFixed(1)}mm, gap=${sp.skillGapMm.toFixed(1)}mm
+\\renewenvironment{cvskills}{%
+  \\vspace{\\acvSectionContentTopSkip}
+  \\vspace{-2.0mm}
+  \\begin{flushleft}
+    \\hspace*{${sp.skillOffsetMm.toFixed(1)}mm}%
+    \\setlength{\\tabcolsep}{${(sp.skillGapMm / 2).toFixed(2)}mm}%
+    \\setlength{\\extrarowheight}{0pt}
+    \\begin{tabular*}{\\dimexpr\\textwidth-(${sp.skillOffsetMm.toFixed(1)}mm)\\relax}{@{\\extracolsep{\\fill}} >{\\raggedleft\\arraybackslash}p{${sp.skillCatWidthMm.toFixed(1)}mm} L{\\dimexpr\\textwidth-(${sp.skillCatWidthMm.toFixed(1)}mm)-(${sp.skillOffsetMm.toFixed(1)}mm)-(${sp.skillGapMm.toFixed(1)}mm)-2mm\\relax}}
+}{%
+    \\end{tabular*}
+  \\end{flushleft}
+}`;
+
       const inputs = resumeState.sections
         .filter((s) => s.enabled)
         .map((s) => {
@@ -1005,6 +1116,8 @@
 \\definecolor{awesome}{HTML}{${th.awesomeHex.toUpperCase()}}
 \\setbool{acvSectionColorHighlight}{${th.sectionHighlight ? "true" : "false"}}
 \\renewcommand{\\acvHeaderSocialSep}{\\quad\\textbar\\quad}
+
+${skillEnvOverride}
 
 ${headerLines}
 
@@ -1083,6 +1196,15 @@ ${inputs}
     }
 
     function parseMainTex(rawTex) {
+      const skillLayoutMatch = rawTex.match(
+        /AZCORE_SKILL_LAYOUT:\s*offset=([-\d.]+)mm,\s*catw=([-\d.]+)mm,\s*gap=([-\d.]+)mm/
+      );
+      if (skillLayoutMatch) {
+        resumeState.spacing.skillOffsetMm = parseFloat(skillLayoutMatch[1]);
+        resumeState.spacing.skillCatWidthMm = parseFloat(skillLayoutMatch[2]);
+        resumeState.spacing.skillGapMm = parseFloat(skillLayoutMatch[3]);
+      }
+
       const tex = stripLatexComments(rawTex);
 
       const docClassMatch = tex.match(/\\documentclass\[([^\]]+)\]\{awesome-cv\}/);
@@ -1260,6 +1382,9 @@ ${inputs}
       r.setProperty("--cv-margin-x", `${sp.marginXMm}mm`);
       r.setProperty("--cv-margin-top", `${sp.marginTopMm}mm`);
       r.setProperty("--cv-margin-bottom", `${sp.marginBottomMm}mm`);
+      r.setProperty("--cv-skill-offset-x", `${(sp.skillOffsetMm * PX_PER_MM).toFixed(1)}px`);
+      r.setProperty("--cv-skill-cat-w", `${(sp.skillCatWidthMm * PX_PER_MM).toFixed(1)}px`);
+      r.setProperty("--cv-skill-gap", `${(sp.skillGapMm * PX_PER_MM).toFixed(1)}px`);
       r.setProperty("--cv-awesome", `#${resumeState.theme.awesomeHex}`);
 
       const printStyle = document.getElementById("dynamic-print-page");
@@ -1276,6 +1401,9 @@ ${inputs}
       document.getElementById("val-margin-x").textContent = `${sp.marginXMm}mm`;
       document.getElementById("val-margin-top").textContent = `${sp.marginTopMm}mm`;
       document.getElementById("val-margin-bottom").textContent = `${sp.marginBottomMm}mm`;
+      document.getElementById("val-skill-offset").textContent = `${sp.skillOffsetMm.toFixed(1)}mm`;
+      document.getElementById("val-skill-cat-w").textContent = `${sp.skillCatWidthMm.toFixed(1)}mm`;
+      document.getElementById("val-skill-gap").textContent = `${sp.skillGapMm.toFixed(1)}mm`;
 
       document.getElementById("sl-sec-gap").value = sp.sectionTopMm;
       document.getElementById("sl-entry-gap").value = sp.entryGapMm;
@@ -1283,8 +1411,16 @@ ${inputs}
       document.getElementById("sl-margin-x").value = sp.marginXMm;
       document.getElementById("sl-margin-top").value = sp.marginTopMm;
       document.getElementById("sl-margin-bottom").value = sp.marginBottomMm;
+      document.getElementById("sl-skill-offset").value = sp.skillOffsetMm;
+      document.getElementById("sl-skill-cat-w").value = sp.skillCatWidthMm;
+      document.getElementById("sl-skill-gap").value = sp.skillGapMm;
+
       document.getElementById("cb-sec-highlight").checked = resumeState.theme.sectionHighlight;
       document.getElementById("color-awesome").value = `#${resumeState.theme.awesomeHex}`;
+
+      document.querySelectorAll(".skill-col-drag-pill").forEach((pill) => {
+        pill.textContent = `↔ ${sp.skillCatWidthMm.toFixed(1)}mm`;
+      });
 
       renderPageBreakGuides();
     }
@@ -1461,7 +1597,7 @@ ${inputs}
         `;
 
         if (sec.type === "skills") {
-          html += `<table class="cv-skills-table">`;
+          html += `<div class="cv-skills-wrap"><table class="cv-skills-table">`;
           sec.items.forEach((row, rIdx) => {
             html += `
               <tr class="cv-skill-row">
@@ -1473,7 +1609,7 @@ ${inputs}
               </tr>
             `;
           });
-          html += `</table>`;
+          html += `</table><div class="skill-col-drag-handle" title="Drag left/right to adjust label column width (Hold Shift to shift entire block)"><span class="skill-col-drag-pill">&harr; ${resumeState.spacing.skillCatWidthMm.toFixed(1)}mm</span></div></div>`;
         } else if (sec.type === "honors") {
           sec.groups.forEach((g, gIdx) => {
             if (g.subsection) {
@@ -1722,6 +1858,40 @@ ${inputs}
           window.addEventListener("mouseup", onUp);
         });
       });
+
+      root.querySelectorAll(".skill-col-drag-handle").forEach((handle) => {
+        handle.addEventListener("mousedown", (e) => {
+          e.preventDefault();
+          const startX = e.clientX;
+          const shiftBlock = e.shiftKey;
+          const startMm = shiftBlock
+            ? resumeState.spacing.skillOffsetMm
+            : resumeState.spacing.skillCatWidthMm;
+          handle.classList.add("dragging");
+
+          const onMove = (ev) => {
+            const deltaMm = (ev.clientX - startX) / (PX_PER_MM * currentScale);
+            const snapped = Math.round((startMm + deltaMm) * 2) / 2;
+            if (shiftBlock) {
+              resumeState.spacing.skillOffsetMm = Math.max(-10, Math.min(40, snapped));
+            } else {
+              resumeState.spacing.skillCatWidthMm = Math.max(15, Math.min(65, snapped));
+            }
+            applySpacingCssVars();
+            renderTexInspector();
+            checkPageOverflow();
+          };
+
+          const onUp = () => {
+            handle.classList.remove("dragging");
+            window.removeEventListener("mousemove", onMove);
+            window.removeEventListener("mouseup", onUp);
+          };
+
+          window.addEventListener("mousemove", onMove);
+          window.addEventListener("mouseup", onUp);
+        });
+      });
     }
 
     function renderAll() {
@@ -1873,6 +2043,9 @@ ${inputs}
       bindSlider("sl-margin-x", "marginXMm");
       bindSlider("sl-margin-top", "marginTopMm");
       bindSlider("sl-margin-bottom", "marginBottomMm");
+      bindSlider("sl-skill-offset", "skillOffsetMm");
+      bindSlider("sl-skill-cat-w", "skillCatWidthMm");
+      bindSlider("sl-skill-gap", "skillGapMm");
 
       document.getElementById("cb-sec-highlight").addEventListener("change", (e) => {
         resumeState.theme.sectionHighlight = e.target.checked;
@@ -1887,7 +2060,17 @@ ${inputs}
 
       document.getElementById("reset-spacing-btn").addEventListener("click", () => {
         resumeState.page = { size: "letterpaper", count: 1 };
-        resumeState.spacing = { sectionTopMm: 3, entryGapMm: 1.5, bulletGapMm: 0.25, marginXMm: 14, marginTopMm: 8, marginBottomMm: 18 };
+        resumeState.spacing = {
+          sectionTopMm: 3,
+          entryGapMm: 1.5,
+          bulletGapMm: 0.25,
+          marginXMm: 14,
+          marginTopMm: 8,
+          marginBottomMm: 18,
+          skillOffsetMm: 0.0,
+          skillCatWidthMm: 32.0,
+          skillGapMm: 3.2
+        };
         resumeState.sections.forEach((s) => (s.vspaceMm = 0));
         renderAll();
       });
