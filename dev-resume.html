@@ -28,13 +28,8 @@
       --cv-font-scale: 1;
     }
 
-    html, body {
-      height: 100%;
-    }
-
-    body.cad-theme {
-      overflow: hidden;
-    }
+    html, body { height: 100%; }
+    body.cad-theme { overflow: hidden; }
 
     .dev-stage {
       position: relative;
@@ -116,7 +111,7 @@
 
     .workspace-grid {
       display: grid;
-      grid-template-columns: 375px 1fr;
+      grid-template-columns: 410px 1fr;
       gap: 18px;
       flex: 1;
       min-height: 0;
@@ -126,7 +121,7 @@
     .inspector-col {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 12px;
       height: 100%;
       overflow-y: auto;
       padding-right: 4px;
@@ -149,18 +144,38 @@
       gap: 4px;
     }
     .page-config-field select,
-    .page-config-field input {
+    .page-config-field input,
+    .header-field-input {
       background: #0e1012;
       color: var(--text-main);
       border: 1px solid var(--border-cad);
       padding: 5px 7px;
       font-family: var(--font-mono);
-      font-size: 0.72rem;
+      font-size: 0.71rem;
       outline: none;
+      width: 100%;
+      box-sizing: border-box;
     }
     .page-config-field select:focus,
-    .page-config-field input:focus {
+    .page-config-field input:focus,
+    .header-field-input:focus {
       border-color: var(--accent);
+    }
+
+    .header-fields-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .header-field-row {
+      display: grid;
+      grid-template-columns: 76px 1fr;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.66rem;
+      color: var(--text-muted);
     }
 
     .slider-row {
@@ -195,16 +210,16 @@
       color: var(--text-muted);
     }
 
-    /* Section Manager Cards (Drag-to-Reorder + Per-Section Sliders) */
+    /* Section & Atomic Block Sidebar Cards */
     .section-order-list {
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 7px;
     }
     .section-order-card {
       background: rgba(14, 16, 18, 0.92);
       border: 1px solid var(--border-cad);
-      transition: border-color 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
+      transition: border-color 0.15s ease, opacity 0.15s ease;
     }
     .section-order-card.disabled-sec { opacity: 0.5; }
     .section-order-card.dragging-card { opacity: 0.35; border-style: dashed; }
@@ -220,7 +235,8 @@
       font-family: var(--font-mono);
       font-size: 0.71rem;
     }
-    .sec-drag-grip {
+    .sec-drag-grip,
+    .item-drag-grip {
       cursor: grab;
       color: var(--text-muted);
       padding: 0 3px;
@@ -228,10 +244,11 @@
       font-size: 0.85rem;
       line-height: 1;
     }
-    .sec-drag-grip:active { cursor: grabbing; color: var(--accent); }
+    .sec-drag-grip:active,
+    .item-drag-grip:active { cursor: grabbing; color: var(--accent); }
 
     .sec-type-badge {
-      font-size: 0.58rem;
+      font-size: 0.57rem;
       padding: 1px 4px;
       border: 1px solid var(--border-cad);
       color: var(--text-muted);
@@ -239,14 +256,99 @@
       flex-shrink: 0;
     }
 
-    .section-sliders-drawer {
-      padding: 9px 10px 10px;
+    .blk-kind-tag {
+      font-size: 0.56rem;
+      font-weight: 700;
+      padding: 1px 4px;
+      border-radius: 2px;
+      flex-shrink: 0;
+      text-transform: uppercase;
+    }
+    .blk-kind-tag.k-title  { background: rgba(217, 40, 4, 0.25); color: #ff8a65; border: 1px solid rgba(217, 40, 4, 0.5); }
+    .blk-kind-tag.k-role   { background: rgba(52, 152, 219, 0.22); color: #74b9ff; border: 1px solid rgba(52, 152, 219, 0.45); }
+    .blk-kind-tag.k-bullet { background: rgba(46, 204, 113, 0.18); color: #55efc4; border: 1px solid rgba(46, 204, 113, 0.4); }
+    .blk-kind-tag.k-text   { background: rgba(155, 89, 182, 0.22); color: #d2a8ff; border: 1px solid rgba(155, 89, 182, 0.45); }
+
+    .section-drawer {
       border-top: 1px solid rgba(255, 255, 255, 0.08);
       background: rgba(255, 255, 255, 0.02);
     }
+    .sec-subtab-bar {
+      display: flex;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .sec-subtab-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 5px 8px;
+      font-family: var(--font-mono);
+      font-size: 0.64rem;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+    .sec-subtab-btn.active {
+      color: #fff;
+      background: rgba(217, 40, 4, 0.14);
+      border-bottom-color: var(--accent);
+      font-weight: 700;
+    }
+
+    .section-sliders-drawer,
+    .section-items-drawer {
+      padding: 8px 9px 9px;
+    }
+
+    .sidebar-item-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      max-height: 310px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+    .sidebar-item-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 4px 6px;
+      font-family: var(--font-mono);
+      font-size: 0.64rem;
+      transition: opacity 0.15s ease, border-color 0.15s ease;
+    }
+    .sidebar-item-card.k-bullet { margin-left: 10px; }
+    .sidebar-item-card.k-role   { margin-left: 5px; }
+    .sidebar-item-card.disabled-item { opacity: 0.42; }
+    .sidebar-item-card.dragging-card { opacity: 0.3; border-style: dashed; }
+    .sidebar-item-card.drop-before { border-top: 2px solid var(--accent); }
+    .sidebar-item-card.drop-after { border-bottom: 2px solid var(--accent); }
+
+    .sidebar-item-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 5px;
+    }
+    .sidebar-item-title {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--text-main);
+    }
+    .sidebar-item-extra {
+      margin-top: 6px;
+      padding-top: 6px;
+      border-top: 1px dashed rgba(255, 255, 255, 0.1);
+    }
+
     .section-drawer-footer {
       display: flex;
-      justify-content: flex-end;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 4px;
       margin-top: 8px;
       padding-top: 6px;
       border-top: 1px dashed rgba(255, 255, 255, 0.08);
@@ -256,13 +358,14 @@
       background: rgba(255, 255, 255, 0.05);
       color: var(--text-muted);
       border: 1px solid var(--border-cad);
-      padding: 2px 6px;
+      padding: 2px 5px;
       font-family: var(--font-mono);
-      font-size: 0.68rem;
+      font-size: 0.64rem;
       cursor: pointer;
     }
     .icon-btn:hover,
     .icon-btn.active { color: #fff; border-color: var(--accent); background: var(--accent); }
+    .icon-btn.danger:hover { background: #c0392b; border-color: #e74c3c; color: #fff; }
 
     .tex-tab-bar {
       display: flex;
@@ -288,7 +391,7 @@
 
     .tex-code-area {
       width: 100%;
-      min-height: 190px;
+      min-height: 170px;
       background: #0e1012;
       color: #dce3ea;
       border: 1px solid var(--border-cad);
@@ -368,7 +471,6 @@
       padding: 4px 8px 8px;
     }
 
-    /* Real LuaLaTeX Render Stage */
     .tex-render-stage {
       position: relative;
       flex: 1;
@@ -380,15 +482,8 @@
       box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
       overflow: hidden;
     }
-    .tex-render-stage.active {
-      display: flex;
-    }
-    .tex-render-iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-      background: #2b2f33;
-    }
+    .tex-render-stage.active { display: flex; }
+    .tex-render-iframe { width: 100%; height: 100%; border: none; background: #2b2f33; }
     .tex-render-loading {
       position: absolute;
       inset: 0;
@@ -402,9 +497,7 @@
       color: var(--text-main);
       z-index: 10;
     }
-    .tex-render-loading.visible {
-      display: flex;
-    }
+    .tex-render-loading.visible { display: flex; }
     .tex-spinner {
       width: 28px;
       height: 28px;
@@ -413,17 +506,12 @@
       border-radius: 50%;
       animation: texSpin 0.8s linear infinite;
     }
-    @keyframes texSpin {
-      to { transform: rotate(360deg); }
-    }
+    @keyframes texSpin { to { transform: rotate(360deg); } }
 
-    .sheet-scale-wrapper {
-      position: relative;
-      flex-shrink: 0;
-    }
+    .sheet-scale-wrapper { position: relative; flex-shrink: 0; }
 
     /* =========================================================================
-       AWESOME-CV.CLS MATCHING STYLES
+       AWESOME-CV.CLS MATCHING STYLES + ATOMIC PIECE CONTROLS
        ========================================================================= */
     .cv-sheet {
       position: relative;
@@ -443,21 +531,17 @@
 
     .page-break-guide {
       position: absolute;
-      left: 0;
-      right: 0;
+      left: 0; right: 0;
       border-top: 2px dashed #d92804;
       pointer-events: none;
       z-index: 20;
     }
     .page-break-label {
       position: absolute;
-      right: 8px;
-      top: -18px;
-      background: #d92804;
-      color: #fff;
+      right: 8px; top: -18px;
+      background: #d92804; color: #fff;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 9px;
-      padding: 1px 6px;
+      font-size: 9px; padding: 1px 6px;
     }
 
     [contenteditable="true"] {
@@ -465,17 +549,16 @@
       border-radius: 2px;
       transition: background 0.12s ease, box-shadow 0.12s ease;
     }
-    [contenteditable="true"]:hover { background: rgba(217, 40, 4, 0.07); }
+    [contenteditable="true"]:hover { background: rgba(217, 40, 4, 0.06); }
     [contenteditable="true"]:focus {
       background: rgba(217, 40, 4, 0.11);
       box-shadow: 0 0 0 1px rgba(217, 40, 4, 0.5);
     }
 
-    /* Header (\makecvheader) */
     .cv-header { text-align: center; margin-bottom: var(--cv-header-after); }
     .cv-name {
       font-family: 'Roboto', sans-serif;
-      font-size: 32pt;
+      font-size: calc(32pt * var(--cv-font-scale));
       line-height: 1.05;
       letter-spacing: -0.015em;
       margin-bottom: 1.2mm;
@@ -483,19 +566,18 @@
     .cv-first-name { font-weight: 300; color: #5D5D5D; }
     .cv-last-name { font-weight: 700; color: #333333; }
     .cv-position {
-      font-size: 7.6pt;
+      font-size: calc(7.6pt * var(--cv-font-scale));
       text-transform: uppercase;
       letter-spacing: 0.04em;
       color: var(--cv-awesome);
       margin-bottom: 0.4mm;
     }
     .cv-address {
-      font-size: 8pt;
+      font-size: calc(8pt * var(--cv-font-scale));
       font-style: italic;
       color: #999999;
       margin-bottom: 0.4mm;
     }
-
     .cv-contact {
       display: flex;
       justify-content: center;
@@ -503,16 +585,15 @@
       flex-wrap: wrap;
       gap: 2px 7px;
       font-family: 'Roboto', sans-serif;
-      font-size: 6.8pt;
+      font-size: calc(6.8pt * var(--cv-font-scale));
       font-weight: 400;
       color: #333333;
       margin-top: 1mm;
     }
     .cv-contact-item { display: inline-flex; align-items: center; gap: 4px; }
-    .cv-contact-item i { font-size: 7.2pt; color: #333333; }
+    .cv-contact-item i { font-size: calc(7.2pt * var(--cv-font-scale)); color: #333333; }
     .cv-contact-sep { color: #5D5D5D; margin: 0 2px; }
 
-    /* Vertical Spacing Drag Handles (Top \vspace & Heading->Content Gap) */
     .spacing-drag-handle,
     .content-skip-drag-handle {
       position: relative;
@@ -532,70 +613,38 @@
     .content-skip-drag-handle:hover,
     .content-skip-drag-handle.dragging { opacity: 1; }
     .spacing-drag-handle::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: 50%;
+      content: ""; position: absolute; left: 0; right: 0; top: 50%;
       border-top: 1px dashed #d92804;
     }
     .content-skip-drag-handle::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      right: 0;
-      top: 50%;
+      content: ""; position: absolute; left: 0; right: 0; top: 50%;
       border-top: 1px dashed #2980b9;
     }
     .spacing-drag-pill {
       position: relative;
-      background: #d92804;
-      color: #fff;
+      background: #d92804; color: #fff;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 8.5px;
-      padding: 1px 7px;
-      border-radius: 8px;
-      letter-spacing: 0.04em;
+      font-size: 8.5px; padding: 1px 7px; border-radius: 8px; letter-spacing: 0.04em;
     }
-    .content-skip-drag-handle .spacing-drag-pill {
-      background: #2980b9;
-    }
+    .content-skip-drag-handle .spacing-drag-pill { background: #2980b9; }
 
-    /* Sections (\cvsection) */
     .cv-section-block {
       position: relative;
       margin-top: var(--cv-section-gap);
       transition: opacity 0.15s ease;
     }
-    .cv-section-block.sheet-dragging {
-      opacity: 0.35;
-    }
-    .cv-section-block.sheet-drop-before {
-      box-shadow: 0 -3px 0 0 #d92804;
-    }
-    .cv-section-block.sheet-drop-after {
-      box-shadow: 0 3px 0 0 #d92804;
-    }
+    .cv-section-block.sheet-dragging { opacity: 0.35; }
+    .cv-section-block.sheet-drop-before { box-shadow: 0 -3px 0 0 #d92804; }
+    .cv-section-block.sheet-drop-after { box-shadow: 0 3px 0 0 #d92804; }
 
     .sec-reorder-handle {
       position: absolute;
-      left: -34px;
-      top: 2px;
-      width: 28px;
-      height: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #1f2326;
-      color: #fff;
-      border: 1px solid #d92804;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
-      cursor: grab;
-      opacity: 0;
-      transition: opacity 0.15s ease;
-      z-index: 16;
-      user-select: none;
+      left: -34px; top: 2px;
+      width: 28px; height: 18px;
+      display: flex; align-items: center; justify-content: center;
+      background: #1f2326; color: #fff; border: 1px solid #d92804;
+      font-family: 'JetBrains Mono', monospace; font-size: 10px;
+      cursor: grab; opacity: 0; transition: opacity 0.15s ease; z-index: 16; user-select: none;
     }
     .sec-reorder-handle:active { cursor: grabbing; background: #d92804; }
     .cv-section-block:hover .sec-reorder-handle { opacity: 1; }
@@ -609,232 +658,124 @@
     }
     .cv-section-title {
       font-family: 'Source Sans 3', sans-serif;
-      font-size: 16pt;
-      font-weight: 700;
-      line-height: 1.05;
-      color: #333333;
-      white-space: nowrap;
+      font-size: calc(16pt * var(--cv-font-scale));
+      font-weight: 700; line-height: 1.05; color: #333333; white-space: nowrap;
     }
     .cv-section-accent { color: var(--cv-awesome); }
     .cv-section-rule {
-      flex: 1;
-      height: 0;
-      border-bottom: 0.9pt solid #5D5D5D;
-      transform: translateY(-1.5px);
+      flex: 1; height: 0; border-bottom: 0.9pt solid #5D5D5D; transform: translateY(-1.5px);
     }
-    .cv-section-add-btn {
+    .cv-section-add-bar {
       position: absolute;
-      right: 0;
-      top: 50%;
-      transform: translateY(-50%);
-      opacity: 0;
-      pointer-events: none;
-      background: #1f2326;
-      color: #fff;
-      border: 1px solid #d92804;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 9px;
-      padding: 1px 6px;
-      cursor: pointer;
-      transition: opacity 0.15s ease;
-      z-index: 5;
+      right: 0; top: 50%; transform: translateY(-50%);
+      display: flex; gap: 3px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.15s ease; z-index: 8;
     }
-    .cv-section-block:hover .cv-section-add-btn {
-      opacity: 1;
-      pointer-events: auto;
+    .cv-section-block:hover .cv-section-add-bar { opacity: 1; pointer-events: auto; }
+    .cv-section-add-btn {
+      background: #1f2326; color: #fff; border: 1px solid #d92804;
+      font-family: 'JetBrains Mono', monospace; font-size: 8.5px;
+      padding: 1px 5px; cursor: pointer;
     }
+    .cv-section-add-btn:hover { background: #d92804; }
 
     .cv-subsection-heading {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin: 2mm 0 1mm;
+      display: flex; align-items: center; justify-content: space-between; margin: 2mm 0 1mm;
     }
     .cv-subsection-title {
-      font-size: 12pt;
-      font-variant: small-caps;
-      color: #333333;
-      font-weight: 600;
+      font-size: calc(12pt * var(--cv-font-scale)); font-variant: small-caps; color: #333333; font-weight: 600;
     }
 
-    /* Skills / Involvement (\begin{cvskills}) — Per-section CSS variables */
-    .cv-skills-wrap {
+    /* =========================================================================
+       ATOMIC PIECES (EVERY TITLE, ROLE, BULLET, TEXT IS ITS OWN DRAGGABLE PIECE)
+       ========================================================================= */
+    .cv-atomic-piece {
       position: relative;
-    }
-
-    .cv-skills-table {
-      width: calc(100% - var(--sec-skill-offset-x, 0px));
-      margin-left: var(--sec-skill-offset-x, 0px);
-      table-layout: fixed;
-      border-collapse: collapse;
-      margin-top: 0;
-    }
-
-    .cv-honors-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 0;
-    }
-
-    .cv-skill-row,
-    .cv-honor-row { position: relative; }
-    .cv-skill-row td,
-    .cv-honor-row td {
-      padding: var(--sec-row-pad, 0.7px) 0;
-      vertical-align: top;
-      line-height: 1.24;
-    }
-
-    .cv-skill-cat {
-      width: var(--sec-skill-cat-w, 121px);
-      box-sizing: border-box;
-      text-align: right;
-      padding-right: var(--sec-skill-gap, 12px) !important;
-      font-weight: 700;
-      color: #414141;
-      font-size: 10pt;
-    }
-    .cv-skill-list {
-      color: #333333;
-      font-size: 9pt;
-      font-weight: 300;
-      word-wrap: break-word;
-    }
-    .cv-skill-actions {
-      width: 24px;
-      text-align: right;
-      opacity: 0;
-      transition: opacity 0.15s ease;
-    }
-    .cv-skill-row:hover .cv-skill-actions,
-    .cv-honor-row:hover .cv-skill-actions { opacity: 1; }
-
-    /* Independent Horizontal Drag Handles per Skills/Involvement Block */
-    .skill-offset-drag-handle {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: var(--sec-skill-offset-x, 0px);
-      width: 10px;
-      margin-left: -5px;
-      cursor: ew-resize;
-      opacity: 0;
-      z-index: 15;
-      user-select: none;
-      transition: opacity 0.15s ease;
-    }
-    .skill-col-drag-handle {
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: calc(var(--sec-skill-offset-x, 0px) + var(--sec-skill-cat-w, 121px) - (var(--sec-skill-gap, 12px) / 2));
-      width: 10px;
-      margin-left: -5px;
-      cursor: ew-resize;
-      opacity: 0;
-      z-index: 15;
-      user-select: none;
-      transition: opacity 0.15s ease;
-    }
-    .cv-skills-wrap:hover .skill-offset-drag-handle,
-    .cv-skills-wrap:hover .skill-col-drag-handle,
-    .skill-offset-drag-handle.dragging,
-    .skill-col-drag-handle.dragging { opacity: 1; }
-
-    .skill-offset-drag-handle::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: 50%;
-      border-left: 1px dashed #27ae60;
-    }
-    .skill-col-drag-handle::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: 50%;
-      border-left: 1px dashed #d92804;
-    }
-    .skill-drag-pill {
-      position: absolute;
-      top: -15px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #d92804;
-      color: #fff;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 8.5px;
-      padding: 1px 5px;
-      border-radius: 7px;
-      white-space: nowrap;
-      pointer-events: none;
-    }
-    .skill-offset-drag-handle .skill-drag-pill {
-      background: #27ae60;
-    }
-
-    /* Honors (\begin{cvhonors}) */
-    .cv-honor-date {
-      width: 54px;
-      text-align: center;
-      color: #5D5D5D;
-      font-size: 9pt;
-    }
-    .cv-honor-main {
-      color: #5D5D5D;
-      font-size: 9pt;
-      padding-right: 8px !important;
-    }
-    .cv-honor-pos {
-      font-weight: 700;
-      color: #414141;
-    }
-    .cv-honor-loc {
-      width: 110px;
-      text-align: right;
-      font-style: italic;
-      font-weight: 300;
-      color: var(--cv-awesome);
-      font-size: 9pt;
-    }
-
-    /* Entries (\cventry) — Per-section CSS variables */
-    .cv-entry {
-      position: relative;
-      margin-bottom: var(--sec-entry-gap, 5.5px);
+      border: 1px solid transparent;
+      border-radius: 2px;
       padding: 0 3px;
       margin-left: -3px;
       margin-right: -3px;
-      border: 1px solid transparent;
-      border-radius: 3px;
+      transition: border-color 0.1s ease, background 0.1s ease, opacity 0.15s ease;
     }
-    .cv-entry:last-child { margin-bottom: 0; }
-    .cv-entry:hover { border-color: rgba(217, 40, 4, 0.25); }
+    .cv-atomic-piece:hover {
+      border-color: rgba(217, 40, 4, 0.45);
+      background: rgba(217, 40, 4, 0.025);
+    }
+    .cv-atomic-piece.sheet-dragging { opacity: 0.3; border-style: dashed; }
+    .cv-atomic-piece.sheet-drop-before { box-shadow: 0 -2.5px 0 0 #d92804; }
+    .cv-atomic-piece.sheet-drop-after  { box-shadow: 0 2.5px 0 0 #d92804; }
 
-    .cv-entry-controls {
+    /* Natural Awesome-CV spacing between consecutive atomic pieces */
+    .cv-atomic-piece.kind-title.has-prev { margin-top: var(--sec-entry-gap, 5.5px); }
+    .cv-atomic-piece.kind-role.standalone-role.has-prev { margin-top: calc(var(--sec-entry-gap, 5.5px) * 0.75); }
+    .cv-atomic-piece.kind-bullet { margin-bottom: var(--sec-bullet-gap, 1px); }
+    .cv-atomic-piece.kind-bullet.first-bullet { margin-top: 1.5px; }
+    .cv-atomic-piece.kind-text { margin-top: 2px; margin-bottom: 2px; }
+
+    .piece-drag-grip {
       position: absolute;
-      top: -11px;
-      right: 4px;
+      left: -20px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 17px;
+      height: 15px;
       display: flex;
-      gap: 3px;
+      align-items: center;
+      justify-content: center;
+      background: #d92804;
+      color: #fff;
+      border-radius: 2px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      cursor: grab;
       opacity: 0;
-      transition: opacity 0.15s ease;
-      z-index: 10;
+      transition: opacity 0.12s ease;
+      z-index: 14;
+      user-select: none;
     }
-    .cv-entry:hover .cv-entry-controls { opacity: 1; }
+    .piece-drag-grip:active { cursor: grabbing; }
+    .cv-atomic-piece:hover .piece-drag-grip { opacity: 1; }
+
+    .piece-controls {
+      position: absolute;
+      top: -13px;
+      right: 2px;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.12s ease;
+      z-index: 15;
+    }
+    .cv-atomic-piece:hover .piece-controls {
+      opacity: 1;
+      pointer-events: auto;
+    }
 
     .mini-cv-btn {
       background: #1f2326;
       color: #eee;
       border: 1px solid #555;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 9px;
-      padding: 1px 5px;
+      font-size: 8.5px;
+      line-height: 1.1;
+      padding: 1px 4px;
       cursor: pointer;
     }
     .mini-cv-btn:hover { background: #d92804; border-color: #d92804; color: #fff; }
+    .mini-cv-badge {
+      background: #2c3136;
+      color: #ffb8a8;
+      border: 1px solid #555;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 7.5px;
+      line-height: 1.1;
+      padding: 1px 4px;
+      pointer-events: none;
+    }
 
     .cv-entry-row1,
     .cv-entry-row2 {
@@ -843,43 +784,124 @@
       align-items: baseline;
       gap: 10px;
     }
-    .cv-entry-org { font-weight: 700; font-size: 10pt; color: #414141; line-height: 1.22; }
-    .cv-entry-loc { font-style: italic; font-weight: 300; font-size: 9pt; color: var(--cv-awesome); text-align: right; }
-    .cv-entry-role { font-size: 8pt; font-weight: 400; text-transform: uppercase; letter-spacing: 0.015em; color: #5D5D5D; line-height: 1.25; }
-    .cv-entry-date { font-style: italic; font-weight: 300; font-size: 8pt; color: #5D5D5D; text-align: right; }
+    .cv-entry-org  { font-weight: 700; font-size: calc(10pt * var(--cv-font-scale)); color: #414141; line-height: 1.22; }
+    .cv-entry-loc  { font-style: italic; font-weight: 300; font-size: calc(9pt * var(--cv-font-scale)); color: var(--cv-awesome); text-align: right; min-width: 24px; }
+    .cv-entry-role { font-size: calc(8pt * var(--cv-font-scale)); font-weight: 400; text-transform: uppercase; letter-spacing: 0.015em; color: #5D5D5D; line-height: 1.25; }
+    .cv-entry-date { font-style: italic; font-weight: 300; font-size: calc(8pt * var(--cv-font-scale)); color: #5D5D5D; text-align: right; min-width: 24px; }
 
-    /* Bullets (\begin{cvitems}) */
-    .cv-bullets { margin: 1.5px 0 0 13px; padding: 0; }
-    .cv-bullet-item {
-      position: relative;
-      margin-bottom: var(--sec-bullet-gap, 1px);
-      font-size: 9pt;
+    .cv-bullet-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+      padding-left: 5px;
+      font-size: calc(9pt * var(--cv-font-scale));
       font-weight: 300;
       line-height: 1.25;
       color: #333333;
-      padding-right: 12px;
       hyphens: auto;
       -webkit-hyphens: auto;
     }
-    .cv-bullet-item::marker {
-      font-size: 7.5pt;
+    .cv-bullet-dot {
+      flex-shrink: 0;
+      font-size: calc(8.5pt * var(--cv-font-scale));
+      line-height: 1.25;
+      color: #333333;
+      user-select: none;
+    }
+    .cv-bullet-text {
+      flex: 1;
+      min-width: 0;
+      text-align: justify;
+    }
+    .cv-free-text {
+      font-size: calc(9pt * var(--cv-font-scale));
+      font-weight: 300;
+      line-height: 1.25;
       color: #333333;
     }
-    .cv-bullet-del {
-      position: absolute;
-      right: 0;
-      top: 0;
-      opacity: 0;
-      background: none;
-      border: none;
-      color: #d92804;
-      font-weight: 700;
-      cursor: pointer;
-      font-size: 11px;
-    }
-    .cv-bullet-item:hover .cv-bullet-del { opacity: 1; }
 
-    /* Footer (\makecvfooter) */
+    /* Skills / Involvement Tables */
+    .cv-skills-wrap { position: relative; }
+    .cv-skills-table {
+      width: calc(100% - var(--sec-skill-offset-x, 0px));
+      margin-left: var(--sec-skill-offset-x, 0px);
+      table-layout: fixed;
+      border-collapse: collapse;
+    }
+    .cv-honors-table { width: 100%; border-collapse: collapse; }
+
+    .cv-skill-row,
+    .cv-honor-row { position: relative; }
+    .cv-skill-row.sheet-dragging,
+    .cv-honor-row.sheet-dragging { opacity: 0.35; }
+    .cv-skill-row.sheet-drop-before td,
+    .cv-honor-row.sheet-drop-before td { border-top: 2px solid #d92804; }
+    .cv-skill-row.sheet-drop-after td,
+    .cv-honor-row.sheet-drop-after td { border-bottom: 2px solid #d92804; }
+
+    .cv-skill-row td,
+    .cv-honor-row td {
+      padding: var(--sec-row-pad, 0.7px) 0;
+      vertical-align: top;
+      line-height: 1.24;
+    }
+    .cv-skill-cat {
+      width: var(--sec-skill-cat-w, 121px);
+      box-sizing: border-box;
+      text-align: right;
+      padding-right: var(--sec-skill-gap, 12px) !important;
+      font-weight: 700;
+      color: #414141;
+      font-size: calc(10pt * var(--cv-font-scale));
+    }
+    .cv-skill-list {
+      color: #333333;
+      font-size: calc(9pt * var(--cv-font-scale));
+      font-weight: 300;
+      word-wrap: break-word;
+    }
+    .cv-skill-actions {
+      width: 68px;
+      text-align: right;
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 0.15s ease;
+    }
+    .cv-skill-row:hover .cv-skill-actions,
+    .cv-honor-row:hover .cv-skill-actions { opacity: 1; }
+
+    .skill-offset-drag-handle {
+      position: absolute; top: 0; bottom: 0;
+      left: var(--sec-skill-offset-x, 0px);
+      width: 10px; margin-left: -5px;
+      cursor: ew-resize; opacity: 0; z-index: 15; user-select: none;
+      transition: opacity 0.15s ease;
+    }
+    .skill-col-drag-handle {
+      position: absolute; top: 0; bottom: 0;
+      left: calc(var(--sec-skill-offset-x, 0px) + var(--sec-skill-cat-w, 121px) - (var(--sec-skill-gap, 12px) / 2));
+      width: 10px; margin-left: -5px;
+      cursor: ew-resize; opacity: 0; z-index: 15; user-select: none;
+      transition: opacity 0.15s ease;
+    }
+    .cv-skills-wrap:hover .skill-offset-drag-handle,
+    .cv-skills-wrap:hover .skill-col-drag-handle,
+    .skill-offset-drag-handle.dragging,
+    .skill-col-drag-handle.dragging { opacity: 1; }
+    .skill-offset-drag-handle::before { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; border-left: 1px dashed #27ae60; }
+    .skill-col-drag-handle::before { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; border-left: 1px dashed #d92804; }
+    .skill-drag-pill {
+      position: absolute; top: -15px; left: 50%; transform: translateX(-50%);
+      background: #d92804; color: #fff; font-family: 'JetBrains Mono', monospace;
+      font-size: 8.5px; padding: 1px 5px; border-radius: 7px; white-space: nowrap; pointer-events: none;
+    }
+    .skill-offset-drag-handle .skill-drag-pill { background: #27ae60; }
+
+    .cv-honor-date { width: 54px; text-align: center; color: #5D5D5D; font-size: calc(9pt * var(--cv-font-scale)); }
+    .cv-honor-main { color: #5D5D5D; font-size: calc(9pt * var(--cv-font-scale)); padding-right: 8px !important; }
+    .cv-honor-pos { font-weight: 700; color: #414141; }
+    .cv-honor-loc { width: 110px; text-align: right; font-style: italic; font-weight: 300; color: var(--cv-awesome); font-size: calc(9pt * var(--cv-font-scale)); }
+
     .cv-footer {
       position: absolute;
       left: var(--cv-margin-x);
@@ -888,7 +910,7 @@
       display: grid;
       grid-template-columns: 1fr auto 1fr;
       align-items: center;
-      font-size: 8pt;
+      font-size: calc(8pt * var(--cv-font-scale));
       font-variant: small-caps;
       color: #999999;
     }
@@ -910,28 +932,19 @@
       .bg-canvas-layer, .site-header, .fs-banner, .inspector-col, .sheet-toolbar,
       .tex-render-stage, #page-break-guides, .spacing-drag-handle, .content-skip-drag-handle,
       .skill-offset-drag-handle, .skill-col-drag-handle, .sec-reorder-handle,
-      .cv-section-add-btn, .cv-entry-controls, .cv-bullet-del, .cv-skill-actions {
+      .piece-drag-grip, .piece-controls, .cv-section-add-bar, .cv-skill-actions {
         display: none !important;
       }
       .dev-stage, .workspace-grid, .sheet-viewport, .sheet-fit-area, .sheet-scale-wrapper {
-        display: block !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        width: auto !important;
-        height: auto !important;
-        max-width: none !important;
-        overflow: visible !important;
+        display: block !important; padding: 0 !important; margin: 0 !important;
+        width: auto !important; height: auto !important; max-width: none !important; overflow: visible !important;
       }
       .cv-sheet {
-        transform: none !important;
-        width: var(--cv-page-w) !important;
-        min-height: var(--cv-sheet-min-h) !important;
-        box-shadow: none !important;
-        margin: 0 !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
+        transform: none !important; width: var(--cv-page-w) !important; min-height: var(--cv-sheet-min-h) !important;
+        box-shadow: none !important; margin: 0 !important;
+        -webkit-print-color-adjust: exact; print-color-adjust: exact;
       }
-      .cv-entry { border-color: transparent !important; }
+      .cv-atomic-piece { border-color: transparent !important; background: transparent !important; }
     }
   </style>
 </head>
@@ -979,9 +992,42 @@
 
     <div class="workspace-grid">
       <aside class="inspector-col">
+        <!-- 01. HEADER & FOOTER -->
         <div class="cad-panel">
           <div class="panel-header">
-            <span class="panel-title">// 01. PAGE &amp; GLOBAL THEME</span>
+            <span class="panel-title">// 01. HEADER &amp; FOOTER</span>
+            <button type="button" id="toggle-header-panel" class="mini-action-btn">SHOW</button>
+          </div>
+          <div id="header-editor-body" style="display:none;">
+            <div class="header-fields-grid">
+              <div class="header-field-row"><span>FIRST</span><input type="text" class="header-field-input" data-hdr="firstName" /></div>
+              <div class="header-field-row"><span>LAST</span><input type="text" class="header-field-input" data-hdr="lastName" /></div>
+              <div class="header-field-row"><span>POSITION</span><input type="text" class="header-field-input" data-hdr="position" placeholder="Optional subtitle" /></div>
+              <div class="header-field-row"><span>ADDRESS</span><input type="text" class="header-field-input" data-hdr="address" placeholder="Optional address" /></div>
+              <div class="header-field-row"><span>MOBILE</span><input type="text" class="header-field-input" data-hdr="mobile" /></div>
+              <div class="header-field-row"><span>EMAIL</span><input type="text" class="header-field-input" data-hdr="email" /></div>
+              <div class="header-field-row"><span>WEBSITE</span><input type="text" class="header-field-input" data-hdr="homepage" /></div>
+              <div class="header-field-row"><span>GITHUB</span><input type="text" class="header-field-input" data-hdr="github" placeholder="username" /></div>
+              <div class="header-field-row"><span>LINKEDIN</span><input type="text" class="header-field-input" data-hdr="linkedin" /></div>
+            </div>
+            <div class="theme-row">
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                <input type="checkbox" id="cb-footer-enabled" />
+                <span>SHOW FOOTER</span>
+              </label>
+            </div>
+            <div id="footer-fields-wrap" class="header-fields-grid" style="margin-top:6px;">
+              <div class="header-field-row"><span>FT LEFT</span><input type="text" class="header-field-input" data-ftr="left" /></div>
+              <div class="header-field-row"><span>FT CENTER</span><input type="text" class="header-field-input" data-ftr="center" /></div>
+              <div class="header-field-row"><span>FT RIGHT</span><input type="text" class="header-field-input" data-ftr="right" /></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 02. PAGE & GLOBAL THEME -->
+        <div class="cad-panel">
+          <div class="panel-header">
+            <span class="panel-title">// 02. PAGE &amp; GLOBAL THEME</span>
             <button type="button" id="reset-spacing-btn" class="mini-action-btn">RESET ALL</button>
           </div>
 
@@ -1019,6 +1065,10 @@
             <div class="slider-row-head"><span>BOTTOM MARGIN</span><span id="val-margin-bottom">18mm</span></div>
             <input type="range" id="sl-margin-bottom" min="6" max="25" step="1" value="18" />
           </div>
+          <div class="slider-row">
+            <div class="slider-row-head"><span>PREVIEW FONT SCALE</span><span id="val-font-scale">100%</span></div>
+            <input type="range" id="sl-font-scale" min="0.85" max="1.15" step="0.01" value="1" />
+          </div>
 
           <div class="theme-row">
             <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
@@ -1032,16 +1082,19 @@
           </div>
         </div>
 
+        <!-- 03. SECTIONS & ATOMIC BLOCKS -->
         <div class="cad-panel">
           <div class="panel-header">
-            <span class="panel-title">// 02. SECTIONS (DRAG &amp; CUSTOMIZE)</span>
+            <span class="panel-title">// 03. SECTIONS &amp; BLOCKS</span>
+            <button type="button" id="add-section-btn" class="mini-action-btn">+ SECTION</button>
           </div>
           <div id="section-order-list" class="section-order-list"></div>
         </div>
 
+        <!-- 04. LIVE LATEX OUTPUT -->
         <div class="cad-panel">
           <div class="panel-header">
-            <span class="panel-title">// 03. LIVE LATEX OUTPUT</span>
+            <span class="panel-title">// 04. LIVE LATEX OUTPUT</span>
             <button type="button" id="copy-tex-btn" class="mini-action-btn">COPY</button>
           </div>
           <div id="tex-tab-bar" class="tex-tab-bar"></div>
@@ -1052,7 +1105,7 @@
 
       <section class="sheet-viewport">
         <div class="sheet-toolbar">
-          <span id="sheet-toolbar-hint">DRAG ⋮⋮ TO REORDER &bull; DRAG RED/BLUE BARS FOR SPACING &bull; DRAG GREEN/RED LINES ON SKILLS &amp; INVOLVEMENT</span>
+          <span id="sheet-toolbar-hint">EVERY TITLE, ROLE, BULLET &amp; ROW IS A SEPARATE PIECE &bull; DRAG &#8942;&#8942; TO MOVE ANYWHERE &bull; HOVER TO DUPLICATE, HIDE, OR DELETE</span>
           <div class="sheet-toolbar-right">
             <button type="button" id="zoom-toggle-btn" class="mini-action-btn">ZOOM: FIT</button>
             <span id="page-status-pill" class="page-status-pill">WAITING FOR MOUNT</span>
@@ -1083,7 +1136,7 @@
   <form id="tex-compile-form" method="POST" enctype="multipart/form-data" action="https://texlive.net/cgi-bin/latexcgi" target="tex-render-iframe" style="display:none;"></form>
 
   <script>
-    const PX_PER_MM = 96 / 25.4; // 3.779527559
+    const PX_PER_MM = 96 / 25.4;
     const LOCAL_COMPILER_BASE = "http://127.0.0.1:8765";
     const PAGE_SIZES = {
       letterpaper: { wPx: 816, hPx: 1056, hLabel: "11.0 IN", cssSize: "letter" },
@@ -1094,6 +1147,15 @@
     let zoomIndex = 0;
     let currentScale = 1;
     let draggedSectionIdx = null;
+    let draggedPieceRef = null; // { secType, sIdx, gIdx, iIdx }
+
+    function escHtml(str) {
+      return String(str || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
 
     function createDefaultSectionLayout(type, legacySkillDefaults = null) {
       if (type === "skills") {
@@ -1106,16 +1168,9 @@
         };
       }
       if (type === "honors") {
-        return {
-          contentSkipMm: 2.5,
-          rowStretch: 1.0
-        };
+        return { contentSkipMm: 2.5, rowStretch: 1.0 };
       }
-      return {
-        contentSkipMm: 2.5,
-        entryGapMm: 1.5,
-        bulletGapMm: 0.25
-      };
+      return { contentSkipMm: 2.5, entryGapMm: 1.5, bulletGapMm: 0.25 };
     }
 
     const resumeState = {
@@ -1137,38 +1192,21 @@
       cvDirHandle: null,
       supportFiles: {},
       activeTexTab: "main.tex",
-      page: {
-        size: "letterpaper",
-        count: 1
-      },
+      page: { size: "letterpaper", count: 1 },
       spacing: {
         headerAfterMm: 3.5,
         sectionTopMm: 3.0,
         marginXMm: 14,
         marginTopMm: 8,
-        marginBottomMm: 18
+        marginBottomMm: 18,
+        fontScale: 1
       },
-      theme: {
-        awesomeHex: "000000",
-        sectionHighlight: false
-      },
+      theme: { awesomeHex: "000000", sectionHighlight: false },
       header: {
-        firstName: "",
-        lastName: "",
-        position: "",
-        address: "",
-        mobile: "",
-        email: "",
-        homepage: "",
-        github: "",
-        linkedin: ""
+        firstName: "", lastName: "", position: "", address: "",
+        mobile: "", email: "", homepage: "", github: "", linkedin: ""
       },
-      footer: {
-        enabled: false,
-        left: "",
-        center: "",
-        right: ""
-      },
+      footer: { enabled: false, left: "", center: "", right: "" },
       sections: []
     };
 
@@ -1178,6 +1216,12 @@
 
     function rowStretchToPadPx(stretch) {
       return Math.max(0, 0.7 + (stretch - 0.95) * 8).toFixed(2);
+    }
+
+    function getSectionItemsArray(sec, gIdx = 0) {
+      if (sec.type === "entries") return sec.blocks;
+      if (sec.type === "honors") return sec.groups[gIdx].items;
+      return sec.items;
     }
 
     // =========================================================================
@@ -1195,11 +1239,9 @@
       const availH = Math.max(280, area.clientHeight - 12);
 
       const mode = ZOOM_STEPS[zoomIndex];
-      if (mode === "fit") {
-        currentScale = Math.min(availW / spec.wPx, availH / targetH, 1.5);
-      } else {
-        currentScale = mode;
-      }
+      currentScale = mode === "fit"
+        ? Math.min(availW / spec.wPx, availH / targetH, 1.5)
+        : mode;
 
       sheet.style.transform = `scale(${currentScale})`;
       const unscaledH = Math.max(targetH, sheet.scrollHeight);
@@ -1230,15 +1272,93 @@
     }
 
     // =========================================================================
-    // REORDER HELPER
+    // REORDER / DUPLICATE / DELETE HELPERS
     // =========================================================================
     function moveSectionIndex(fromIdx, toIdx) {
-      if (fromIdx === toIdx || fromIdx < 0 || toIdx < 0 || fromIdx >= resumeState.sections.length || toIdx >= resumeState.sections.length) {
-        return;
-      }
+      if (fromIdx === toIdx || fromIdx < 0 || toIdx < 0 || fromIdx >= resumeState.sections.length || toIdx >= resumeState.sections.length) return;
       const [moved] = resumeState.sections.splice(fromIdx, 1);
       resumeState.sections.splice(toIdx, 0, moved);
       renderAll();
+    }
+
+    function movePiece(fromSIdx, fromGIdx, fromIdx, toSIdx, toGIdx, toIdx) {
+      const fromSec = resumeState.sections[fromSIdx];
+      const toSec = resumeState.sections[toSIdx];
+      if (!fromSec || !toSec || fromSec.type !== toSec.type) return;
+      const fromArr = getSectionItemsArray(fromSec, fromGIdx);
+      const toArr = getSectionItemsArray(toSec, toGIdx);
+      if (fromIdx < 0 || fromIdx >= fromArr.length) return;
+
+      const [moved] = fromArr.splice(fromIdx, 1);
+      let insertAt = toIdx;
+      if (fromSec === toSec && fromGIdx === toGIdx && fromIdx < insertAt) insertAt--;
+      insertAt = Math.max(0, Math.min(toArr.length, insertAt));
+      toArr.splice(insertAt, 0, moved);
+      renderAll();
+    }
+
+    function nudgePiece(sIdx, gIdx, iIdx, dir) {
+      const sec = resumeState.sections[sIdx];
+      if (!sec) return;
+      const arr = getSectionItemsArray(sec, gIdx);
+      const t = iIdx + dir;
+      if (t < 0 || t >= arr.length) return;
+      [arr[iIdx], arr[t]] = [arr[t], arr[iIdx]];
+      renderAll();
+    }
+
+    function duplicatePiece(sIdx, gIdx, iIdx) {
+      const sec = resumeState.sections[sIdx];
+      if (!sec) return;
+      const arr = getSectionItemsArray(sec, gIdx);
+      const copy = JSON.parse(JSON.stringify(arr[iIdx]));
+      copy.expanded = false;
+      arr.splice(iIdx + 1, 0, copy);
+      renderAll();
+    }
+
+    function deletePiece(sIdx, gIdx, iIdx) {
+      const sec = resumeState.sections[sIdx];
+      if (!sec) return;
+      const arr = getSectionItemsArray(sec, gIdx);
+      arr.splice(iIdx, 1);
+      renderAll();
+    }
+
+    function addAtomicBlock(sIdx, kind, insertAfterIdx = null) {
+      const sec = resumeState.sections[sIdx];
+      if (!sec || sec.type !== "entries") return;
+      let blk;
+      if (kind === "title") {
+        blk = { kind: "title", enabled: true, expanded: false, vspaceMm: 0, left: "Organization Name", right: "Chicago, IL" };
+      } else if (kind === "role") {
+        blk = { kind: "role", enabled: true, expanded: false, vspaceMm: 0, left: "Role / Subtitle", right: "Month Year to Present" };
+      } else if (kind === "text") {
+        blk = { kind: "text", enabled: true, expanded: false, vspaceMm: 0, text: "Custom text line or summary note..." };
+      } else {
+        blk = { kind: "bullet", enabled: true, expanded: false, vspaceMm: 0, text: "Key technical accomplishment with measurable impact." };
+      }
+      if (insertAfterIdx === null || insertAfterIdx < 0 || insertAfterIdx >= sec.blocks.length) {
+        sec.blocks.push(blk);
+      } else {
+        sec.blocks.splice(insertAfterIdx + 1, 0, blk);
+      }
+      renderAll();
+    }
+
+    function addNewItemToSection(sIdx, kind = "title") {
+      const sec = resumeState.sections[sIdx];
+      if (!sec) return;
+      if (sec.type === "skills") {
+        sec.items.push({ enabled: true, category: "Category", list: "Item 1 | Item 2" });
+        renderAll();
+      } else if (sec.type === "honors") {
+        if (!sec.groups.length) sec.groups.push({ subsection: "", items: [] });
+        sec.groups[0].items.unshift({ enabled: true, position: "Award / Cert", title: "Issuer / Event", location: "", date: "2026" });
+        renderAll();
+      } else {
+        addAtomicBlock(sIdx, kind);
+      }
     }
 
     // =========================================================================
@@ -1282,6 +1402,10 @@
       return escapeTex(str).replace(/\u00A0/g, "~");
     }
 
+    function commentBlock(blockText) {
+      return blockText.split("\n").map((l) => `% AZCORE_HIDDEN ${l}`).join("\n");
+    }
+
     function parseLengthToMm(valStr) {
       const m = String(valStr || "").trim().match(/^(-?\d*\.?\d+)\s*(mm|cm|pt|in)?$/i);
       if (!m) return null;
@@ -1319,10 +1443,7 @@
         .filter((s) => s.enabled)
         .map((s) => {
           const vspace = s.vspaceMm !== 0 ? `\\vspace{${s.vspaceMm.toFixed(1)}mm}\n` : "";
-          if (inlineSections) {
-            return `${vspace}${generateSectionTex(s)}`;
-          }
-          return `${vspace}\\input{${s.file}}`;
+          return inlineSections ? `${vspace}${generateSectionTex(s)}` : `${vspace}\\input{${s.file}}`;
         })
         .join("\n");
 
@@ -1347,13 +1468,132 @@ ${inputs}
 `;
     }
 
+    function generateEntriesBodyTex(blocks, lay) {
+      const entryDeltaMm = lay.entryGapMm - 1.5;
+      const chunks = [];
+      let emittedActiveCount = 0;
+
+      const emitVspace = (mm) =>
+        mm && Math.abs(mm) >= 0.05
+          ? `  % AZCORE_BLK_VSPACE: ${mm.toFixed(2)}mm\n  \\vspace{${mm.toFixed(2)}mm}\n`
+          : "";
+
+      const maybeEntryGap = () => {
+        if (emittedActiveCount > 0 && Math.abs(entryDeltaMm) >= 0.05) {
+          chunks.push(`  \\vspace{${entryDeltaMm.toFixed(2)}mm}`);
+        }
+      };
+
+      const serializeHidden = (b) => {
+        if (b.kind === "title") return commentBlock(`  \\aztitle{${escapeTex(b.left)}}{${escapeTex(b.right)}}`);
+        if (b.kind === "role")  return commentBlock(`  \\azrole{${escapeTex(b.left)}}{${escapeTex(b.right)}}`);
+        if (b.kind === "text")  return commentBlock(`  \\aztext{${escapeTex(b.text)}}`);
+        return commentBlock(`  \\azbullet{${escapeTex(b.text)}}`);
+      };
+
+      let i = 0;
+      while (i < blocks.length) {
+        const b = blocks[i];
+
+        if (b.enabled === false) {
+          chunks.push(serializeHidden(b));
+          i++;
+          continue;
+        }
+
+        // Pattern 1: active TITLE + active ROLE (vspace 0) + 0+ active BULLETS (vspace 0) -> standard \cventry
+        if (
+          b.kind === "title" &&
+          i + 1 < blocks.length &&
+          blocks[i + 1].enabled !== false &&
+          blocks[i + 1].kind === "role" &&
+          Math.abs(blocks[i + 1].vspaceMm || 0) < 0.05
+        ) {
+          maybeEntryGap();
+          const roleBlk = blocks[i + 1];
+          const bullets = [];
+          let j = i + 2;
+          while (
+            j < blocks.length &&
+            blocks[j].enabled !== false &&
+            blocks[j].kind === "bullet" &&
+            Math.abs(blocks[j].vspaceMm || 0) < 0.05
+          ) {
+            bullets.push(blocks[j].text);
+            j++;
+          }
+          const desc = bullets.length
+            ? `\n      \\begin{cvitems}\n${bullets.map((t) => `        \\item {${escapeTex(t)}}`).join("\n")}\n      \\end{cvitems}\n    `
+            : "";
+          chunks.push(
+            `${emitVspace(b.vspaceMm)}  \\cventry\n    {${escapeTex(roleBlk.left)}}\n    {${escapeTex(b.left)}}\n    {${escapeTex(b.right)}}\n    {${escapeTex(roleBlk.right)}}\n    {${desc}}`
+          );
+          emittedActiveCount++;
+          i = j;
+          continue;
+        }
+
+        // Pattern 2: standalone active ROLE + 0+ active BULLETS (vspace 0) -> native Awesome-CV \cventry with empty org/loc
+        if (b.kind === "role") {
+          maybeEntryGap();
+          const bullets = [];
+          let j = i + 1;
+          while (
+            j < blocks.length &&
+            blocks[j].enabled !== false &&
+            blocks[j].kind === "bullet" &&
+            Math.abs(blocks[j].vspaceMm || 0) < 0.05
+          ) {
+            bullets.push(blocks[j].text);
+            j++;
+          }
+          const desc = bullets.length
+            ? `\n      \\begin{cvitems}\n${bullets.map((t) => `        \\item {${escapeTex(t)}}`).join("\n")}\n      \\end{cvitems}\n    `
+            : "";
+          chunks.push(
+            `${emitVspace(b.vspaceMm)}  \\cventry\n    {${escapeTex(b.left)}}\n    {}\n    {}\n    {${escapeTex(b.right)}}\n    {${desc}}`
+          );
+          emittedActiveCount++;
+          i = j;
+          continue;
+        }
+
+        // Pattern 3: standalone active TITLE
+        if (b.kind === "title") {
+          maybeEntryGap();
+          chunks.push(`${emitVspace(b.vspaceMm)}  \\aztitle{${escapeTex(b.left)}}{${escapeTex(b.right)}}`);
+          emittedActiveCount++;
+          i++;
+          continue;
+        }
+
+        // Pattern 4: standalone active BULLET (or bullet with custom vspace)
+        if (b.kind === "bullet") {
+          chunks.push(`${emitVspace(b.vspaceMm)}  \\azbullet{${escapeTex(b.text)}}`);
+          emittedActiveCount++;
+          i++;
+          continue;
+        }
+
+        // Pattern 5: active TEXT
+        chunks.push(`${emitVspace(b.vspaceMm)}  \\aztext{${escapeTex(b.text)}}`);
+        emittedActiveCount++;
+        i++;
+      }
+
+      return chunks.join("\n\n");
+    }
+
     function generateSectionTex(sec) {
       const lay = sec.layout;
 
       if (sec.type === "skills") {
         const meta = `% AZCORE_SEC_LAYOUT: contentSkip=${lay.contentSkipMm.toFixed(1)}mm, offset=${lay.skillOffsetMm.toFixed(1)}mm, catw=${lay.skillCatWidthMm.toFixed(1)}mm, gap=${lay.skillGapMm.toFixed(1)}mm, rowStretch=${lay.rowStretch.toFixed(2)}`;
         const rows = sec.items
-          .map((r) => `  \\cvskill\n    {${escapeTex(r.category)}}\n    {${escapeTex(r.list)}}`)
+          .map((r) => {
+            const raw = `  \\cvskill\n    {${escapeTex(r.category)}}\n    {${escapeTex(r.list)}}`;
+            return r.enabled === false ? commentBlock(raw) : raw;
+          })
           .join("\n\n");
 
         return `${meta}
@@ -1384,10 +1624,10 @@ ${rows}
           .map((g) => {
             const sub = g.subsection ? `\\cvsubsection{${escapeTex(g.subsection)}}\n\n` : "";
             const rows = g.items
-              .map(
-                (r) =>
-                  `  \\cvhonor\n    {${escapeTex(r.position)}}\n    {${escapeTex(r.title)}}\n    {${escapeTex(r.location)}}\n    {${escapeTex(r.date)}}`
-              )
+              .map((r) => {
+                const raw = `  \\cvhonor\n    {${escapeTex(r.position)}}\n    {${escapeTex(r.title)}}\n    {${escapeTex(r.location)}}\n    {${escapeTex(r.date)}}`;
+                return r.enabled === false ? commentBlock(raw) : raw;
+              })
               .join("\n\n");
             return `${sub}\\begin{cvhonors}\n${rows}\n\\end{cvhonors}`;
           })
@@ -1405,19 +1645,7 @@ ${blocks}
       }
 
       const meta = `% AZCORE_SEC_LAYOUT: contentSkip=${lay.contentSkipMm.toFixed(1)}mm, entryGap=${lay.entryGapMm.toFixed(2)}mm, bulletGap=${lay.bulletGapMm.toFixed(2)}mm`;
-      const entryDeltaMm = lay.entryGapMm - 1.5;
-      const entrySpacer = Math.abs(entryDeltaMm) >= 0.05
-        ? `\n\n  \\vspace{${entryDeltaMm.toFixed(2)}mm}\n\n`
-        : "\n\n";
-
-      const entries = sec.items
-        .map((e) => {
-          const desc = e.bullets && e.bullets.length
-            ? `\n      \\begin{cvitems}\n${e.bullets.map((b) => `        \\item {${escapeTex(b)}}`).join("\n")}\n      \\end{cvitems}\n    `
-            : "";
-          return `  \\cventry\n    {${escapeTex(e.role)}}\n    {${escapeTex(e.org)}}\n    {${escapeTex(e.loc)}}\n    {${escapeTex(e.date)}}\n    {${desc}}`;
-        })
-        .join(entrySpacer);
+      const body = generateEntriesBodyTex(sec.blocks, lay);
 
       return `${meta}
 \\cvsection{${escapeTex(sec.title)}}
@@ -1435,8 +1663,29 @@ ${blocks}
   \\end{justify}%
   \\vspace{1.0mm}%
 }%
+\\providecommand{\\aztitle}[2]{%
+  \\par\\vspace{-2.0mm}%
+  \\setlength\\tabcolsep{0pt}\\setlength{\\extrarowheight}{0pt}%
+  \\noindent\\begin{tabular*}{\\textwidth}{@{\\extracolsep{\\fill}} L{\\textwidth - 4.5cm} R{4.5cm}}%
+    \\entrytitlestyle{#1} & \\entrylocationstyle{#2} \\\\%
+  \\end{tabular*}\\par%
+}%
+\\providecommand{\\azrole}[2]{%
+  \\par\\vspace{-1.5mm}%
+  \\setlength\\tabcolsep{0pt}\\setlength{\\extrarowheight}{0pt}%
+  \\noindent\\begin{tabular*}{\\textwidth}{@{\\extracolsep{\\fill}} L{\\textwidth - 4.5cm} R{4.5cm}}%
+    \\entrypositionstyle{#1} & \\entrydatestyle{#2} \\\\%
+  \\end{tabular*}\\par%
+}%
+\\providecommand{\\azbullet}[1]{%
+  \\par\\vspace{1.5mm}%
+  \\begin{cvitems}\\item {#1}\\end{cvitems}%
+}%
+\\providecommand{\\aztext}[1]{%
+  \\par\\descriptionstyle{#1}\\par%
+}%
 \\begin{cventries}
-${entries}
+${body}
 \\end{cventries}
 }
 `;
@@ -1445,7 +1694,7 @@ ${entries}
     // =========================================================================
     // HYBRID LUALATEX RENDERER (In-Page + Live Auto-Sync Pop-Out Window)
     // =========================================================================
-function stripHeavyPackagesForPreview(clsText) {
+    function stripHeavyPackagesForPreview(clsText) {
       return clsText
         .replace(/\\RequirePackage\[skins\]\{tcolorbox\}/g, "")
         .replace(/\\RequirePackage\{unicode-math\}/g, "")
@@ -1498,7 +1747,6 @@ function stripHeavyPackagesForPreview(clsText) {
       return resumeState.localServerAvailable;
     }
 
-    // --- Pop-Out Live Sync Window ---
     function updatePopoutButtonState() {
       const btn = document.getElementById("popout-btn");
       if (!btn) return;
@@ -1528,19 +1776,16 @@ function stripHeavyPackagesForPreview(clsText) {
 
     function openPopoutWindow() {
       if (!resumeState.mounted) return;
-
       if (resumeState.popoutWin && !resumeState.popoutWin.closed) {
         resumeState.popoutWin.focus();
         renderToPopout();
         return;
       }
-
       const win = window.open("", "azcore_resume_live_popout", "width=880,height=1100,resizable=yes,scrollbars=yes");
       if (!win) {
         logMsg("Pop-up blocked! Allow pop-ups for this site to use the Live Pop-Out window.", true);
         return;
       }
-
       resumeState.popoutWin = win;
       win.document.open();
       win.document.write(`<!DOCTYPE html>
@@ -1562,11 +1807,7 @@ function stripHeavyPackagesForPreview(clsText) {
 </head>
 <body>
   <div class="bar">
-    <div class="left">
-      <span class="dot"></span>
-      <strong>AZCORE // LIVE LUALATEX</strong>
-      <span id="popout-spin" class="spin"></span>
-    </div>
+    <div class="left"><span class="dot"></span><strong>AZCORE // LIVE LUALATEX</strong><span id="popout-spin" class="spin"></span></div>
     <span id="popout-badge" class="badge">INITIALIZING...</span>
   </div>
   <iframe id="popout-frame" name="popout-frame" title="Live Compiled PDF"></iframe>
@@ -1575,127 +1816,107 @@ function stripHeavyPackagesForPreview(clsText) {
 </html>`);
       win.document.close();
 
-      const frame = win.document.getElementById("popout-frame");
-      frame.addEventListener("load", () => {
-      if (resumeState.popoutBackend !== "texlive") return;
-      const elapsed = ((performance.now() - resumeState.popoutStartTime) / 1000).toFixed(1);
-      setPopoutStatus(`SYNCED (${elapsed}s • texlive.net)`, false, false);
-      resumeState.popoutCompiling = false;
-      if (resumeState.popoutDirty) {
-        resumeState.popoutDirty = false;
-        renderToPopout();
-      }
-    });
+      win.document.getElementById("popout-frame").addEventListener("load", () => {
+        if (resumeState.popoutBackend !== "texlive") return;
+        const elapsed = ((performance.now() - resumeState.popoutStartTime) / 1000).toFixed(1);
+        setPopoutStatus(`SYNCED (${elapsed}s • texlive.net)`, false, false);
+        resumeState.popoutCompiling = false;
+        if (resumeState.popoutDirty) {
+          resumeState.popoutDirty = false;
+          renderToPopout();
+        }
+      });
 
-    win.addEventListener("beforeunload", () => {
-      if (resumeState.popoutTimer) clearTimeout(resumeState.popoutTimer);
-      if (resumeState.popoutBlobUrl) {
-        URL.revokeObjectURL(resumeState.popoutBlobUrl);
-        resumeState.popoutBlobUrl = null;
-      }
-      resumeState.popoutCompiling = false;
-      resumeState.popoutDirty = false;
-      resumeState.popoutWin = null;
-      updatePopoutButtonState();
-    });
+      win.addEventListener("beforeunload", () => {
+        if (resumeState.popoutTimer) clearTimeout(resumeState.popoutTimer);
+        if (resumeState.popoutBlobUrl) {
+          URL.revokeObjectURL(resumeState.popoutBlobUrl);
+          resumeState.popoutBlobUrl = null;
+        }
+        resumeState.popoutCompiling = false;
+        resumeState.popoutDirty = false;
+        resumeState.popoutWin = null;
+        updatePopoutButtonState();
+      });
 
       updatePopoutButtonState();
       renderToPopout();
     }
 
     function schedulePopoutRender() {
-  if (!resumeState.mounted || !resumeState.popoutWin) return;
-  if (resumeState.popoutWin.closed) {
-    updatePopoutButtonState();
-    return;
-  }
-  if (resumeState.popoutTimer) clearTimeout(resumeState.popoutTimer);
-  setPopoutStatus("EDIT DETECTED — SYNCING SOON...", true, false);
-
-  if (resumeState.popoutCompiling) {
-    resumeState.popoutDirty = true;
-    return;
-  }
-
-  const delay = resumeState.localServerAvailable ? 250 : 1200;
-  resumeState.popoutTimer = setTimeout(() => {
-    resumeState.popoutTimer = null;
-    renderToPopout();
-  }, delay);
-}
+      if (!resumeState.mounted || !resumeState.popoutWin) return;
+      if (resumeState.popoutWin.closed) { updatePopoutButtonState(); return; }
+      if (resumeState.popoutTimer) clearTimeout(resumeState.popoutTimer);
+      setPopoutStatus("EDIT DETECTED — SYNCING SOON...", true, false);
+      if (resumeState.popoutCompiling) { resumeState.popoutDirty = true; return; }
+      const delay = resumeState.localServerAvailable ? 250 : 1200;
+      resumeState.popoutTimer = setTimeout(() => {
+        resumeState.popoutTimer = null;
+        renderToPopout();
+      }, delay);
+    }
 
     async function renderToPopout() {
-  const win = resumeState.popoutWin;
-  if (!win || win.closed) {
-    resumeState.popoutCompiling = false;
-    resumeState.popoutDirty = false;
-    updatePopoutButtonState();
-    return;
-  }
-
-  if (resumeState.popoutCompiling) {
-    resumeState.popoutDirty = true;
-    return;
-  }
-
-  resumeState.popoutCompiling = true;
-  resumeState.popoutDirty = false;
-
-  const files = buildCompilePayload();
-  const useLocal = await checkLocalCompilerOnce();
-
-  if (useLocal) {
-    resumeState.popoutBackend = "local";
-    setPopoutStatus("COMPILING (LOCAL)...", true, false);
-    const t0 = performance.now();
-    let localHandled = false;
-    try {
-      const res = await fetch(`${LOCAL_COMPILER_BASE}/compile`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ engine: "lualatex", files })
-      });
-      localHandled = true;
-      if (!resumeState.popoutWin || resumeState.popoutWin.closed) return;
-      const blob = await res.blob();
-      const elapsed = ((performance.now() - t0) / 1000).toFixed(2);
-      if (resumeState.popoutBlobUrl) URL.revokeObjectURL(resumeState.popoutBlobUrl);
-      resumeState.popoutBlobUrl = URL.createObjectURL(blob);
-      win.document.getElementById("popout-frame").src = resumeState.popoutBlobUrl;
-      setPopoutStatus(res.ok ? `SYNCED (${elapsed}s • local)` : `ERROR (${elapsed}s)`, false, !res.ok);
-    } catch {
-      resumeState.localServerAvailable = false;
-    } finally {
-      if (localHandled) {
+      const win = resumeState.popoutWin;
+      if (!win || win.closed) {
         resumeState.popoutCompiling = false;
-        if (resumeState.popoutDirty) {
-          resumeState.popoutDirty = false;
-          renderToPopout();
-        }
+        resumeState.popoutDirty = false;
+        updatePopoutButtonState();
+        return;
       }
+      if (resumeState.popoutCompiling) { resumeState.popoutDirty = true; return; }
+      resumeState.popoutCompiling = true;
+      resumeState.popoutDirty = false;
+
+      const files = buildCompilePayload();
+      const useLocal = await checkLocalCompilerOnce();
+
+      if (useLocal) {
+        resumeState.popoutBackend = "local";
+        setPopoutStatus("COMPILING (LOCAL)...", true, false);
+        const t0 = performance.now();
+        let localHandled = false;
+        try {
+          const res = await fetch(`${LOCAL_COMPILER_BASE}/compile`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ engine: "lualatex", files })
+          });
+          localHandled = true;
+          if (!resumeState.popoutWin || resumeState.popoutWin.closed) return;
+          const blob = await res.blob();
+          const elapsed = ((performance.now() - t0) / 1000).toFixed(2);
+          if (resumeState.popoutBlobUrl) URL.revokeObjectURL(resumeState.popoutBlobUrl);
+          resumeState.popoutBlobUrl = URL.createObjectURL(blob);
+          win.document.getElementById("popout-frame").src = resumeState.popoutBlobUrl;
+          setPopoutStatus(res.ok ? `SYNCED (${elapsed}s • local)` : `ERROR (${elapsed}s)`, false, !res.ok);
+        } catch {
+          resumeState.localServerAvailable = false;
+        } finally {
+          if (localHandled) {
+            resumeState.popoutCompiling = false;
+            if (resumeState.popoutDirty) { resumeState.popoutDirty = false; renderToPopout(); }
+          }
+        }
+        if (localHandled) return;
+      }
+
+      if (!resumeState.popoutWin || resumeState.popoutWin.closed) { resumeState.popoutCompiling = false; return; }
+      resumeState.popoutBackend = "texlive";
+      resumeState.popoutStartTime = performance.now();
+      setPopoutStatus("COMPILING (texlive.net)...", true, false);
+
+      const form = win.document.getElementById("popout-form");
+      form.innerHTML = "";
+      appendFormField(win.document, form, "engine", "lualatex");
+      appendFormField(win.document, form, "return", "pdf");
+      for (const [fname, content] of Object.entries(files)) {
+        appendFormField(win.document, form, "filename[]", fname);
+        appendFormField(win.document, form, "filecontents[]", content, true);
+      }
+      form.submit();
     }
-    if (localHandled) return;
-  }
 
-  if (!resumeState.popoutWin || resumeState.popoutWin.closed) {
-    resumeState.popoutCompiling = false;
-    return;
-  }
-  resumeState.popoutBackend = "texlive";
-  resumeState.popoutStartTime = performance.now();
-  setPopoutStatus("COMPILING (texlive.net)...", true, false);
-
-  const form = win.document.getElementById("popout-form");
-  form.innerHTML = "";
-  appendFormField(win.document, form, "engine", "lualatex");
-  appendFormField(win.document, form, "return", "pdf");
-  for (const [fname, content] of Object.entries(files)) {
-    appendFormField(win.document, form, "filename[]", fname);
-    appendFormField(win.document, form, "filecontents[]", content, true);
-  }
-  form.submit();
-}
-    // --- In-Page Render Mode ---
     async function enterTexRenderMode() {
       if (!resumeState.mounted) return;
       resumeState.isRendered = true;
@@ -1719,7 +1940,6 @@ function stripHeavyPackagesForPreview(clsText) {
       zoomBtn.style.display = "none";
       renderStage.classList.add("active");
       loading.classList.add("visible");
-
       loadTitle.textContent = "COMPILING VIA LUALATEX...";
       pill.className = "page-status-pill rendering";
       pill.textContent = "COMPILING...";
@@ -1731,7 +1951,6 @@ function stripHeavyPackagesForPreview(clsText) {
         resumeState.renderBackend = "local";
         loadSub.textContent = "Compiling locally via 127.0.0.1:8765...";
         hint.textContent = "LIVE LUALATEX OUTPUT (LOCAL HELPER) • CLICK BACK TO RETURN TO EDITOR";
-
         try {
           const t0 = performance.now();
           const res = await fetch(`${LOCAL_COMPILER_BASE}/compile`, {
@@ -1740,20 +1959,13 @@ function stripHeavyPackagesForPreview(clsText) {
             body: JSON.stringify({ engine: "lualatex", files })
           });
           if (!resumeState.isRendered) return;
-
           const blob = await res.blob();
           const elapsed = ((performance.now() - t0) / 1000).toFixed(2);
           resumeState.lastBlobUrl = URL.createObjectURL(blob);
           iframe.src = resumeState.lastBlobUrl;
           loading.classList.remove("visible");
-
-          if (res.ok) {
-            pill.className = "page-status-pill";
-            pill.textContent = `LOCAL RENDER (${elapsed}s)`;
-          } else {
-            pill.className = "page-status-pill overflow";
-            pill.textContent = `LOCAL COMPILE ERROR (${elapsed}s)`;
-          }
+          pill.className = res.ok ? "page-status-pill" : "page-status-pill overflow";
+          pill.textContent = res.ok ? `LOCAL RENDER (${elapsed}s)` : `LOCAL COMPILE ERROR (${elapsed}s)`;
           return;
         } catch {
           resumeState.localServerAvailable = false;
@@ -1761,7 +1973,6 @@ function stripHeavyPackagesForPreview(clsText) {
       }
 
       if (!resumeState.isRendered) return;
-
       resumeState.renderBackend = "texlive";
       loadSub.textContent = "Compiling via texlive.net (fast-stripped PDF)...";
       hint.textContent = "LIVE LUALATEX OUTPUT (TEXLIVE.NET) • CLICK BACK TO RETURN TO EDITOR";
@@ -1771,12 +1982,10 @@ function stripHeavyPackagesForPreview(clsText) {
       form.innerHTML = "";
       appendFormField(document, form, "engine", "lualatex");
       appendFormField(document, form, "return", "pdf");
-
       for (const [fname, content] of Object.entries(files)) {
         appendFormField(document, form, "filename[]", fname);
         appendFormField(document, form, "filecontents[]", content, true);
       }
-
       form.submit();
     }
 
@@ -1784,35 +1993,23 @@ function stripHeavyPackagesForPreview(clsText) {
       resumeState.isRendered = false;
       resumeState.renderBackend = null;
       revokeLastBlobUrl();
-
       const btn = document.getElementById("render-tex-btn");
-      const fitArea = document.getElementById("sheet-fit-area");
-      const renderStage = document.getElementById("tex-render-stage");
-      const loading = document.getElementById("tex-render-loading");
-      const zoomBtn = document.getElementById("zoom-toggle-btn");
-      const hint = document.getElementById("sheet-toolbar-hint");
-
       btn.innerHTML = "&#9881; RENDER";
       btn.classList.remove("is-back");
-      renderStage.classList.remove("active");
-      loading.classList.remove("visible");
-      fitArea.style.display = "flex";
-      zoomBtn.style.display = "";
-      hint.innerHTML = "DRAG &#8942;&#8942; TO REORDER &bull; DRAG RED/BLUE BARS FOR SPACING &bull; DRAG GREEN/RED LINES ON SKILLS &amp; INVOLVEMENT";
-
+      document.getElementById("tex-render-stage").classList.remove("active");
+      document.getElementById("tex-render-loading").classList.remove("visible");
+      document.getElementById("sheet-fit-area").style.display = "flex";
+      document.getElementById("zoom-toggle-btn").style.display = "";
+      document.getElementById("sheet-toolbar-hint").innerHTML = "EVERY TITLE, ROLE, BULLET &amp; ROW IS A SEPARATE PIECE &bull; DRAG &#8942;&#8942; TO MOVE ANYWHERE &bull; HOVER TO DUPLICATE, HIDE, OR DELETE";
       requestAnimationFrame(checkPageOverflow);
     }
 
     function toggleTexRender() {
-      if (resumeState.isRendered) {
-        exitTexRenderMode();
-      } else {
-        enterTexRenderMode();
-      }
+      resumeState.isRendered ? exitTexRenderMode() : enterTexRenderMode();
     }
 
     // =========================================================================
-    // LATEX PARSING
+    // LATEX PARSING (DECOMPOSES \cventry & \az* INTO ATOMIC PIECES)
     // =========================================================================
     function extractBraceArgs(str, startIndex, count) {
       const args = [];
@@ -1843,9 +2040,7 @@ function stripHeavyPackagesForPreview(clsText) {
 
     function parseMainTex(rawTex) {
       let legacySkillDefaults = null;
-      const skillLayoutMatch = rawTex.match(
-        /AZCORE_SKILL_LAYOUT:\s*offset=([-\d.]+)mm,\s*catw=([-\d.]+)mm,\s*gap=([-\d.]+)mm/
-      );
+      const skillLayoutMatch = rawTex.match(/AZCORE_SKILL_LAYOUT:\s*offset=([-\d.]+)mm,\s*catw=([-\d.]+)mm,\s*gap=([-\d.]+)mm/);
       if (skillLayoutMatch) {
         legacySkillDefaults = {
           offset: parseFloat(skillLayoutMatch[1]),
@@ -1855,7 +2050,6 @@ function stripHeavyPackagesForPreview(clsText) {
       }
 
       const tex = stripLatexComments(rawTex);
-
       const docClassMatch = tex.match(/\\documentclass\[([^\]]+)\]\{awesome-cv\}/);
       if (docClassMatch) {
         resumeState.page.size = /\ba4paper\b/i.test(docClassMatch[1]) ? "a4paper" : "letterpaper";
@@ -1874,12 +2068,7 @@ function stripHeavyPackagesForPreview(clsText) {
       }
 
       const headerAfterMatch = tex.match(/\\renewcommand\{\\acvHeaderAfterSocialSkip\}\{([^}]+)\}/);
-      if (headerAfterMatch) {
-        const mm = parseLengthToMm(headerAfterMatch[1]);
-        if (mm !== null) resumeState.spacing.headerAfterMm = mm;
-      } else {
-        resumeState.spacing.headerAfterMm = 3.5;
-      }
+      resumeState.spacing.headerAfterMm = headerAfterMatch ? (parseLengthToMm(headerAfterMatch[1]) ?? 3.5) : 3.5;
 
       const skipMatch = tex.match(/\\renewcommand\{\\acvSectionTopSkip\}\{([^}]+)\}/);
       if (skipMatch) {
@@ -1967,106 +2156,168 @@ function stripHeavyPackagesForPreview(clsText) {
       return layout;
     }
 
+    function preprocessSectionTex(rawTex) {
+      return rawTex
+        .split(/\r?\n/)
+        .map((line) => {
+          if (/^\s*%\s*AZCORE_HIDDEN\s/.test(line)) {
+            return line.replace(/^\s*%\s*AZCORE_HIDDEN\s/, "__AZH__ ");
+          }
+          if (/^\s*%\s*AZCORE_(?:BLK|ENTRY)_VSPACE:\s*([-\d.]+)mm/.test(line)) {
+            const m = line.match(/VSPACE:\s*([-\d.]+)mm/);
+            return `__AZV__${m[1]}__`;
+          }
+          return line;
+        })
+        .join("\n");
+    }
+
     function parseSectionFile(filePath, rawTex, legacySkillDefaults) {
-      const tex = stripLatexComments(rawTex);
+      const pre = preprocessSectionTex(rawTex);
+      const tex = stripLatexComments(pre);
       const secMatch = tex.match(/\\cvsection\{([^}]+)\}/);
       const title = secMatch ? unescapeTex(secMatch[1]) : filePath.replace(/^cv\/|\.tex$/g, "");
 
       if (tex.includes("\\begin{cvhonors}") || tex.includes("\\cvhonor")) {
         const groups = [];
         let currentGroup = { subsection: "", items: [] };
-        const tokenRx = /\\(cvsubsection|cvhonor)(?![a-zA-Z])/g;
+        const tokenRx = /(__AZH__\s*)?\\(cvsubsection|cvhonor)(?![a-zA-Z])/g;
         let m;
         while ((m = tokenRx.exec(tex)) !== null) {
-          if (m[1] === "cvsubsection") {
-            const { args, endIndex } = extractBraceArgs(tex, m.index + 13, 1);
+          const isHidden = Boolean(m[1]);
+          const cmd = m[2];
+          if (cmd === "cvsubsection") {
+            const { args, endIndex } = extractBraceArgs(tex, m.index + m[0].length, 1);
             if (currentGroup.items.length || currentGroup.subsection) groups.push(currentGroup);
             currentGroup = { subsection: args[0] ? unescapeTex(args[0]) : "", items: [] };
             tokenRx.lastIndex = endIndex;
-          } else if (m[1] === "cvhonor") {
-            const { args, endIndex } = extractBraceArgs(tex, m.index + 8, 4);
+          } else if (cmd === "cvhonor") {
+            const cleanSlice = tex.slice(m.index + m[0].length).replace(/__AZH__\s*/g, "");
+            const { args } = extractBraceArgs(cleanSlice, 0, 4);
             if (args.length === 4) {
               currentGroup.items.push({
+                enabled: !isHidden,
                 position: unescapeTex(args[0]),
                 title: unescapeTex(args[1]),
                 location: unescapeTex(args[2]),
                 date: unescapeTex(args[3])
               });
             }
-            tokenRx.lastIndex = endIndex;
           }
         }
-        if (currentGroup.items.length || currentGroup.subsection || !groups.length) {
-          groups.push(currentGroup);
-        }
+        if (currentGroup.items.length || currentGroup.subsection || !groups.length) groups.push(currentGroup);
         return {
-          file: filePath,
-          title,
-          type: "honors",
-          expanded: false,
-          layout: parseSecLayoutMeta(rawTex, "honors", legacySkillDefaults),
-          groups
+          file: filePath, title, type: "honors", expanded: false, activeTab: "items",
+          layout: parseSecLayoutMeta(rawTex, "honors", legacySkillDefaults), groups
         };
       }
 
       if (tex.includes("\\begin{cvskills}") || tex.includes("\\cvskill")) {
         const items = [];
-        let idx = 0;
-        while ((idx = tex.indexOf("\\cvskill", idx)) !== -1) {
-          const nextChar = tex[idx + 8];
-          if (nextChar && /[a-zA-Z]/.test(nextChar)) { idx += 8; continue; }
-          const { args, endIndex } = extractBraceArgs(tex, idx + 8, 2);
+        const rx = /(__AZH__\s*)?\\cvskill(?![a-zA-Z])/g;
+        let m;
+        while ((m = rx.exec(tex)) !== null) {
+          const isHidden = Boolean(m[1]);
+          const cleanSlice = tex.slice(m.index + m[0].length).replace(/__AZH__\s*/g, "");
+          const { args } = extractBraceArgs(cleanSlice, 0, 2);
           if (args.length === 2) {
-            items.push({ category: unescapeTex(args[0]), list: unescapeTex(args[1]) });
+            items.push({
+              enabled: !isHidden,
+              category: unescapeTex(args[0]),
+              list: unescapeTex(args[1])
+            });
           }
-          idx = endIndex > idx ? endIndex : idx + 8;
         }
         return {
-          file: filePath,
-          title,
-          type: "skills",
-          expanded: false,
-          layout: parseSecLayoutMeta(rawTex, "skills", legacySkillDefaults),
-          items
+          file: filePath, title, type: "skills", expanded: false, activeTab: "items",
+          layout: parseSecLayoutMeta(rawTex, "skills", legacySkillDefaults), items
         };
       }
 
-      const items = [];
-      let idx = 0;
-      while ((idx = tex.indexOf("\\cventry", idx)) !== -1) {
-        const { args, endIndex } = extractBraceArgs(tex, idx + 8, 5);
-        if (args.length === 5) {
-          const bullets = [];
-          let bIdx = 0;
-          const body = args[4];
-          while ((bIdx = body.indexOf("\\item", bIdx)) !== -1) {
-            const { args: bArgs, endIndex: bEnd } = extractBraceArgs(body, bIdx + 5, 1);
-            if (bArgs.length === 1) bullets.push(unescapeTex(bArgs[0]));
-            bIdx = bEnd > bIdx ? bEnd : bIdx + 5;
+      // Entries -> decompose into atomic blocks inside \begin{cventries}...\end{cventries}
+      const envStart = tex.indexOf("\\begin{cventries}");
+      const envEnd = tex.indexOf("\\end{cventries}");
+      const bodyTex = envStart !== -1
+        ? tex.slice(envStart + 17, envEnd !== -1 ? envEnd : undefined)
+        : tex;
+
+      const blocks = [];
+      const tokenRx = /(?:__AZV__([-\d.]+)__[\s\S]{0,60}?)?(__AZH__\s*)?\\(cventry|aztitle|azrole|azbullet|aztext)(?![a-zA-Z])/g;
+      let m;
+      while ((m = tokenRx.exec(bodyTex)) !== null) {
+        const vspaceMm = m[1] ? parseFloat(m[1]) : 0;
+        const isHidden = Boolean(m[2]);
+        const cmd = m[3];
+        const afterIdx = m.index + m[0].length;
+        const cleanSlice = bodyTex.slice(afterIdx).replace(/__AZH__\s*/g, "");
+
+        if (cmd === "cventry") {
+          const { args } = extractBraceArgs(cleanSlice, 0, 5);
+          if (args.length === 5) {
+            const role = unescapeTex(args[0]);
+            const org = unescapeTex(args[1]);
+            const loc = unescapeTex(args[2]);
+            const date = unescapeTex(args[3]);
+            const hasTitle = Boolean(org || loc);
+            if (hasTitle) {
+              blocks.push({ kind: "title", enabled: !isHidden, expanded: false, vspaceMm: isNaN(vspaceMm) ? 0 : vspaceMm, left: org, right: loc });
+            }
+            if (role || date) {
+              blocks.push({ kind: "role", enabled: !isHidden, expanded: false, vspaceMm: hasTitle ? 0 : (isNaN(vspaceMm) ? 0 : vspaceMm), left: role, right: date });
+            }
+            let bIdx = 0;
+            const bBody = args[4];
+            while ((bIdx = bBody.indexOf("\\item", bIdx)) !== -1) {
+              const { args: bArgs, endIndex: bEnd } = extractBraceArgs(bBody, bIdx + 5, 1);
+              if (bArgs.length === 1) {
+                blocks.push({ kind: "bullet", enabled: !isHidden, expanded: false, vspaceMm: 0, text: unescapeTex(bArgs[0]) });
+              }
+              bIdx = bEnd > bIdx ? bEnd : bIdx + 5;
+            }
           }
-          items.push({
-            role: unescapeTex(args[0]),
-            org: unescapeTex(args[1]),
-            loc: unescapeTex(args[2]),
-            date: unescapeTex(args[3]),
-            bullets
-          });
+        } else if (cmd === "aztitle") {
+          const { args } = extractBraceArgs(cleanSlice, 0, 2);
+          if (args.length === 2) {
+            blocks.push({ kind: "title", enabled: !isHidden, expanded: false, vspaceMm: isNaN(vspaceMm) ? 0 : vspaceMm, left: unescapeTex(args[0]), right: unescapeTex(args[1]) });
+          }
+        } else if (cmd === "azrole") {
+          const { args } = extractBraceArgs(cleanSlice, 0, 2);
+          if (args.length === 2) {
+            blocks.push({ kind: "role", enabled: !isHidden, expanded: false, vspaceMm: isNaN(vspaceMm) ? 0 : vspaceMm, left: unescapeTex(args[0]), right: unescapeTex(args[1]) });
+          }
+        } else if (cmd === "azbullet") {
+          const { args } = extractBraceArgs(cleanSlice, 0, 1);
+          if (args.length === 1) {
+            blocks.push({ kind: "bullet", enabled: !isHidden, expanded: false, vspaceMm: isNaN(vspaceMm) ? 0 : vspaceMm, text: unescapeTex(args[0]) });
+          }
+        } else if (cmd === "aztext") {
+          const { args } = extractBraceArgs(cleanSlice, 0, 1);
+          if (args.length === 1) {
+            blocks.push({ kind: "text", enabled: !isHidden, expanded: false, vspaceMm: isNaN(vspaceMm) ? 0 : vspaceMm, text: unescapeTex(args[0]) });
+          }
         }
-        idx = endIndex > idx ? endIndex : idx + 8;
       }
+
       return {
-        file: filePath,
-        title,
-        type: "entries",
-        expanded: false,
-        layout: parseSecLayoutMeta(rawTex, "entries", legacySkillDefaults),
-        items
+        file: filePath, title, type: "entries", expanded: false, activeTab: "items",
+        layout: parseSecLayoutMeta(rawTex, "entries", legacySkillDefaults), blocks
       };
     }
 
     // =========================================================================
-    // LIVE STYLE UPDATES (GLOBAL & PER-SECTION)
+    // LIVE STYLE UPDATES
     // =========================================================================
+    function syncHeaderInputs() {
+      document.querySelectorAll("[data-hdr]").forEach((inp) => {
+        inp.value = resumeState.header[inp.dataset.hdr] || "";
+      });
+      document.getElementById("cb-footer-enabled").checked = resumeState.footer.enabled;
+      document.getElementById("footer-fields-wrap").style.display = resumeState.footer.enabled ? "flex" : "none";
+      document.querySelectorAll("[data-ftr]").forEach((inp) => {
+        inp.value = resumeState.footer[inp.dataset.ftr] || "";
+      });
+    }
+
     function applySpacingCssVars() {
       const r = document.documentElement.style;
       const sp = resumeState.spacing;
@@ -2080,31 +2331,32 @@ function stripHeavyPackagesForPreview(clsText) {
       r.setProperty("--cv-margin-x", `${sp.marginXMm}mm`);
       r.setProperty("--cv-margin-top", `${sp.marginTopMm}mm`);
       r.setProperty("--cv-margin-bottom", `${sp.marginBottomMm}mm`);
+      r.setProperty("--cv-font-scale", `${sp.fontScale}`);
       r.setProperty("--cv-awesome", `#${resumeState.theme.awesomeHex}`);
 
       const printStyle = document.getElementById("dynamic-print-page");
-      if (printStyle) {
-        printStyle.textContent = `@media print { @page { size: ${spec.cssSize}; margin: 0; } }`;
-      }
+      if (printStyle) printStyle.textContent = `@media print { @page { size: ${spec.cssSize}; margin: 0; } }`;
 
       document.getElementById("sel-page-size").value = resumeState.page.size;
       document.getElementById("inp-page-count").value = resumeState.page.count;
-
       document.getElementById("val-header-after").textContent = `${sp.headerAfterMm.toFixed(1)}mm`;
       document.getElementById("val-sec-gap").textContent = `${sp.sectionTopMm.toFixed(1)}mm`;
       document.getElementById("val-margin-x").textContent = `${sp.marginXMm}mm`;
       document.getElementById("val-margin-top").textContent = `${sp.marginTopMm}mm`;
       document.getElementById("val-margin-bottom").textContent = `${sp.marginBottomMm}mm`;
+      document.getElementById("val-font-scale").textContent = `${Math.round(sp.fontScale * 100)}%`;
 
       document.getElementById("sl-header-after").value = sp.headerAfterMm;
       document.getElementById("sl-sec-gap").value = sp.sectionTopMm;
       document.getElementById("sl-margin-x").value = sp.marginXMm;
       document.getElementById("sl-margin-top").value = sp.marginTopMm;
       document.getElementById("sl-margin-bottom").value = sp.marginBottomMm;
+      document.getElementById("sl-font-scale").value = sp.fontScale;
 
       document.getElementById("cb-sec-highlight").checked = resumeState.theme.sectionHighlight;
       document.getElementById("color-awesome").value = `#${resumeState.theme.awesomeHex}`;
 
+      syncHeaderInputs();
       renderPageBreakGuides();
     }
 
@@ -2143,13 +2395,11 @@ function stripHeavyPackagesForPreview(clsText) {
           if (colPill) colPill.textContent = `↔ W: ${sec.layout.skillCatWidthMm.toFixed(1)}mm`;
         }
       }
-
       const vspaceHandle = document.querySelector(`.spacing-drag-handle[data-sec-idx="${sIdx}"]`);
       if (vspaceHandle) {
         const pill = vspaceHandle.querySelector(".spacing-drag-pill");
         if (pill) pill.textContent = `↕ \\vspace{${sec.vspaceMm.toFixed(1)}mm}`;
       }
-
       const card = document.querySelector(`.section-order-card[data-idx="${sIdx}"]`);
       if (card) {
         const badge = card.querySelector(".sec-vspace-readout");
@@ -2174,17 +2424,14 @@ function stripHeavyPackagesForPreview(clsText) {
 
     function checkPageOverflow() {
       if (resumeState.isRendered) return;
-
       const pill = document.getElementById("page-status-pill");
       const bodyWrap = document.getElementById("cv-body-wrap");
-
       if (!resumeState.mounted || !bodyWrap) {
         pill.className = "page-status-pill";
         pill.textContent = "WAITING FOR MOUNT";
         updateSheetScale();
         return;
       }
-
       const spec = getPageSpec();
       const sp = resumeState.spacing;
       const pages = resumeState.page.count;
@@ -2202,14 +2449,12 @@ function stripHeavyPackagesForPreview(clsText) {
         pill.className = "page-status-pill";
         pill.textContent = `FITS ${pageWord} (${pct}%)`;
       }
-
       updateSheetScale();
     }
 
     function renderTexInspector(triggerPopout = true) {
       const tabBar = document.getElementById("tex-tab-bar");
       const area = document.getElementById("tex-code-area");
-
       if (!resumeState.mounted) {
         tabBar.innerHTML = "";
         area.value = "% Mount AZcore folder to load assets/resume/main.tex and all cv/*.tex files.";
@@ -2220,7 +2465,7 @@ function stripHeavyPackagesForPreview(clsText) {
       if (!files.includes(resumeState.activeTexTab)) resumeState.activeTexTab = "main.tex";
 
       tabBar.innerHTML = files
-        .map((f) => `<button type="button" class="tex-tab-btn ${f === resumeState.activeTexTab ? "active" : ""}" data-file="${f}">${f.replace("cv/", "")}</button>`)
+        .map((f) => `<button type="button" class="tex-tab-btn ${f === resumeState.activeTexTab ? "active" : ""}" data-file="${escHtml(f)}">${escHtml(f.replace("cv/", ""))}</button>`)
         .join("");
 
       tabBar.querySelectorAll(".tex-tab-btn").forEach((btn) => {
@@ -2252,6 +2497,81 @@ function stripHeavyPackagesForPreview(clsText) {
       `;
     }
 
+    // =========================================================================
+    // SIDEBAR SECTION & ATOMIC PIECE MANAGER
+    // =========================================================================
+    function renderSectionItemsList(s, sIdx) {
+      if (s.type === "entries") {
+        if (!s.blocks.length) return `<div style="font-size:0.65rem; color:var(--text-muted);">No blocks yet. Add a Title, Role, or Bullet below.</div>`;
+        const tagMap = { title: "T", role: "R", bullet: "•", text: "P" };
+        return `<div class="sidebar-item-list">${s.blocks.map((blk, bIdx) => {
+          const label = blk.kind === "title" || blk.kind === "role" ? (blk.left || "(empty)") : (blk.text || "(empty)");
+          const extraHtml = blk.expanded ? `
+            <div class="sidebar-item-extra">
+              <div class="slider-row">
+                <div class="slider-row-head">
+                  <span>TOP SPACE (\\vspace)</span>
+                  <span data-blk-vspace-val="${sIdx}:${bIdx}">${(blk.vspaceMm || 0).toFixed(1)}mm</span>
+                </div>
+                <input type="range" data-blk-vspace="${sIdx}:${bIdx}" min="-6" max="14" step="0.5" value="${blk.vspaceMm || 0}" />
+              </div>
+            </div>
+          ` : "";
+
+          return `
+            <div class="sidebar-item-card k-${blk.kind} ${blk.enabled === false ? "disabled-item" : ""}" data-sb-piece="entries:${sIdx}:0:${bIdx}" draggable="true">
+              <div class="sidebar-item-head">
+                <span class="item-drag-grip" title="Drag to reorder">&#8942;&#8942;</span>
+                <input type="checkbox" class="sb-item-toggle" data-sb-piece="entries:${sIdx}:0:${bIdx}" ${blk.enabled !== false ? "checked" : ""} title="Show/Hide piece" />
+                <span class="blk-kind-tag k-${blk.kind}">${tagMap[blk.kind] || "?"}</span>
+                <div class="sidebar-item-title" title="${escHtml(label)}">${escHtml(label)}</div>
+                <div style="display:flex; gap:2px; flex-shrink:0;">
+                  <button type="button" class="icon-btn ${blk.expanded ? "active" : ""}" data-sb-exp="${sIdx}:${bIdx}" title="Per-piece spacing">&#9881;</button>
+                  <button type="button" class="icon-btn" data-sb-dup="${sIdx}:0:${bIdx}" title="Duplicate">&#10697;</button>
+                  <button type="button" class="icon-btn danger" data-sb-del="${sIdx}:0:${bIdx}" title="Delete">&times;</button>
+                </div>
+              </div>
+              ${extraHtml}
+            </div>
+          `;
+        }).join("")}</div>`;
+      }
+
+      if (s.type === "honors") {
+        const flat = [];
+        s.groups.forEach((g, gIdx) => g.items.forEach((item, iIdx) => flat.push({ item, gIdx, iIdx })));
+        if (!flat.length) return `<div style="font-size:0.65rem; color:var(--text-muted);">No honors yet.</div>`;
+        return `<div class="sidebar-item-list">${flat.map(({ item, gIdx, iIdx }) => `
+          <div class="sidebar-item-card ${item.enabled === false ? "disabled-item" : ""}" data-sb-piece="honors:${sIdx}:${gIdx}:${iIdx}" draggable="true">
+            <div class="sidebar-item-head">
+              <span class="item-drag-grip">&#8942;&#8942;</span>
+              <input type="checkbox" class="sb-item-toggle" data-sb-piece="honors:${sIdx}:${gIdx}:${iIdx}" ${item.enabled !== false ? "checked" : ""} />
+              <div class="sidebar-item-title">${escHtml(item.position || "Untitled")}</div>
+              <div style="display:flex; gap:2px;">
+                <button type="button" class="icon-btn" data-sb-dup="${sIdx}:${gIdx}:${iIdx}">&#10697;</button>
+                <button type="button" class="icon-btn danger" data-sb-del="${sIdx}:${gIdx}:${iIdx}">&times;</button>
+              </div>
+            </div>
+          </div>
+        `).join("")}</div>`;
+      }
+
+      if (!s.items.length) return `<div style="font-size:0.65rem; color:var(--text-muted);">No rows yet.</div>`;
+      return `<div class="sidebar-item-list">${s.items.map((item, iIdx) => `
+        <div class="sidebar-item-card ${item.enabled === false ? "disabled-item" : ""}" data-sb-piece="skills:${sIdx}:0:${iIdx}" draggable="true">
+          <div class="sidebar-item-head">
+            <span class="item-drag-grip">&#8942;&#8942;</span>
+            <input type="checkbox" class="sb-item-toggle" data-sb-piece="skills:${sIdx}:0:${iIdx}" ${item.enabled !== false ? "checked" : ""} />
+            <div class="sidebar-item-title" title="${escHtml(item.category)}">${escHtml(item.category || "Category")}</div>
+            <div style="display:flex; gap:2px;">
+              <button type="button" class="icon-btn" data-sb-dup="${sIdx}:0:${iIdx}">&#10697;</button>
+              <button type="button" class="icon-btn danger" data-sb-del="${sIdx}:0:${iIdx}">&times;</button>
+            </div>
+          </div>
+        </div>
+      `).join("")}</div>`;
+    }
+
     function renderSectionManager() {
       const list = document.getElementById("section-order-list");
       if (!resumeState.mounted) {
@@ -2262,35 +2582,72 @@ function stripHeavyPackagesForPreview(clsText) {
       list.innerHTML = resumeState.sections
         .map((s, idx) => {
           const lay = s.layout;
+          const itemCount = s.type === "entries"
+            ? s.blocks.length
+            : s.type === "honors"
+              ? s.groups.reduce((acc, g) => acc + g.items.length, 0)
+              : s.items.length;
+
           let drawerHtml = "";
           if (s.expanded) {
-            let extraSliders = "";
-            if (s.type === "skills") {
-              extraSliders = `
-                ${buildSectionSliderRow(idx, "skillOffsetMm", "HORIZONTAL OFFSET (X)", -10, 40, 0.5, lay.skillOffsetMm)}
-                ${buildSectionSliderRow(idx, "skillCatWidthMm", "LABEL COLUMN WIDTH", 15, 65, 0.5, lay.skillCatWidthMm)}
-                ${buildSectionSliderRow(idx, "skillGapMm", "LABEL / LIST GAP", 1, 12, 0.5, lay.skillGapMm)}
-                ${buildSectionSliderRow(idx, "rowStretch", "ROW SPACING", 0.75, 1.5, 0.05, lay.rowStretch)}
-              `;
-            } else if (s.type === "honors") {
-              extraSliders = `
-                ${buildSectionSliderRow(idx, "rowStretch", "ROW SPACING", 0.75, 1.5, 0.05, lay.rowStretch)}
+            const tab = s.activeTab || "items";
+            let tabBody = "";
+
+            if (tab === "items") {
+              const addButtons = s.type === "entries"
+                ? `<div style="display:flex; gap:3px; flex-wrap:wrap;">
+                     <button type="button" class="mini-action-btn" data-sb-add="${idx}:title">+ TITLE</button>
+                     <button type="button" class="mini-action-btn" data-sb-add="${idx}:role">+ ROLE</button>
+                     <button type="button" class="mini-action-btn" data-sb-add="${idx}:bullet">+ BULLET</button>
+                     <button type="button" class="mini-action-btn" data-sb-add="${idx}:text">+ TEXT</button>
+                   </div>`
+                : `<button type="button" class="mini-action-btn" data-sb-add="${idx}:row">+ ADD ${s.type === "skills" ? "ROW" : "HONOR"}</button>`;
+
+              tabBody = `
+                <div class="section-items-drawer">
+                  ${renderSectionItemsList(s, idx)}
+                  <div class="section-drawer-footer">
+                    ${addButtons}
+                    <button type="button" class="icon-btn danger" data-del-sec="${idx}" title="Remove section">DEL SEC</button>
+                  </div>
+                </div>
               `;
             } else {
-              extraSliders = `
-                ${buildSectionSliderRow(idx, "entryGapMm", "ENTRY GAP", 0, 8, 0.25, lay.entryGapMm)}
-                ${buildSectionSliderRow(idx, "bulletGapMm", "BULLET GAP", 0, 4, 0.25, lay.bulletGapMm)}
+              let extraSliders = "";
+              if (s.type === "skills") {
+                extraSliders = `
+                  ${buildSectionSliderRow(idx, "skillOffsetMm", "HORIZONTAL OFFSET (X)", -10, 40, 0.5, lay.skillOffsetMm)}
+                  ${buildSectionSliderRow(idx, "skillCatWidthMm", "LABEL COLUMN WIDTH", 15, 65, 0.5, lay.skillCatWidthMm)}
+                  ${buildSectionSliderRow(idx, "skillGapMm", "LABEL / LIST GAP", 1, 12, 0.5, lay.skillGapMm)}
+                  ${buildSectionSliderRow(idx, "rowStretch", "ROW SPACING", 0.75, 1.5, 0.05, lay.rowStretch)}
+                `;
+              } else if (s.type === "honors") {
+                extraSliders = buildSectionSliderRow(idx, "rowStretch", "ROW SPACING", 0.75, 1.5, 0.05, lay.rowStretch);
+              } else {
+                extraSliders = `
+                  ${buildSectionSliderRow(idx, "entryGapMm", "TITLE / ENTRY GAP", 0, 8, 0.25, lay.entryGapMm)}
+                  ${buildSectionSliderRow(idx, "bulletGapMm", "BULLET GAP", 0, 4, 0.25, lay.bulletGapMm)}
+                `;
+              }
+              tabBody = `
+                <div class="section-sliders-drawer">
+                  ${buildSectionSliderRow(idx, "vspaceMm", "TOP SPACE (\\vspace)", -10, 20, 0.5, s.vspaceMm)}
+                  ${buildSectionSliderRow(idx, "contentSkipMm", "HEADING → CONTENT GAP", -2, 12, 0.5, lay.contentSkipMm)}
+                  ${extraSliders}
+                  <div class="section-drawer-footer">
+                    <button type="button" class="mini-action-btn" data-reset-sec="${idx}">RESET ${escHtml(s.title.toUpperCase())}</button>
+                  </div>
+                </div>
               `;
             }
 
             drawerHtml = `
-              <div class="section-sliders-drawer">
-                ${buildSectionSliderRow(idx, "vspaceMm", "TOP SPACE (\\vspace)", -10, 20, 0.5, s.vspaceMm)}
-                ${buildSectionSliderRow(idx, "contentSkipMm", "HEADING → CONTENT GAP", -2, 12, 0.5, lay.contentSkipMm)}
-                ${extraSliders}
-                <div class="section-drawer-footer">
-                  <button type="button" class="mini-action-btn" data-reset-sec="${idx}">RESET ${s.title.toUpperCase()}</button>
+              <div class="section-drawer">
+                <div class="sec-subtab-bar">
+                  <button type="button" class="sec-subtab-btn ${tab === "items" ? "active" : ""}" data-sec-tab="${idx}:items">PIECES (${itemCount})</button>
+                  <button type="button" class="sec-subtab-btn ${tab === "layout" ? "active" : ""}" data-sec-tab="${idx}:layout">LAYOUT</button>
                 </div>
+                ${tabBody}
               </div>
             `;
           }
@@ -2299,16 +2656,16 @@ function stripHeavyPackagesForPreview(clsText) {
             <div class="section-order-card ${s.enabled ? "" : "disabled-sec"}" data-idx="${idx}" draggable="true">
               <div class="section-order-head">
                 <div style="display:flex; align-items:center; gap:6px; min-width:0; flex:1;">
-                  <span class="sec-drag-grip" title="Drag up or down to reorder">&#8942;&#8942;</span>
+                  <span class="sec-drag-grip" title="Drag up or down to reorder section">&#8942;&#8942;</span>
                   <label style="display:flex; align-items:center; gap:6px; cursor:pointer; min-width:0;">
                     <input type="checkbox" data-idx="${idx}" class="sec-toggle-cb" ${s.enabled ? "checked" : ""} />
-                    <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${s.file}">${s.title}</span>
+                    <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${escHtml(s.file)}">${escHtml(s.title)}</span>
                   </label>
-                  <span class="sec-type-badge">${s.type}</span>
-                  <span class="sec-vspace-readout" style="color:var(--text-muted); font-size:0.62rem;">(${s.vspaceMm >= 0 ? "+" : ""}${s.vspaceMm.toFixed(1)}mm)</span>
+                  <span class="sec-type-badge">${itemCount}</span>
+                  <span class="sec-vspace-readout" style="color:var(--text-muted); font-size:0.61rem;">(${s.vspaceMm >= 0 ? "+" : ""}${s.vspaceMm.toFixed(1)}mm)</span>
                 </div>
                 <div style="display:flex; gap:3px; flex-shrink:0;">
-                  <button type="button" class="icon-btn ${s.expanded ? "active" : ""}" data-expand-sec="${idx}" title="Customize section sliders">&#9881;</button>
+                  <button type="button" class="icon-btn ${s.expanded ? "active" : ""}" data-expand-sec="${idx}" title="Expand pieces & layout">${s.expanded ? "&#9662;" : "&#9656;"}</button>
                   <button type="button" class="icon-btn" data-move="up" data-idx="${idx}" title="Move up">&#8593;</button>
                   <button type="button" class="icon-btn" data-move="down" data-idx="${idx}" title="Move down">&#8595;</button>
                 </div>
@@ -2319,18 +2676,15 @@ function stripHeavyPackagesForPreview(clsText) {
         })
         .join("");
 
+      // Section drag-and-drop
       list.querySelectorAll(".section-order-card").forEach((card) => {
         card.addEventListener("dragstart", (e) => {
-          if (e.target.closest("input, button, .section-sliders-drawer")) {
-            e.preventDefault();
-            return;
-          }
+          if (e.target.closest("input, button, .section-drawer")) { e.preventDefault(); return; }
           draggedSectionIdx = Number(card.dataset.idx);
           card.classList.add("dragging-card");
           e.dataTransfer.effectAllowed = "move";
-          e.dataTransfer.setData("text/plain", String(draggedSectionIdx));
+          e.dataTransfer.setData("text/plain", `sec:${draggedSectionIdx}`);
         });
-
         card.addEventListener("dragover", (e) => {
           if (draggedSectionIdx === null) return;
           e.preventDefault();
@@ -2339,30 +2693,67 @@ function stripHeavyPackagesForPreview(clsText) {
           card.classList.toggle("drop-before", before);
           card.classList.toggle("drop-after", !before);
         });
-
-        card.addEventListener("dragleave", () => {
-          card.classList.remove("drop-before", "drop-after");
-        });
-
+        card.addEventListener("dragleave", () => card.classList.remove("drop-before", "drop-after"));
         card.addEventListener("drop", (e) => {
+          if (draggedSectionIdx === null) return;
           e.preventDefault();
           const targetIdx = Number(card.dataset.idx);
           const before = card.classList.contains("drop-before");
           card.classList.remove("drop-before", "drop-after");
-          if (draggedSectionIdx === null || draggedSectionIdx === targetIdx) return;
-
+          if (draggedSectionIdx === targetIdx) return;
           let insertIdx = before ? targetIdx : targetIdx + 1;
           if (draggedSectionIdx < insertIdx) insertIdx--;
           const from = draggedSectionIdx;
           draggedSectionIdx = null;
           moveSectionIndex(from, insertIdx);
         });
-
         card.addEventListener("dragend", () => {
           draggedSectionIdx = null;
-          list.querySelectorAll(".section-order-card").forEach((c) =>
-            c.classList.remove("dragging-card", "drop-before", "drop-after")
-          );
+          list.querySelectorAll(".section-order-card").forEach((c) => c.classList.remove("dragging-card", "drop-before", "drop-after"));
+        });
+      });
+
+      // Sidebar atomic piece drag-and-drop (supports cross-section for same type!)
+      list.querySelectorAll(".sidebar-item-card").forEach((card) => {
+        card.addEventListener("dragstart", (e) => {
+          if (e.target.closest("input, button, .sidebar-item-extra")) { e.preventDefault(); return; }
+          e.stopPropagation();
+          const [secType, sIdx, gIdx, iIdx] = card.dataset.sbPiece.split(":");
+          draggedPieceRef = { secType, sIdx: Number(sIdx), gIdx: Number(gIdx), iIdx: Number(iIdx) };
+          card.classList.add("dragging-card");
+          e.dataTransfer.effectAllowed = "move";
+          e.dataTransfer.setData("text/plain", `piece:${card.dataset.sbPiece}`);
+        });
+        card.addEventListener("dragover", (e) => {
+          if (!draggedPieceRef) return;
+          const [secType] = card.dataset.sbPiece.split(":");
+          if (secType !== draggedPieceRef.secType) return;
+          e.preventDefault();
+          e.stopPropagation();
+          const rect = card.getBoundingClientRect();
+          const before = e.clientY < rect.top + rect.height / 2;
+          card.classList.toggle("drop-before", before);
+          card.classList.toggle("drop-after", !before);
+        });
+        card.addEventListener("dragleave", () => card.classList.remove("drop-before", "drop-after"));
+        card.addEventListener("drop", (e) => {
+          if (!draggedPieceRef) return;
+          const [secType, sIdxStr, gIdxStr, iIdxStr] = card.dataset.sbPiece.split(":");
+          if (secType !== draggedPieceRef.secType) return;
+          e.preventDefault();
+          e.stopPropagation();
+          const before = card.classList.contains("drop-before");
+          card.classList.remove("drop-before", "drop-after");
+          const toS = Number(sIdxStr), toG = Number(gIdxStr), toI = Number(iIdxStr);
+          if (draggedPieceRef.sIdx === toS && draggedPieceRef.gIdx === toG && draggedPieceRef.iIdx === toI) return;
+          const insertIdx = before ? toI : toI + 1;
+          const ref = draggedPieceRef;
+          draggedPieceRef = null;
+          movePiece(ref.sIdx, ref.gIdx, ref.iIdx, toS, toG, insertIdx);
+        });
+        card.addEventListener("dragend", () => {
+          draggedPieceRef = null;
+          list.querySelectorAll(".sidebar-item-card").forEach((c) => c.classList.remove("dragging-card", "drop-before", "drop-after"));
         });
       });
 
@@ -2372,7 +2763,6 @@ function stripHeavyPackagesForPreview(clsText) {
           renderAll();
         });
       });
-
       list.querySelectorAll("[data-expand-sec]").forEach((btn) => {
         btn.addEventListener("click", () => {
           const i = Number(btn.dataset.expandSec);
@@ -2380,15 +2770,72 @@ function stripHeavyPackagesForPreview(clsText) {
           renderSectionManager();
         });
       });
-
+      list.querySelectorAll("[data-sec-tab]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const [i, tab] = btn.dataset.secTab.split(":");
+          resumeState.sections[Number(i)].activeTab = tab;
+          renderSectionManager();
+        });
+      });
       list.querySelectorAll("[data-move]").forEach((btn) => {
         btn.addEventListener("click", () => {
           const i = Number(btn.dataset.idx);
-          const dir = btn.dataset.move === "up" ? -1 : 1;
-          moveSectionIndex(i, i + dir);
+          moveSectionIndex(i, i + (btn.dataset.move === "up" ? -1 : 1));
         });
       });
-
+      list.querySelectorAll(".sb-item-toggle").forEach((cb) => {
+        cb.addEventListener("change", () => {
+          const [, sIdx, gIdx, iIdx] = cb.dataset.sbPiece.split(":");
+          const arr = getSectionItemsArray(resumeState.sections[Number(sIdx)], Number(gIdx));
+          arr[Number(iIdx)].enabled = cb.checked;
+          renderAll();
+        });
+      });
+      list.querySelectorAll("[data-sb-exp]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const [sIdx, bIdx] = btn.dataset.sbExp.split(":").map(Number);
+          const blk = resumeState.sections[sIdx].blocks[bIdx];
+          blk.expanded = !blk.expanded;
+          renderSectionManager();
+        });
+      });
+      list.querySelectorAll("[data-blk-vspace]").forEach((inp) => {
+        inp.addEventListener("input", () => {
+          const [sIdx, bIdx] = inp.dataset.blkVspace.split(":").map(Number);
+          const val = parseFloat(inp.value);
+          resumeState.sections[sIdx].blocks[bIdx].vspaceMm = val;
+          const out = list.querySelector(`[data-blk-vspace-val="${sIdx}:${bIdx}"]`);
+          if (out) out.textContent = `${val.toFixed(1)}mm`;
+          renderSheet();
+          renderTexInspector();
+        });
+      });
+      list.querySelectorAll("[data-sb-dup]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const [sIdx, gIdx, iIdx] = btn.dataset.sbDup.split(":").map(Number);
+          duplicatePiece(sIdx, gIdx, iIdx);
+        });
+      });
+      list.querySelectorAll("[data-sb-del]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const [sIdx, gIdx, iIdx] = btn.dataset.sbDel.split(":").map(Number);
+          deletePiece(sIdx, gIdx, iIdx);
+        });
+      });
+      list.querySelectorAll("[data-sb-add]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const [sIdx, kind] = btn.dataset.sbAdd.split(":");
+          addNewItemToSection(Number(sIdx), kind);
+        });
+      });
+      list.querySelectorAll("[data-del-sec]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const sIdx = Number(btn.dataset.delSec);
+          if (!confirm(`Remove section "${resumeState.sections[sIdx].title}" from resume?`)) return;
+          resumeState.sections.splice(sIdx, 1);
+          renderAll();
+        });
+      });
       list.querySelectorAll("input[data-sec-prop]").forEach((inp) => {
         inp.addEventListener("input", () => {
           const sIdx = Number(inp.dataset.secIdx);
@@ -2396,16 +2843,13 @@ function stripHeavyPackagesForPreview(clsText) {
           const val = parseFloat(inp.value);
           const sec = resumeState.sections[sIdx];
           if (!sec || isNaN(val)) return;
-
           if (prop === "vspaceMm") sec.vspaceMm = val;
           else sec.layout[prop] = val;
-
           syncSectionBlockDom(sIdx);
           renderTexInspector();
           checkPageOverflow();
         });
       });
-
       list.querySelectorAll("[data-reset-sec]").forEach((btn) => {
         btn.addEventListener("click", () => {
           const sIdx = Number(btn.dataset.resetSec);
@@ -2420,21 +2864,21 @@ function stripHeavyPackagesForPreview(clsText) {
 
     function renderSectionTitleHtml(title) {
       if (resumeState.theme.sectionHighlight && title.length > 3) {
-        return `<span class="cv-section-accent">${title.slice(0, 3)}</span>${title.slice(3)}`;
+        return `<span class="cv-section-accent">${escHtml(title.slice(0, 3))}</span>${escHtml(title.slice(3))}`;
       }
-      return title;
+      return escHtml(title);
     }
 
+    // =========================================================================
+    // LIVE SHEET RENDERING (EVERY PIECE SEPARATE)
+    // =========================================================================
     function renderSheet() {
       const root = document.getElementById("cv-sheet-content");
-
       if (!resumeState.mounted) {
         root.innerHTML = `
           <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:860px; text-align:center; gap:18px; opacity:0.7;">
             <div style="font-size:64px;">&#128193;</div>
-            <div style="font-family:'JetBrains Mono',monospace; font-size:1.1rem; font-weight:700; color:#555;">
-              NO DATA LOADED
-            </div>
+            <div style="font-family:'JetBrains Mono',monospace; font-size:1.1rem; font-weight:700; color:#555;">NO DATA LOADED</div>
             <div style="font-family:'Source Sans 3',sans-serif; font-size:0.92rem; color:#888; max-width:400px; line-height:1.5;">
               Click <strong style="color:#d92804;">MOUNT AZcore FOLDER</strong> above to dynamically load <code>assets/resume/main.tex</code> and all <code>assets/resume/cv/*.tex</code> files.
             </div>
@@ -2446,22 +2890,22 @@ function stripHeavyPackagesForPreview(clsText) {
 
       const h = resumeState.header;
       const contactItems = [
-        h.mobile ? `<span class="cv-contact-item"><i class="fa-solid fa-mobile-screen-button"></i> <span contenteditable="true" data-bind="header.mobile">${h.mobile}</span></span>` : "",
-        h.email ? `<span class="cv-contact-item"><i class="fa-solid fa-envelope"></i> <span contenteditable="true" data-bind="header.email">${h.email}</span></span>` : "",
-        h.homepage ? `<span class="cv-contact-item"><i class="fa-solid fa-house"></i> <span contenteditable="true" data-bind="header.homepage">${h.homepage}</span></span>` : "",
-        h.github ? `<span class="cv-contact-item"><i class="fa-brands fa-github"></i> <span contenteditable="true" data-bind="header.github">${h.github}</span></span>` : "",
-        h.linkedin ? `<span class="cv-contact-item"><i class="fa-brands fa-linkedin"></i> <span contenteditable="true" data-bind="header.linkedin">${h.linkedin}</span></span>` : ""
+        h.mobile ? `<span class="cv-contact-item"><i class="fa-solid fa-mobile-screen-button"></i> <span contenteditable="true" data-bind="header.mobile">${escHtml(h.mobile)}</span></span>` : "",
+        h.email ? `<span class="cv-contact-item"><i class="fa-solid fa-envelope"></i> <span contenteditable="true" data-bind="header.email">${escHtml(h.email)}</span></span>` : "",
+        h.homepage ? `<span class="cv-contact-item"><i class="fa-solid fa-house"></i> <span contenteditable="true" data-bind="header.homepage">${escHtml(h.homepage)}</span></span>` : "",
+        h.github ? `<span class="cv-contact-item"><i class="fa-brands fa-github"></i> <span contenteditable="true" data-bind="header.github">${escHtml(h.github)}</span></span>` : "",
+        h.linkedin ? `<span class="cv-contact-item"><i class="fa-brands fa-linkedin"></i> <span contenteditable="true" data-bind="header.linkedin">${escHtml(h.linkedin)}</span></span>` : ""
       ].filter(Boolean).join(`<span class="cv-contact-sep">|</span>`);
 
       let html = `
         <div id="cv-body-wrap" class="cv-body-wrap">
           <div class="cv-header">
             <div class="cv-name">
-              <span class="cv-first-name" contenteditable="true" data-bind="header.firstName">${h.firstName}</span>
-              <span class="cv-last-name" contenteditable="true" data-bind="header.lastName">${h.lastName}</span>
+              <span class="cv-first-name" contenteditable="true" data-bind="header.firstName">${escHtml(h.firstName)}</span>
+              <span class="cv-last-name" contenteditable="true" data-bind="header.lastName">${escHtml(h.lastName)}</span>
             </div>
-            ${h.position ? `<div class="cv-position" contenteditable="true" data-bind="header.position">${h.position}</div>` : ""}
-            ${h.address ? `<div class="cv-address" contenteditable="true" data-bind="header.address">${h.address}</div>` : ""}
+            ${h.position ? `<div class="cv-position" contenteditable="true" data-bind="header.position">${escHtml(h.position)}</div>` : ""}
+            ${h.address ? `<div class="cv-address" contenteditable="true" data-bind="header.address">${escHtml(h.address)}</div>` : ""}
             <div class="cv-contact">${contactItems}</div>
           </div>
       `;
@@ -2469,18 +2913,29 @@ function stripHeavyPackagesForPreview(clsText) {
       resumeState.sections.forEach((sec, sIdx) => {
         if (!sec.enabled) return;
 
+        const addBarHtml = sec.type === "entries"
+          ? `<div class="cv-section-add-bar">
+               <button type="button" class="cv-section-add-btn" data-add-item="${sIdx}:title">+ TITLE</button>
+               <button type="button" class="cv-section-add-btn" data-add-item="${sIdx}:role">+ ROLE</button>
+               <button type="button" class="cv-section-add-btn" data-add-item="${sIdx}:bullet">+ BULLET</button>
+               <button type="button" class="cv-section-add-btn" data-add-item="${sIdx}:text">+ TEXT</button>
+             </div>`
+          : `<div class="cv-section-add-bar">
+               <button type="button" class="cv-section-add-btn" data-add-item="${sIdx}:row">+ ADD ${sec.type === "skills" ? "ROW" : "HONOR"}</button>
+             </div>`;
+
         html += `
-          <div class="spacing-drag-handle" data-sec-idx="${sIdx}" title="Drag vertically to adjust \\vspace{} above ${sec.title}">
+          <div class="spacing-drag-handle" data-sec-idx="${sIdx}" title="Drag vertically to adjust \\vspace{} above ${escHtml(sec.title)}">
             <span class="spacing-drag-pill">&#8597; \\vspace{${sec.vspaceMm.toFixed(1)}mm}</span>
           </div>
           <div class="cv-section-block" data-sec-idx="${sIdx}" style="${getSectionInlineStyle(sec)}">
-            <div class="sec-reorder-handle" data-sec-idx="${sIdx}" draggable="true" title="Drag up or down to reorder ${sec.title}">&#8942;&#8942;</div>
+            <div class="sec-reorder-handle" data-sec-idx="${sIdx}" draggable="true" title="Drag up or down to reorder ${escHtml(sec.title)}">&#8942;&#8942;</div>
             <div class="cv-section-heading">
               <span class="cv-section-title" contenteditable="true" data-sec-title="${sIdx}">${renderSectionTitleHtml(sec.title)}</span>
               <div class="cv-section-rule"></div>
-              <button type="button" class="cv-section-add-btn" data-add-item="${sIdx}">+ ADD ${sec.type === "skills" ? "ROW" : sec.type === "honors" ? "HONOR" : "ENTRY"}</button>
+              ${addBarHtml}
             </div>
-            <div class="content-skip-drag-handle" data-sec-idx="${sIdx}" title="Drag vertically to adjust gap under ${sec.title} heading">
+            <div class="content-skip-drag-handle" data-sec-idx="${sIdx}" title="Drag vertically to adjust gap under ${escHtml(sec.title)} heading">
               <span class="spacing-drag-pill">&#8597; gap: ${sec.layout.contentSkipMm.toFixed(1)}mm</span>
             </div>
         `;
@@ -2488,45 +2943,49 @@ function stripHeavyPackagesForPreview(clsText) {
         if (sec.type === "skills") {
           html += `<div class="cv-skills-wrap"><table class="cv-skills-table">`;
           sec.items.forEach((row, rIdx) => {
+            if (row.enabled === false) return;
             html += `
-              <tr class="cv-skill-row">
-                <td class="cv-skill-cat" contenteditable="true" data-skill-cat="${sIdx}:${rIdx}">${row.category}</td>
-                <td class="cv-skill-list" contenteditable="true" data-skill-list="${sIdx}:${rIdx}">${row.list}</td>
+              <tr class="cv-skill-row" data-sheet-piece="skills:${sIdx}:0:${rIdx}" draggable="true">
+                <td class="cv-skill-cat" contenteditable="true" data-skill-cat="${sIdx}:${rIdx}">${escHtml(row.category)}</td>
+                <td class="cv-skill-list" contenteditable="true" data-skill-list="${sIdx}:${rIdx}">${escHtml(row.list)}</td>
                 <td class="cv-skill-actions">
-                  <button type="button" class="mini-cv-btn" data-del-item="${sIdx}:${rIdx}">&times;</button>
+                  <button type="button" class="mini-cv-btn" data-move-piece="${sIdx}:0:${rIdx}:-1">&#8593;</button>
+                  <button type="button" class="mini-cv-btn" data-move-piece="${sIdx}:0:${rIdx}:1">&#8595;</button>
+                  <button type="button" class="mini-cv-btn" data-dup-piece="${sIdx}:0:${rIdx}">&#10697;</button>
+                  <button type="button" class="mini-cv-btn" data-del-piece="${sIdx}:0:${rIdx}">&times;</button>
                 </td>
               </tr>
             `;
           });
           html += `
             </table>
-            <div class="skill-offset-drag-handle" data-sec-idx="${sIdx}" title="Drag left/right to shift ${sec.title} block (X offset)">
+            <div class="skill-offset-drag-handle" data-sec-idx="${sIdx}" title="Drag left/right to shift ${escHtml(sec.title)} block (X offset)">
               <span class="skill-drag-pill">&harr; X: ${sec.layout.skillOffsetMm.toFixed(1)}mm</span>
             </div>
-            <div class="skill-col-drag-handle" data-sec-idx="${sIdx}" title="Drag left/right to resize ${sec.title} label column width">
+            <div class="skill-col-drag-handle" data-sec-idx="${sIdx}" title="Drag left/right to resize ${escHtml(sec.title)} label column width">
               <span class="skill-drag-pill">&harr; W: ${sec.layout.skillCatWidthMm.toFixed(1)}mm</span>
             </div>
           </div>`;
         } else if (sec.type === "honors") {
           sec.groups.forEach((g, gIdx) => {
             if (g.subsection) {
-              html += `
-                <div class="cv-subsection-heading">
-                  <span class="cv-subsection-title" contenteditable="true" data-honor-sub="${sIdx}:${gIdx}">${g.subsection}</span>
-                </div>
-              `;
+              html += `<div class="cv-subsection-heading"><span class="cv-subsection-title" contenteditable="true" data-honor-sub="${sIdx}:${gIdx}">${escHtml(g.subsection)}</span></div>`;
             }
             html += `<table class="cv-honors-table">`;
             g.items.forEach((item, iIdx) => {
+              if (item.enabled === false) return;
               html += `
-                <tr class="cv-honor-row">
-                  <td class="cv-honor-date" contenteditable="true" data-honor-field="${sIdx}:${gIdx}:${iIdx}:date">${item.date}</td>
+                <tr class="cv-honor-row" data-sheet-piece="honors:${sIdx}:${gIdx}:${iIdx}" draggable="true">
+                  <td class="cv-honor-date" contenteditable="true" data-honor-field="${sIdx}:${gIdx}:${iIdx}:date">${escHtml(item.date)}</td>
                   <td class="cv-honor-main">
-                    <span class="cv-honor-pos" contenteditable="true" data-honor-field="${sIdx}:${gIdx}:${iIdx}:position">${item.position}</span>${item.title ? ", " : ""}<span contenteditable="true" data-honor-field="${sIdx}:${gIdx}:${iIdx}:title">${item.title}</span>
+                    <span class="cv-honor-pos" contenteditable="true" data-honor-field="${sIdx}:${gIdx}:${iIdx}:position">${escHtml(item.position)}</span>${item.title ? ", " : ""}<span contenteditable="true" data-honor-field="${sIdx}:${gIdx}:${iIdx}:title">${escHtml(item.title)}</span>
                   </td>
-                  <td class="cv-honor-loc" contenteditable="true" data-honor-field="${sIdx}:${gIdx}:${iIdx}:location">${item.location}</td>
+                  <td class="cv-honor-loc" contenteditable="true" data-honor-field="${sIdx}:${gIdx}:${iIdx}:location">${escHtml(item.location)}</td>
                   <td class="cv-skill-actions">
-                    <button type="button" class="mini-cv-btn" data-del-honor="${sIdx}:${gIdx}:${iIdx}">&times;</button>
+                    <button type="button" class="mini-cv-btn" data-move-piece="${sIdx}:${gIdx}:${iIdx}:-1">&#8593;</button>
+                    <button type="button" class="mini-cv-btn" data-move-piece="${sIdx}:${gIdx}:${iIdx}:1">&#8595;</button>
+                    <button type="button" class="mini-cv-btn" data-dup-piece="${sIdx}:${gIdx}:${iIdx}">&#10697;</button>
+                    <button type="button" class="mini-cv-btn" data-del-piece="${sIdx}:${gIdx}:${iIdx}">&times;</button>
                   </td>
                 </tr>
               `;
@@ -2534,40 +2993,58 @@ function stripHeavyPackagesForPreview(clsText) {
             html += `</table>`;
           });
         } else {
-          sec.items.forEach((entry, eIdx) => {
-            html += `
-              <div class="cv-entry">
-                <div class="cv-entry-controls">
-                  <button type="button" class="mini-cv-btn" data-add-bullet="${sIdx}:${eIdx}">+ BULLET</button>
-                  <button type="button" class="mini-cv-btn" data-move-entry="${sIdx}:${eIdx}:-1">&#8593;</button>
-                  <button type="button" class="mini-cv-btn" data-move-entry="${sIdx}:${eIdx}:1">&#8595;</button>
-                  <button type="button" class="mini-cv-btn" data-del-item="${sIdx}:${eIdx}">&times;</button>
-                </div>
+          let prevVisibleKind = null;
+          sec.blocks.forEach((blk, bIdx) => {
+            if (blk.enabled === false) return;
+            const classes = [`cv-atomic-piece`, `kind-${blk.kind}`];
+            if (prevVisibleKind !== null) classes.push("has-prev");
+            if (blk.kind === "role" && prevVisibleKind !== "title") classes.push("standalone-role");
+            if (blk.kind === "bullet" && prevVisibleKind !== "bullet") classes.push("first-bullet");
+
+            const vStyle = blk.vspaceMm ? `margin-top:${(blk.vspaceMm * PX_PER_MM).toFixed(1)}px;` : "";
+            const kindLabel = blk.kind.toUpperCase();
+
+            let inner = "";
+            if (blk.kind === "title") {
+              inner = `
                 <div class="cv-entry-row1">
-                  <span class="cv-entry-org" contenteditable="true" data-entry-field="${sIdx}:${eIdx}:org">${entry.org}</span>
-                  <span class="cv-entry-loc" contenteditable="true" data-entry-field="${sIdx}:${eIdx}:loc">${entry.loc}</span>
+                  <span class="cv-entry-org" contenteditable="true" data-blk-field="${sIdx}:${bIdx}:left">${escHtml(blk.left)}</span>
+                  <span class="cv-entry-loc" contenteditable="true" data-blk-field="${sIdx}:${bIdx}:right">${escHtml(blk.right)}</span>
                 </div>
+              `;
+            } else if (blk.kind === "role") {
+              inner = `
                 <div class="cv-entry-row2">
-                  <span class="cv-entry-role" contenteditable="true" data-entry-field="${sIdx}:${eIdx}:role">${entry.role}</span>
-                  <span class="cv-entry-date" contenteditable="true" data-entry-field="${sIdx}:${eIdx}:date">${entry.date}</span>
+                  <span class="cv-entry-role" contenteditable="true" data-blk-field="${sIdx}:${bIdx}:left">${escHtml(blk.left)}</span>
+                  <span class="cv-entry-date" contenteditable="true" data-blk-field="${sIdx}:${bIdx}:right">${escHtml(blk.right)}</span>
                 </div>
-                ${
-                  entry.bullets && entry.bullets.length
-                    ? `<ul class="cv-bullets">
-                        ${entry.bullets
-                          .map(
-                            (b, bIdx) => `
-                            <li class="cv-bullet-item">
-                              <span contenteditable="true" data-bullet="${sIdx}:${eIdx}:${bIdx}">${b}</span>
-                              <button type="button" class="cv-bullet-del" data-del-bullet="${sIdx}:${eIdx}:${bIdx}" title="Delete bullet">&times;</button>
-                            </li>`
-                          )
-                          .join("")}
-                      </ul>`
-                    : ""
-                }
+              `;
+            } else if (blk.kind === "text") {
+              inner = `<div class="cv-free-text" contenteditable="true" data-blk-field="${sIdx}:${bIdx}:text">${escHtml(blk.text)}</div>`;
+            } else {
+              inner = `
+                <div class="cv-bullet-row">
+                  <span class="cv-bullet-dot">&bull;</span>
+                  <span class="cv-bullet-text" contenteditable="true" data-blk-field="${sIdx}:${bIdx}:text">${escHtml(blk.text)}</span>
+                </div>
+              `;
+            }
+
+            html += `
+              <div class="${classes.join(" ")}" data-sheet-piece="entries:${sIdx}:0:${bIdx}" style="${vStyle}">
+                <div class="piece-drag-grip" data-sheet-piece="entries:${sIdx}:0:${bIdx}" draggable="true" title="Drag ${kindLabel} piece anywhere">&#8942;&#8942;</div>
+                <div class="piece-controls">
+                  <span class="mini-cv-badge">${kindLabel}</span>
+                  <button type="button" class="mini-cv-btn" data-move-piece="${sIdx}:0:${bIdx}:-1" title="Move up">&#8593;</button>
+                  <button type="button" class="mini-cv-btn" data-move-piece="${sIdx}:0:${bIdx}:1" title="Move down">&#8595;</button>
+                  <button type="button" class="mini-cv-btn" data-dup-piece="${sIdx}:0:${bIdx}" title="Duplicate">&#10697;</button>
+                  <button type="button" class="mini-cv-btn" data-hide-piece="${sIdx}:0:${bIdx}" title="Hide from PDF">HIDE</button>
+                  <button type="button" class="mini-cv-btn" data-del-piece="${sIdx}:0:${bIdx}" title="Delete piece">&times;</button>
+                </div>
+                ${inner}
               </div>
             `;
+            prevVisibleKind = blk.kind;
           });
         }
 
@@ -2579,9 +3056,9 @@ function stripHeavyPackagesForPreview(clsText) {
       if (resumeState.footer.enabled) {
         html += `
           <div class="cv-footer">
-            <span class="cv-footer-left" contenteditable="true" data-bind="footer.left">${resumeState.footer.left}</span>
-            <span class="cv-footer-center" contenteditable="true" data-bind="footer.center">${resumeState.footer.center}</span>
-            <span class="cv-footer-right" contenteditable="true" data-bind="footer.right">${resumeState.footer.right}</span>
+            <span class="cv-footer-left" contenteditable="true" data-bind="footer.left">${escHtml(resumeState.footer.left)}</span>
+            <span class="cv-footer-center" contenteditable="true" data-bind="footer.center">${escHtml(resumeState.footer.center)}</span>
+            <span class="cv-footer-right" contenteditable="true" data-bind="footer.right">${escHtml(resumeState.footer.right)}</span>
           </div>
         `;
       }
@@ -2596,6 +3073,7 @@ function stripHeavyPackagesForPreview(clsText) {
         el.addEventListener("input", () => {
           const [group, key] = el.dataset.bind.split(".");
           resumeState[group][key] = el.textContent;
+          syncHeaderInputs();
           renderTexInspector();
         });
       });
@@ -2608,12 +3086,23 @@ function stripHeavyPackagesForPreview(clsText) {
         });
       });
 
+      root.querySelectorAll("[data-blk-field]").forEach((el) => {
+        el.addEventListener("input", () => {
+          const [s, b, field] = el.dataset.blkField.split(":");
+          resumeState.sections[Number(s)].blocks[Number(b)][field] = el.textContent.trim();
+          renderTexInspector();
+          checkPageOverflow();
+        });
+        el.addEventListener("blur", () => renderSectionManager());
+      });
+
       root.querySelectorAll("[data-skill-cat]").forEach((el) => {
         el.addEventListener("input", () => {
           const [s, r] = el.dataset.skillCat.split(":").map(Number);
           resumeState.sections[s].items[r].category = el.textContent.trim();
           renderTexInspector();
         });
+        el.addEventListener("blur", () => renderSectionManager());
       });
       root.querySelectorAll("[data-skill-list]").forEach((el) => {
         el.addEventListener("input", () => {
@@ -2630,7 +3119,6 @@ function stripHeavyPackagesForPreview(clsText) {
           renderTexInspector();
         });
       });
-
       root.querySelectorAll("[data-honor-field]").forEach((el) => {
         el.addEventListener("input", () => {
           const [s, g, i, field] = el.dataset.honorField.split(":");
@@ -2640,85 +3128,86 @@ function stripHeavyPackagesForPreview(clsText) {
         });
       });
 
-      root.querySelectorAll("[data-del-honor]").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const [s, g, i] = btn.dataset.delHonor.split(":").map(Number);
-          resumeState.sections[s].groups[g].items.splice(i, 1);
-          renderAll();
-        });
-      });
-
-      root.querySelectorAll("[data-entry-field]").forEach((el) => {
-        el.addEventListener("input", () => {
-          const [s, e, field] = el.dataset.entryField.split(":");
-          resumeState.sections[s].items[e][field] = el.textContent.trim();
-          renderTexInspector();
-          checkPageOverflow();
-        });
-      });
-
-      root.querySelectorAll("[data-bullet]").forEach((el) => {
-        el.addEventListener("input", () => {
-          const [s, e, b] = el.dataset.bullet.split(":").map(Number);
-          resumeState.sections[s].items[e].bullets[b] = el.textContent.trim();
-          renderTexInspector();
-          checkPageOverflow();
-        });
-      });
-
       root.querySelectorAll("[data-add-item]").forEach((btn) => {
         btn.addEventListener("click", () => {
-          const sec = resumeState.sections[Number(btn.dataset.addItem)];
-          if (sec.type === "skills") {
-            sec.items.push({ category: "Category", list: "Item 1 | Item 2" });
-          } else if (sec.type === "honors") {
-            if (!sec.groups.length) sec.groups.push({ subsection: "", items: [] });
-            sec.groups[0].items.unshift({ position: "Award / Cert", title: "Issuer / Event", location: "", date: "2026" });
-          } else {
-            sec.items.unshift({
-              org: "Organization Name",
-              role: "Role / Title",
-              loc: "Chicago, IL",
-              date: "Month Year to Present",
-              bullets: ["Key technical accomplishment with measurable impact."]
-            });
-          }
+          const [sIdx, kind] = btn.dataset.addItem.split(":");
+          addNewItemToSection(Number(sIdx), kind);
+        });
+      });
+      root.querySelectorAll("[data-move-piece]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const [s, g, i, dir] = btn.dataset.movePiece.split(":").map(Number);
+          nudgePiece(s, g, i, dir);
+        });
+      });
+      root.querySelectorAll("[data-dup-piece]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const [s, g, i] = btn.dataset.dupPiece.split(":").map(Number);
+          duplicatePiece(s, g, i);
+        });
+      });
+      root.querySelectorAll("[data-hide-piece]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const [s, g, i] = btn.dataset.hidePiece.split(":").map(Number);
+          const arr = getSectionItemsArray(resumeState.sections[s], g);
+          arr[i].enabled = false;
           renderAll();
         });
       });
-
-      root.querySelectorAll("[data-del-item]").forEach((btn) => {
+      root.querySelectorAll("[data-del-piece]").forEach((btn) => {
         btn.addEventListener("click", () => {
-          const [s, i] = btn.dataset.delItem.split(":").map(Number);
-          resumeState.sections[s].items.splice(i, 1);
-          renderAll();
+          const [s, g, i] = btn.dataset.delPiece.split(":").map(Number);
+          deletePiece(s, g, i);
         });
       });
 
-      root.querySelectorAll("[data-add-bullet]").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const [s, e] = btn.dataset.addBullet.split(":").map(Number);
-          resumeState.sections[s].items[e].bullets.push("New bullet point...");
-          renderAll();
+      // On-sheet drag-and-drop for EVERY atomic piece & table row
+      root.querySelectorAll(".piece-drag-grip, tr[data-sheet-piece]").forEach((handle) => {
+        handle.addEventListener("dragstart", (e) => {
+          if (handle.tagName === "TR" && e.target.closest("[contenteditable], button")) { e.preventDefault(); return; }
+          e.stopPropagation();
+          const [secType, sIdx, gIdx, iIdx] = handle.dataset.sheetPiece.split(":");
+          draggedPieceRef = { secType, sIdx: Number(sIdx), gIdx: Number(gIdx), iIdx: Number(iIdx) };
+          const host = handle.closest("[data-sheet-piece]");
+          if (host) host.classList.add("sheet-dragging");
+          e.dataTransfer.effectAllowed = "move";
+          e.dataTransfer.setData("text/plain", `sheetpiece:${handle.dataset.sheetPiece}`);
+        });
+        handle.addEventListener("dragend", () => {
+          draggedPieceRef = null;
+          root.querySelectorAll("[data-sheet-piece]").forEach((el) =>
+            el.classList.remove("sheet-dragging", "sheet-drop-before", "sheet-drop-after")
+          );
         });
       });
 
-      root.querySelectorAll("[data-del-bullet]").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const [s, e, b] = btn.dataset.delBullet.split(":").map(Number);
-          resumeState.sections[s].items[e].bullets.splice(b, 1);
-          renderAll();
+      root.querySelectorAll(".cv-atomic-piece[data-sheet-piece], tr[data-sheet-piece]").forEach((el) => {
+        el.addEventListener("dragover", (e) => {
+          if (!draggedPieceRef) return;
+          const [secType] = el.dataset.sheetPiece.split(":");
+          if (secType !== draggedPieceRef.secType) return;
+          e.preventDefault();
+          e.stopPropagation();
+          const rect = el.getBoundingClientRect();
+          const before = e.clientY < rect.top + rect.height / 2;
+          el.classList.toggle("sheet-drop-before", before);
+          el.classList.toggle("sheet-drop-after", !before);
         });
-      });
-
-      root.querySelectorAll("[data-move-entry]").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const [s, e, dir] = btn.dataset.moveEntry.split(":").map(Number);
-          const arr = resumeState.sections[s].items;
-          const t = e + dir;
-          if (t < 0 || t >= arr.length) return;
-          [arr[e], arr[t]] = [arr[t], arr[e]];
-          renderAll();
+        el.addEventListener("dragleave", () => el.classList.remove("sheet-drop-before", "sheet-drop-after"));
+        el.addEventListener("drop", (e) => {
+          if (!draggedPieceRef) return;
+          const [secType, sIdxStr, gIdxStr, iIdxStr] = el.dataset.sheetPiece.split(":");
+          if (secType !== draggedPieceRef.secType) return;
+          e.preventDefault();
+          e.stopPropagation();
+          const before = el.classList.contains("sheet-drop-before");
+          el.classList.remove("sheet-drop-before", "sheet-drop-after");
+          const toS = Number(sIdxStr), toG = Number(gIdxStr), toI = Number(iIdxStr);
+          if (draggedPieceRef.sIdx === toS && draggedPieceRef.gIdx === toG && draggedPieceRef.iIdx === toI) return;
+          const insertIdx = before ? toI : toI + 1;
+          const ref = draggedPieceRef;
+          draggedPieceRef = null;
+          movePiece(ref.sIdx, ref.gIdx, ref.iIdx, toS, toG, insertIdx);
         });
       });
 
@@ -2748,9 +3237,7 @@ function stripHeavyPackagesForPreview(clsText) {
           block.classList.toggle("sheet-drop-before", before);
           block.classList.toggle("sheet-drop-after", !before);
         });
-        block.addEventListener("dragleave", () => {
-          block.classList.remove("sheet-drop-before", "sheet-drop-after");
-        });
+        block.addEventListener("dragleave", () => block.classList.remove("sheet-drop-before", "sheet-drop-after"));
         block.addEventListener("drop", (e) => {
           if (draggedSectionIdx === null) return;
           e.preventDefault();
@@ -2758,7 +3245,6 @@ function stripHeavyPackagesForPreview(clsText) {
           const before = block.classList.contains("sheet-drop-before");
           block.classList.remove("sheet-drop-before", "sheet-drop-after");
           if (draggedSectionIdx === targetIdx) return;
-
           let insertIdx = before ? targetIdx : targetIdx + 1;
           if (draggedSectionIdx < insertIdx) insertIdx--;
           const from = draggedSectionIdx;
@@ -2767,121 +3253,42 @@ function stripHeavyPackagesForPreview(clsText) {
         });
       });
 
-      // Drag \vspace above each section
-      root.querySelectorAll(".spacing-drag-handle").forEach((handle) => {
-        handle.addEventListener("mousedown", (e) => {
-          e.preventDefault();
-          const sIdx = Number(handle.dataset.secIdx);
-          const startY = e.clientY;
-          const startMm = resumeState.sections[sIdx].vspaceMm;
-          handle.classList.add("dragging");
-
-          const onMove = (ev) => {
-            const deltaMm = (ev.clientY - startY) / (PX_PER_MM * currentScale);
-            const snapped = Math.round((startMm + deltaMm) * 2) / 2;
-            resumeState.sections[sIdx].vspaceMm = Math.max(-10, Math.min(20, snapped));
-            syncSectionBlockDom(sIdx);
-            renderTexInspector();
-            checkPageOverflow();
-          };
-
-          const onUp = () => {
-            handle.classList.remove("dragging");
-            window.removeEventListener("mousemove", onMove);
-            window.removeEventListener("mouseup", onUp);
-          };
-
-          window.addEventListener("mousemove", onMove);
-          window.addEventListener("mouseup", onUp);
+      const bindDragHandle = (selector, axis, getStart, onDelta) => {
+        root.querySelectorAll(selector).forEach((handle) => {
+          handle.addEventListener("mousedown", (e) => {
+            e.preventDefault();
+            const sIdx = Number(handle.dataset.secIdx);
+            const startPos = axis === "y" ? e.clientY : e.clientX;
+            const startMm = getStart(sIdx);
+            handle.classList.add("dragging");
+            const onMove = (ev) => {
+              const cur = axis === "y" ? ev.clientY : ev.clientX;
+              const deltaMm = (cur - startPos) / (PX_PER_MM * currentScale);
+              const snapped = Math.round((startMm + deltaMm) * 2) / 2;
+              onDelta(sIdx, snapped);
+              syncSectionBlockDom(sIdx);
+              renderTexInspector();
+              checkPageOverflow();
+            };
+            const onUp = () => {
+              handle.classList.remove("dragging");
+              window.removeEventListener("mousemove", onMove);
+              window.removeEventListener("mouseup", onUp);
+            };
+            window.addEventListener("mousemove", onMove);
+            window.addEventListener("mouseup", onUp);
+          });
         });
-      });
+      };
 
-      // Drag Heading -> Content gap inside each section
-      root.querySelectorAll(".content-skip-drag-handle").forEach((handle) => {
-        handle.addEventListener("mousedown", (e) => {
-          e.preventDefault();
-          const sIdx = Number(handle.dataset.secIdx);
-          const startY = e.clientY;
-          const startMm = resumeState.sections[sIdx].layout.contentSkipMm;
-          handle.classList.add("dragging");
-
-          const onMove = (ev) => {
-            const deltaMm = (ev.clientY - startY) / (PX_PER_MM * currentScale);
-            const snapped = Math.round((startMm + deltaMm) * 2) / 2;
-            resumeState.sections[sIdx].layout.contentSkipMm = Math.max(-2, Math.min(12, snapped));
-            syncSectionBlockDom(sIdx);
-            renderTexInspector();
-            checkPageOverflow();
-          };
-
-          const onUp = () => {
-            handle.classList.remove("dragging");
-            window.removeEventListener("mousemove", onMove);
-            window.removeEventListener("mouseup", onUp);
-          };
-
-          window.addEventListener("mousemove", onMove);
-          window.addEventListener("mouseup", onUp);
-        });
-      });
-
-      // Independent Horizontal Offset (X) drag handle per skills/involvement block
-      root.querySelectorAll(".skill-offset-drag-handle").forEach((handle) => {
-        handle.addEventListener("mousedown", (e) => {
-          e.preventDefault();
-          const sIdx = Number(handle.dataset.secIdx);
-          const startX = e.clientX;
-          const startMm = resumeState.sections[sIdx].layout.skillOffsetMm;
-          handle.classList.add("dragging");
-
-          const onMove = (ev) => {
-            const deltaMm = (ev.clientX - startX) / (PX_PER_MM * currentScale);
-            const snapped = Math.round((startMm + deltaMm) * 2) / 2;
-            resumeState.sections[sIdx].layout.skillOffsetMm = Math.max(-10, Math.min(40, snapped));
-            syncSectionBlockDom(sIdx);
-            renderTexInspector();
-            checkPageOverflow();
-          };
-
-          const onUp = () => {
-            handle.classList.remove("dragging");
-            window.removeEventListener("mousemove", onMove);
-            window.removeEventListener("mouseup", onUp);
-          };
-
-          window.addEventListener("mousemove", onMove);
-          window.addEventListener("mouseup", onUp);
-        });
-      });
-
-      // Independent Label Column Width drag handle per skills/involvement block
-      root.querySelectorAll(".skill-col-drag-handle").forEach((handle) => {
-        handle.addEventListener("mousedown", (e) => {
-          e.preventDefault();
-          const sIdx = Number(handle.dataset.secIdx);
-          const startX = e.clientX;
-          const startMm = resumeState.sections[sIdx].layout.skillCatWidthMm;
-          handle.classList.add("dragging");
-
-          const onMove = (ev) => {
-            const deltaMm = (ev.clientX - startX) / (PX_PER_MM * currentScale);
-            const snapped = Math.round((startMm + deltaMm) * 2) / 2;
-            resumeState.sections[sIdx].layout.skillCatWidthMm = Math.max(15, Math.min(65, snapped));
-            syncSectionBlockDom(sIdx);
-            renderTexInspector();
-            checkPageOverflow();
-          };
-
-          const onUp = () => {
-            handle.classList.remove("dragging");
-            window.removeEventListener("mousemove", onMove);
-            window.removeEventListener("mouseup", onUp);
-          };
-
-          window.addEventListener("mousemove", onMove);
-          window.addEventListener("mouseup", onUp);
-        });
-      });
+      bindDragHandle(".spacing-drag-handle", "y", (i) => resumeState.sections[i].vspaceMm,
+        (i, v) => { resumeState.sections[i].vspaceMm = Math.max(-10, Math.min(20, v)); });
+      bindDragHandle(".content-skip-drag-handle", "y", (i) => resumeState.sections[i].layout.contentSkipMm,
+        (i, v) => { resumeState.sections[i].layout.contentSkipMm = Math.max(-2, Math.min(12, v)); });
+      bindDragHandle(".skill-offset-drag-handle", "x", (i) => resumeState.sections[i].layout.skillOffsetMm,
+        (i, v) => { resumeState.sections[i].layout.skillOffsetMm = Math.max(-10, Math.min(40, v)); });
+      bindDragHandle(".skill-col-drag-handle", "x", (i) => resumeState.sections[i].layout.skillCatWidthMm,
+        (i, v) => { resumeState.sections[i].layout.skillCatWidthMm = Math.max(15, Math.min(65, v)); });
     }
 
     function renderAll() {
@@ -2892,7 +3299,7 @@ function stripHeavyPackagesForPreview(clsText) {
     }
 
     // =========================================================================
-    // FILE SYSTEM ACCESS API (Dynamic Discovery from assets/resume/ & cv/)
+    // FILE SYSTEM ACCESS API
     // =========================================================================
     function logMsg(msg, isErr = false) {
       const box = document.getElementById("fs-log-box");
@@ -2945,7 +3352,6 @@ function stripHeavyPackagesForPreview(clsText) {
 
         const orderedSections = [];
         const usedFiles = new Set();
-
         for (const inp of activeInputs) {
           const sec = discoveredMap.get(inp.file);
           if (sec) {
@@ -2953,11 +3359,8 @@ function stripHeavyPackagesForPreview(clsText) {
             usedFiles.add(inp.file);
           }
         }
-
         for (const [filePath, sec] of discoveredMap.entries()) {
-          if (!usedFiles.has(filePath)) {
-            orderedSections.push({ ...sec, enabled: false, vspaceMm: 0 });
-          }
+          if (!usedFiles.has(filePath)) orderedSections.push({ ...sec, enabled: false, vspaceMm: 0 });
         }
 
         resumeState.sections = orderedSections;
@@ -2965,9 +3368,8 @@ function stripHeavyPackagesForPreview(clsText) {
         renderAll();
         logMsg(
           `Mounted /${root.name}\n` +
-          `• Active sections in main.tex: ${usedFiles.size}\n` +
-          `• Inactive sections discovered in cv/: ${orderedSections.length - usedFiles.size}\n` +
-          `• Support files loaded: ${Object.keys(resumeState.supportFiles).join(", ") || "none"}`
+          `• Active sections: ${usedFiles.size} | Inactive: ${orderedSections.length - usedFiles.size}\n` +
+          `• Support files: ${Object.keys(resumeState.supportFiles).join(", ") || "none"}`
         );
       } catch (err) {
         if (err.name !== "AbortError") logMsg(`Mount failed: ${err.message}`, true);
@@ -2990,10 +3392,8 @@ function stripHeavyPackagesForPreview(clsText) {
           await writeTextFile(resumeState.cvDirHandle, fname, generateSectionTex(sec));
         }
         logMsg(
-          `SAVED ALL .TEX FILES TO DISK:\n` +
-          `• assets/resume/main.tex\n` +
-          resumeState.sections.map((s) => `• assets/resume/${s.file}`).join("\n") +
-          `\n\nCommit & push to GitHub to auto-compile assets/about/resume.pdf!`
+          `SAVED ALL .TEX FILES TO DISK:\n• assets/resume/main.tex\n` +
+          resumeState.sections.map((s) => `• assets/resume/${s.file}`).join("\n")
         );
       } catch (err) {
         logMsg(`Save error: ${err.message}`, true);
@@ -3008,6 +3408,62 @@ function stripHeavyPackagesForPreview(clsText) {
       document.getElementById("print-pdf-btn").addEventListener("click", () => {
         if (resumeState.isRendered) exitTexRenderMode();
         window.print();
+      });
+
+      document.getElementById("toggle-header-panel").addEventListener("click", (e) => {
+        const body = document.getElementById("header-editor-body");
+        const open = body.style.display === "none";
+        body.style.display = open ? "block" : "none";
+        e.target.textContent = open ? "HIDE" : "SHOW";
+      });
+
+      document.querySelectorAll("[data-hdr]").forEach((inp) => {
+        inp.addEventListener("input", () => {
+          resumeState.header[inp.dataset.hdr] = inp.value;
+          renderSheet();
+          renderTexInspector();
+        });
+      });
+
+      document.getElementById("cb-footer-enabled").addEventListener("change", (e) => {
+        resumeState.footer.enabled = e.target.checked;
+        document.getElementById("footer-fields-wrap").style.display = e.target.checked ? "flex" : "none";
+        renderSheet();
+        renderTexInspector();
+      });
+
+      document.querySelectorAll("[data-ftr]").forEach((inp) => {
+        inp.addEventListener("input", () => {
+          resumeState.footer[inp.dataset.ftr] = inp.value;
+          renderSheet();
+          renderTexInspector();
+        });
+      });
+
+      document.getElementById("add-section-btn").addEventListener("click", () => {
+        if (!resumeState.mounted) return;
+        const title = prompt("New section title (e.g., Projects, Leadership, Certifications):");
+        if (!title || !title.trim()) return;
+        const typeRaw = (prompt("Section type: entries, skills, or honors", "entries") || "entries").trim().toLowerCase();
+        const type = ["entries", "skills", "honors"].includes(typeRaw) ? typeRaw : "entries";
+        const slug = title.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_");
+        const newSec = {
+          file: `cv/${slug}.tex`,
+          title: title.trim(),
+          type,
+          enabled: true,
+          expanded: true,
+          activeTab: "items",
+          vspaceMm: 0,
+          layout: createDefaultSectionLayout(type),
+          ...(type === "entries"
+            ? { blocks: [] }
+            : type === "honors"
+              ? { groups: [{ subsection: "", items: [] }] }
+              : { items: [] })
+        };
+        resumeState.sections.push(newSec);
+        addNewItemToSection(resumeState.sections.length - 1, "title");
       });
 
       document.getElementById("tex-render-iframe").addEventListener("load", () => {
@@ -3056,6 +3512,7 @@ function stripHeavyPackagesForPreview(clsText) {
       bindSlider("sl-margin-x", "marginXMm");
       bindSlider("sl-margin-top", "marginTopMm");
       bindSlider("sl-margin-bottom", "marginBottomMm");
+      bindSlider("sl-font-scale", "fontScale");
 
       document.getElementById("cb-sec-highlight").addEventListener("change", (e) => {
         resumeState.theme.sectionHighlight = e.target.checked;
@@ -3071,15 +3528,12 @@ function stripHeavyPackagesForPreview(clsText) {
       document.getElementById("reset-spacing-btn").addEventListener("click", () => {
         resumeState.page = { size: "letterpaper", count: 1 };
         resumeState.spacing = {
-          headerAfterMm: 3.5,
-          sectionTopMm: 3,
-          marginXMm: 14,
-          marginTopMm: 8,
-          marginBottomMm: 18
+          headerAfterMm: 3.5, sectionTopMm: 3, marginXMm: 14, marginTopMm: 8, marginBottomMm: 18, fontScale: 1
         };
         resumeState.sections.forEach((s) => {
           s.vspaceMm = 0;
           s.layout = createDefaultSectionLayout(s.type);
+          if (s.blocks) s.blocks.forEach((b) => { b.vspaceMm = 0; });
         });
         renderAll();
       });

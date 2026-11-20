@@ -8,11 +8,32 @@
   \begin{justify}%
   \begin{itemize}[leftmargin=2ex, nosep, itemsep=0.25mm]%
     \setlength{\parskip}{0pt}%
-    \renewcommand{\labelitemi}{\bullet}%
+    \renewcommand{\labelitemi}{\textbullet}%
 }{%
   \end{itemize}%
   \end{justify}%
   \vspace{1.0mm}%
+}%
+\providecommand{\aztitle}[2]{%
+  \par\vspace{-2.0mm}%
+  \setlength\tabcolsep{0pt}\setlength{\extrarowheight}{0pt}%
+  \noindent\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} L{\textwidth - 4.5cm} R{4.5cm}}%
+    \entrytitlestyle{#1} & \entrylocationstyle{#2} \\%
+  \end{tabular*}\par%
+}%
+\providecommand{\azrole}[2]{%
+  \par\vspace{-1.5mm}%
+  \setlength\tabcolsep{0pt}\setlength{\extrarowheight}{0pt}%
+  \noindent\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} L{\textwidth - 4.5cm} R{4.5cm}}%
+    \entrypositionstyle{#1} & \entrydatestyle{#2} \\%
+  \end{tabular*}\par%
+}%
+\providecommand{\azbullet}[1]{%
+  \par\vspace{1.5mm}%
+  \begin{cvitems}\item {#1}\end{cvitems}%
+}%
+\providecommand{\aztext}[1]{%
+  \par\descriptionstyle{#1}\par%
 }%
 \begin{cventries}
   \cventry
@@ -28,28 +49,28 @@
     }
 
   \cventry
-    {LARP (Lithium Array Rechargeable Pack)}
-    {IIT Motorsports (Formula SAE)}
-    {Chicago, IL}
-    {August 2026 to Present}
-    {
-      \begin{cvitems}
-        \item {Engineered a modular multi-plate battery assembly utilizing standardized commercial off-the-shelf components, streamlining machining and assembly cycles while increasing mechanical performance compared to previous iterations}
-        \item {Optimized battery module architecture using SolidWorks, successfully keeping similar dimensions of previous tractive battery while including an active internal cooling system and making it manufacturable}
-        \item {Developed and validated a custom active cooling system for a 72s6p accumulator module using ANSYS Fluent Conjugate Heat Transfer (CHT) simulations, keeping temperatures stable and in the optimal operating range}
-      \end{cvitems}
-    }
-
-  \cventry
-    {Powetrain lead}
-    {IIT Motorsports (Formula SAE)}
-    {Chicago, IL}
+    {Powertrain team lead}
+    {}
+    {}
     {August 2026 to Present}
     {
       \begin{cvitems}
         \item {Calculated vehicle dynamics and motor parameters to build an accurate 120 kW EV powertrain simulation in OptimumLap}
         \item {Identified an optimal arrangement of using a 5:1 planetary gearbox which performed best in lap time, acceleration, and average speed at the Michigan International Speedway}
         \item {Developed a lightweight powertrain mounting system achieving less than 0.01 in of deflection at a 2.0 safety factor}
+      \end{cvitems}
+    }
+
+  \cventry
+    {LARP (Lithium Array Rechargeable Pack)}
+    {}
+    {}
+    {August 2026 to Present}
+    {
+      \begin{cvitems}
+        \item {Engineered a modular multi-plate battery assembly utilizing standardized commercial off-the-shelf components, streamlining machining and assembly cycles while increasing mechanical performance compared to previous iterations}
+        \item {Optimized battery module architecture using SolidWorks, successfully keeping similar dimensions of previous tractive battery while including an active internal cooling system and making it manufacturable}
+        \item {Developed and validated a custom active cooling system for a 72s6p accumulator module using ANSYS Fluent Conjugate Heat Transfer (CHT) simulations, keeping temperatures stable and in the optimal operating range}
       \end{cvitems}
     }
 

@@ -8,11 +8,32 @@
   \begin{justify}%
   \begin{itemize}[leftmargin=2ex, nosep, itemsep=0.25mm]%
     \setlength{\parskip}{0pt}%
-    \renewcommand{\labelitemi}{\bullet}%
+    \renewcommand{\labelitemi}{\textbullet}%
 }{%
   \end{itemize}%
   \end{justify}%
   \vspace{1.0mm}%
+}%
+\providecommand{\aztitle}[2]{%
+  \par\vspace{-2.0mm}%
+  \setlength\tabcolsep{0pt}\setlength{\extrarowheight}{0pt}%
+  \noindent\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} L{\textwidth - 4.5cm} R{4.5cm}}%
+    \entrytitlestyle{#1} & \entrylocationstyle{#2} \\%
+  \end{tabular*}\par%
+}%
+\providecommand{\azrole}[2]{%
+  \par\vspace{-1.5mm}%
+  \setlength\tabcolsep{0pt}\setlength{\extrarowheight}{0pt}%
+  \noindent\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} L{\textwidth - 4.5cm} R{4.5cm}}%
+    \entrypositionstyle{#1} & \entrydatestyle{#2} \\%
+  \end{tabular*}\par%
+}%
+\providecommand{\azbullet}[1]{%
+  \par\vspace{1.5mm}%
+  \begin{cvitems}\item {#1}\end{cvitems}%
+}%
+\providecommand{\aztext}[1]{%
+  \par\descriptionstyle{#1}\par%
 }%
 \begin{cventries}
   \cventry
