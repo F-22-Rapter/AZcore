@@ -1128,6 +1128,8 @@
       popoutBlobUrl: null,
       popoutBackend: null,
       popoutStartTime: 0,
+      popoutCompiling: false,
+      popoutDirty: false,
       localServerChecked: false,
       localServerAvailable: false,
       rootHandle: null,
@@ -1427,7 +1429,7 @@ ${blocks}
   \\begin{justify}%
   \\begin{itemize}[leftmargin=2ex, nosep, itemsep=${lay.bulletGapMm.toFixed(2)}mm]%
     \\setlength{\\parskip}{0pt}%
-    \\renewcommand{\\labelitemi}{\\bullet}%
+    \\renewcommand{\\labelitemi}{\\textbullet}%
 }{%
   \\end{itemize}%
   \\end{justify}%
@@ -1443,15 +1445,14 @@ ${entries}
     // =========================================================================
     // HYBRID LUALATEX RENDERER (In-Page + Live Auto-Sync Pop-Out Window)
     // =========================================================================
-    function stripHeavyPackagesForPreview(clsText) {
+function stripHeavyPackagesForPreview(clsText) {
       return clsText
         .replace(/\\RequirePackage\[skins\]\{tcolorbox\}/g, "")
         .replace(/\\RequirePackage\{unicode-math\}/g, "")
         .replace(/\\usepackage\{datetime\}/g, "")
         .replace(/\\RequirePackage\{bookmark\}/g, "")
         .replace(/\\RequirePackage\{accsupp\}/g, "\\newcommand{\\BeginAccSupp}[1]{}\\newcommand{\\EndAccSupp}{}")
-        .replace(/\\RequirePackage\[[^\]]*\]\{hyperref\}/g, "\\newcommand{\\href}[2]{#2}\\newcommand{\\phantomsection}{}")
-        .replace(/\\hypersetup\{[\s\S]*?\}/g, "");
+        .replace(/\\RequirePackage(?:\[[^\]]*\])?\{hyperref\}/g, "\\newcommand{\\href}[2]{#2}\\newcommand{\\phantomsection}{}\\newcommand{\\hypersetup}[1]{}");
     }
 
     function appendFormField(doc, form, name, value, isTextArea = false) {
@@ -1576,89 +1577,124 @@ ${entries}
 
       const frame = win.document.getElementById("popout-frame");
       frame.addEventListener("load", () => {
-        if (resumeState.popoutBackend !== "texlive") return;
-        const elapsed = ((performance.now() - resumeState.popoutStartTime) / 1000).toFixed(1);
-        setPopoutStatus(`SYNCED (${elapsed}s • texlive.net)`, false, false);
-      });
+      if (resumeState.popoutBackend !== "texlive") return;
+      const elapsed = ((performance.now() - resumeState.popoutStartTime) / 1000).toFixed(1);
+      setPopoutStatus(`SYNCED (${elapsed}s • texlive.net)`, false, false);
+      resumeState.popoutCompiling = false;
+      if (resumeState.popoutDirty) {
+        resumeState.popoutDirty = false;
+        renderToPopout();
+      }
+    });
 
-      win.addEventListener("beforeunload", () => {
-        if (resumeState.popoutTimer) clearTimeout(resumeState.popoutTimer);
-        if (resumeState.popoutBlobUrl) {
-          URL.revokeObjectURL(resumeState.popoutBlobUrl);
-          resumeState.popoutBlobUrl = null;
-        }
-        resumeState.popoutWin = null;
-        updatePopoutButtonState();
-      });
+    win.addEventListener("beforeunload", () => {
+      if (resumeState.popoutTimer) clearTimeout(resumeState.popoutTimer);
+      if (resumeState.popoutBlobUrl) {
+        URL.revokeObjectURL(resumeState.popoutBlobUrl);
+        resumeState.popoutBlobUrl = null;
+      }
+      resumeState.popoutCompiling = false;
+      resumeState.popoutDirty = false;
+      resumeState.popoutWin = null;
+      updatePopoutButtonState();
+    });
 
       updatePopoutButtonState();
       renderToPopout();
     }
 
     function schedulePopoutRender() {
-      if (!resumeState.mounted || !resumeState.popoutWin) return;
-      if (resumeState.popoutWin.closed) {
-        updatePopoutButtonState();
-        return;
-      }
-      if (resumeState.popoutTimer) clearTimeout(resumeState.popoutTimer);
-      setPopoutStatus("EDIT DETECTED — SYNCING SOON...", true, false);
-      const delay = resumeState.localServerAvailable ? 100 : 1200;
-      resumeState.popoutTimer = setTimeout(() => {
-        resumeState.popoutTimer = null;
-        renderToPopout();
-      }, delay);
-    }
+  if (!resumeState.mounted || !resumeState.popoutWin) return;
+  if (resumeState.popoutWin.closed) {
+    updatePopoutButtonState();
+    return;
+  }
+  if (resumeState.popoutTimer) clearTimeout(resumeState.popoutTimer);
+  setPopoutStatus("EDIT DETECTED — SYNCING SOON...", true, false);
+
+  if (resumeState.popoutCompiling) {
+    resumeState.popoutDirty = true;
+    return;
+  }
+
+  const delay = resumeState.localServerAvailable ? 250 : 1200;
+  resumeState.popoutTimer = setTimeout(() => {
+    resumeState.popoutTimer = null;
+    renderToPopout();
+  }, delay);
+}
 
     async function renderToPopout() {
-      const win = resumeState.popoutWin;
-      if (!win || win.closed) {
-        updatePopoutButtonState();
-        return;
-      }
+  const win = resumeState.popoutWin;
+  if (!win || win.closed) {
+    resumeState.popoutCompiling = false;
+    resumeState.popoutDirty = false;
+    updatePopoutButtonState();
+    return;
+  }
 
-      const files = buildCompilePayload();
-      const useLocal = await checkLocalCompilerOnce();
+  if (resumeState.popoutCompiling) {
+    resumeState.popoutDirty = true;
+    return;
+  }
 
-      if (useLocal) {
-        resumeState.popoutBackend = "local";
-        setPopoutStatus("COMPILING (LOCAL)...", true, false);
-        const t0 = performance.now();
-        try {
-          const res = await fetch(`${LOCAL_COMPILER_BASE}/compile`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ engine: "lualatex", files })
-          });
-          if (!resumeState.popoutWin || resumeState.popoutWin.closed) return;
-          const blob = await res.blob();
-          const elapsed = ((performance.now() - t0) / 1000).toFixed(2);
-          if (resumeState.popoutBlobUrl) URL.revokeObjectURL(resumeState.popoutBlobUrl);
-          resumeState.popoutBlobUrl = URL.createObjectURL(blob);
-          win.document.getElementById("popout-frame").src = resumeState.popoutBlobUrl;
-          setPopoutStatus(res.ok ? `SYNCED (${elapsed}s • local)` : `ERROR (${elapsed}s)`, false, !res.ok);
-          return;
-        } catch {
-          resumeState.localServerAvailable = false;
+  resumeState.popoutCompiling = true;
+  resumeState.popoutDirty = false;
+
+  const files = buildCompilePayload();
+  const useLocal = await checkLocalCompilerOnce();
+
+  if (useLocal) {
+    resumeState.popoutBackend = "local";
+    setPopoutStatus("COMPILING (LOCAL)...", true, false);
+    const t0 = performance.now();
+    let localHandled = false;
+    try {
+      const res = await fetch(`${LOCAL_COMPILER_BASE}/compile`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ engine: "lualatex", files })
+      });
+      localHandled = true;
+      if (!resumeState.popoutWin || resumeState.popoutWin.closed) return;
+      const blob = await res.blob();
+      const elapsed = ((performance.now() - t0) / 1000).toFixed(2);
+      if (resumeState.popoutBlobUrl) URL.revokeObjectURL(resumeState.popoutBlobUrl);
+      resumeState.popoutBlobUrl = URL.createObjectURL(blob);
+      win.document.getElementById("popout-frame").src = resumeState.popoutBlobUrl;
+      setPopoutStatus(res.ok ? `SYNCED (${elapsed}s • local)` : `ERROR (${elapsed}s)`, false, !res.ok);
+    } catch {
+      resumeState.localServerAvailable = false;
+    } finally {
+      if (localHandled) {
+        resumeState.popoutCompiling = false;
+        if (resumeState.popoutDirty) {
+          resumeState.popoutDirty = false;
+          renderToPopout();
         }
       }
-
-      if (!resumeState.popoutWin || resumeState.popoutWin.closed) return;
-      resumeState.popoutBackend = "texlive";
-      resumeState.popoutStartTime = performance.now();
-      setPopoutStatus("COMPILING (texlive.net)...", true, false);
-
-      const form = win.document.getElementById("popout-form");
-      form.innerHTML = "";
-      appendFormField(win.document, form, "engine", "lualatex");
-      appendFormField(win.document, form, "return", "pdf");
-      for (const [fname, content] of Object.entries(files)) {
-        appendFormField(win.document, form, "filename[]", fname);
-        appendFormField(win.document, form, "filecontents[]", content, true);
-      }
-      form.submit();
     }
+    if (localHandled) return;
+  }
 
+  if (!resumeState.popoutWin || resumeState.popoutWin.closed) {
+    resumeState.popoutCompiling = false;
+    return;
+  }
+  resumeState.popoutBackend = "texlive";
+  resumeState.popoutStartTime = performance.now();
+  setPopoutStatus("COMPILING (texlive.net)...", true, false);
+
+  const form = win.document.getElementById("popout-form");
+  form.innerHTML = "";
+  appendFormField(win.document, form, "engine", "lualatex");
+  appendFormField(win.document, form, "return", "pdf");
+  for (const [fname, content] of Object.entries(files)) {
+    appendFormField(win.document, form, "filename[]", fname);
+    appendFormField(win.document, form, "filecontents[]", content, true);
+  }
+  form.submit();
+}
     // --- In-Page Render Mode ---
     async function enterTexRenderMode() {
       if (!resumeState.mounted) return;

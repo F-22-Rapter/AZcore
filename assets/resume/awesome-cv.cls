@@ -810,7 +810,7 @@
   \begin{justify}
   \begin{itemize}[leftmargin=2ex, nosep, noitemsep]
     \setlength{\parskip}{0pt}
-    \renewcommand{\labelitemi}{\bullet}
+    \renewcommand{\labelitemi}{\textbullet}
 }{%
   \end{itemize}
   \end{justify}
