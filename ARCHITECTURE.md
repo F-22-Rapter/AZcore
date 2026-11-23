@@ -12,6 +12,7 @@ High-density technical architecture reference optimized for local LLMs (context-
 - `style.css`: Unified stylesheet containing CAD dark-theme design tokens, responsive layout grids, animations, modal styles, and mobile breakpoints.
 - `dev.html`: Localhost visual studio for authoring `project.txt` manifests, tuning 3D coordinates, mapping controls, and exporting configs.
 - `dev-resume.html`: Localhost LaTeX resume previewer and design playground for tuning spacing and typography before PDF compilation.
+- `Local Latex Compiler.bat`: Local XeLaTeX HTTP microserver (127.0.0.1:8765) powering instant offline PDF builds for `dev-resume.html` (git-ignored).
 - `CNAME`: Production domain mapping (`azcore.studio`) for GitHub Pages.
 - `robots.txt`: Search crawler indexing rules and sitemap pointer.
 - `sitemap.xml`: XML sitemap defining production URLs for SEO.
@@ -125,9 +126,10 @@ High-density technical architecture reference optimized for local LLMs (context-
 
 ### Local Development Environment
 - **Local Server Requirement**: Because project manifests (`project.txt`) and photo lists (`photos.txt`) are fetched via AJAX `fetch()`, files must be served over HTTP/HTTPS (e.g., `npx serve`, Python `python -m http.server 8000`, or VS Code Live Server). Direct `file://` execution will trigger browser CORS restrictions.
-- **Localhost Developer Studios**:
+- **Localhost Developer Studios & Compilers**:
   - `dev.html`: Run locally to author new projects, test 3D models and controls, and generate `project.txt` files via File System Access API without manual formatting.
   - `dev-resume.html`: Run locally to visually debug LaTeX resume dimensions, margins, and typography against print layout before committing `.tex` files.
+  - `Local Latex Compiler.bat`: Standalone batch/PowerShell runner that spins up an ephemeral HTTP XeLaTeX microserver on `http://127.0.0.1:8765` (`/ping`, `/compile`), installs TinyTeX on demand, compiles in seconds for `dev-resume.html`, and cleanly removes itself on exit (git-ignored).
 - **Agent Handoff & Version Control Rules**:
-  - `PLAN.md` is strictly git-ignored and used for coordinating multi-model planning handoffs.
+  - `PLAN.md` and `Local Latex Compiler.bat` are strictly git-ignored.
   - `.clinerules` and `.clineignore` constrain local implementation agents to targeted diffs without loading heavy binary/3D media into context.
