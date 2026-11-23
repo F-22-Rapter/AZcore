@@ -1,0 +1,13 @@
+.git/
+node_modules/
+*.webp
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.svg
+*.glb
+*.stl
+*.mp4
+*.mp3
+*.woff2
