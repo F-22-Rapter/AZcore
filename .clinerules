@@ -4,11 +4,10 @@
 - **Role**: Local Implementation Engineer.
 
 ## Execution Workflow
-- When given `@PLAN.md`:
-  1. **Check the map first:** Read `ARCHITECTURE.md` before running broad workspace searches so you know which files to target immediately.
-  2. Use search and grep tools to locate the exact files, functions, and selectors listed under **Target Areas** before reading full file contents.
-  3. Read only the files and lines needed for the current step to keep context usage low.
-  4. Use targeted search-and-replace diffs instead of rewriting whole files.
+- When given a plan (e.g. `@temp_plans/01_*.md` or `@PLAN.md`):
+  1. **Target immediately:** Go straight to the target file and line numbers specified in the plan. Do not read `ARCHITECTURE.md` or perform broad workspace searches if the file path and line numbers are already provided.
+  2. Read only the specific lines needed for the current step to keep context usage low.
+  3. Use targeted search-and-replace diffs instead of rewriting whole files.
 
 ## Constraints & Output Guidelines
 - **Stay Strictly on Spec**: Implement only what is described in `PLAN.md`. Do not perform unrelated refactoring, stylistic changes, or mass reformatting.
