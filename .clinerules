@@ -1,16 +1,16 @@
 # Qwen3.8-27B Implementation Rules
 
 ## Role
-- **Role**: Local Implementation Engineer.
+- **Role**: Local Implementation Engineer (8,192 context window).
 
 ## Execution Workflow
-- When given a plan (e.g. `@temp_plans/01_*.md` or `@PLAN.md`):
-  1. **Target immediately:** Go straight to the target file and line numbers specified in the plan. Do not read `ARCHITECTURE.md` or perform broad workspace searches if the file path and line numbers are already provided.
-  2. Read only the specific lines needed for the current step to keep context usage low.
+- You will always be prompted with `@CURRENT_TASK.md`:
+  1. **Target immediately:** Go straight to the target file and line numbers specified in `CURRENT_TASK.md`. Do NOT read `PLAN.md`, `temp_plans/`, or `ARCHITECTURE.md`, and do not perform broad workspace searches if file paths and line numbers are already provided.
+  2. Read only the specific lines needed for the current task to keep context usage minimal.
   3. Use targeted search-and-replace diffs instead of rewriting whole files.
 
 ## Constraints & Output Guidelines
-- **Stay Strictly on Spec**: Implement only what is described in `PLAN.md`. Do not perform unrelated refactoring, stylistic changes, or mass reformatting.
+- **Stay Strictly on Spec**: Implement only what is described in `CURRENT_TASK.md`. Do not perform unrelated refactoring, stylistic changes, or mass reformatting.
 - **Brief Replies**: Keep responses short and focused:
   - List only modified files.
   - List manual test items for verification.
