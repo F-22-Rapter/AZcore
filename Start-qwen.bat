@@ -1,8 +1,8 @@
 @echo off
-"C:\Tools\llama-cpp\llama-server.exe"^
+"C:\Tools\llama-cpp\llama-server.exe" ^
   -m "C:\Users\a1234\.lmstudio\models\unsloth\Qwen3.8-27B-GGUF\Qwen3.8-27B-UD-Q3_K_XL.gguf" ^
-  -ngl 99 ^
-  --no-mmap ^
+  -ngl 46 ^
+  -lm none ^
   -c 16384 ^
   -np 1 ^
   --flash-attn on ^

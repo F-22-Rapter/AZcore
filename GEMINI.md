@@ -28,6 +28,6 @@ If the user asks to tweak the plan:
 ### Step 3: Submit to Qwen & Review
 Only when the user replies with **`submit`** (or `approve` / `send to qwen`):
 1. Run this terminal command to hand off to local Qwen3.8-27B:
-   `cline --auto-approve true "@PLAN.md Implement this."`
+   `echo "" | cline -y "@PLAN.md Implement this."`
 2. When it finishes, run `git diff` and check Qwen's changes against `PLAN.md`.
 3. Report a short summary of modified files, flag any issues, and list the manual `localhost` checks.
