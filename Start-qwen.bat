@@ -5,7 +5,7 @@ rem set GGML_VK_DISABLE_HOST_VISIBLE_VIDMEM=1
 "C:\Tools\llama-cpp\llama-server.exe" ^
   -m "C:\Users\a1234\.lmstudio\models\unsloth\Qwen3.8-27B-GGUF\Qwen3.8-27B-UD-IQ3_XXS.gguf" ^
   -ngl 99 ^
-  -c 8192 ^
+  -c 16384 ^
   -np 1 ^
   --flash-attn on ^
   -ctk q4_0 -ctv q4_0 ^

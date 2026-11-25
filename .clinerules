@@ -4,10 +4,10 @@
 - **Role**: Local Implementation Engineer (8,192 context window).
 
 ## Execution Workflow
-- You will always be prompted with `@CURRENT_TASK.md`:
-  1. **Target immediately:** Go straight to the target file and line numbers specified in `CURRENT_TASK.md`. Do NOT read `PLAN.md`, `temp_plans/`, or `ARCHITECTURE.md`, and do not perform broad workspace searches if file paths and line numbers are already provided.
-  2. Read only the specific lines needed for the current task to keep context usage minimal.
-  3. Use targeted search-and-replace diffs instead of rewriting whole files.
+- You will always be prompted with `@CURRENT_TASK.md` (formatted as `FILE | READ | GOAL | SPEC | DONE`):
+  1. **Target immediately:** Open ONLY the `FILE` and exact `READ:` line range in `CURRENT_TASK.md` (keep reads <= 60 lines). Do NOT read `PLAN.md`, `temp_plans/`, or `ARCHITECTURE.md`, and do not search the workspace.
+  2. **Implement from spec:** Translate `GOAL` and `SPEC` bullets directly into targeted edits on the lines you read.
+  3. **Use `editor` only — NEVER `run_commands`:** Never run PowerShell/shell commands to read, edit, or verify files. Use `editor` for targeted replacements, then call `submit_and_exit` immediately.
 
 ## Constraints & Output Guidelines
 - **Stay Strictly on Spec**: Implement only what is described in `CURRENT_TASK.md`. Do not perform unrelated refactoring, stylistic changes, or mass reformatting.
