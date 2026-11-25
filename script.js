@@ -372,7 +372,7 @@ function setupMobileSkillsDropdown() {
     panelHeader.setAttribute("aria-expanded", "true");
   }
 
-  panelTitle.innerHTML = `// SKILLS <span class="skills-dropdown-arrow" aria-hidden="true">&#9662;</span>`;
+  panelTitle.innerHTML = `SKILLS <span class="skills-dropdown-arrow" aria-hidden="true">&#9662;</span>`;
 
   const toggleSkills = (e) => {
     if (!window.matchMedia("(max-width: 860px)").matches) return;

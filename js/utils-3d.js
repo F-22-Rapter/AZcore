@@ -1036,7 +1036,7 @@ function createRunLinkCard(asset, projectKeys = "", isStackItem = false) {
   if (!isStackItem) {
     const badge = document.createElement("div");
     badge.className = "stl-badge-overlay";
-    badge.innerHTML = "WEB APPLICATION // CLICK TO LAUNCH &#8599;";
+    badge.innerHTML = "WEB APPLICATION · CLICK TO LAUNCH &#8599;";
     linkEl.appendChild(badge);
   }
   linkEl.appendChild(overlay);
@@ -1078,7 +1078,7 @@ function createItchEmbedCard(asset, onOpenLightboxModal, projectKeys = "", isSta
   if (!isStackItem) {
     const badge = document.createElement("div");
     badge.className = "stl-badge-overlay";
-    badge.textContent = "INTERACTIVE APPLICATION // CLICK RUN TO LAUNCH";
+    badge.textContent = "INTERACTIVE APPLICATION · CLICK RUN TO LAUNCH";
     card.appendChild(badge);
   }
   card.appendChild(overlay);
@@ -1098,17 +1098,17 @@ function createUniversalAssetCard(asset) {
   const wrap = document.createElement("div");
   wrap.className = "universal-asset-card";
 
-  let badgeText = `${ext} // CLICK TO VIEW`;
+  let badgeText = `${ext} · CLICK TO VIEW`;
   let centerIcon = `.${ext}`;
 
   if (asset.type === "video") {
-    badgeText = `VIDEO (${ext}) // CLICK TO STREAM`;
+    badgeText = `VIDEO (${ext}) · CLICK TO STREAM`;
     centerIcon = "&#9654;";
   } else if (asset.type === "audio") {
-    badgeText = `AUDIO (${ext}) // CLICK TO PLAY`;
+    badgeText = `AUDIO (${ext}) · CLICK TO PLAY`;
     centerIcon = "&#9835;";
   } else if (asset.type === "pdf") {
-    badgeText = "PDF DOCUMENT // CLICK TO VIEW";
+    badgeText = "PDF DOCUMENT · CLICK TO VIEW";
     centerIcon = "PDF";
   }
 
@@ -1311,7 +1311,7 @@ function load3DModelObject(url, type) {
 function mountAutoRotating3DPreview(container, modelUrl, type) {
   const badge = document.createElement("div");
   badge.className = "stl-badge-overlay";
-  badge.textContent = `3D ${type.toUpperCase()} // TAP TO INSPECT`;
+  badge.textContent = `3D ${type.toUpperCase()} · TAP TO INSPECT`;
   container.appendChild(badge);
 
   const isMobileDevice = typeof IS_MOBILE !== "undefined" ? IS_MOBILE : false;

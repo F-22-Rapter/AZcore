@@ -215,7 +215,7 @@ async function loadAndRenderPhotography() {
       grid.style.display = "block";
       grid.innerHTML = `
         <div class="empty-state-box">
-          <div class="empty-state-title">// 0 IMAGES IN PHOTOGRAPHY FOLDER</div>
+          <div class="empty-state-title">0 IMAGES IN PHOTOGRAPHY FOLDER</div>
           <div class="empty-state-desc">
             No images were found in <code>${PORTFOLIO_CONFIG.photographyConfig.folder}preview/</code> or <code>${PORTFOLIO_CONFIG.photographyConfig.folder}</code>.
           </div>

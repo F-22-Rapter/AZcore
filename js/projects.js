@@ -20,7 +20,7 @@ function parseProjectTextFile(rawText, folderPath) {
   const lines = rawText.replace(/\r\n/g, "\n").split("\n");
   const data = {
     title: "",
-    code: "PRJ // ARCHIVE",
+    code: "PRJ · ARCHIVE",
     subName: "",
     tags: [],
     keys: "",
@@ -437,7 +437,7 @@ function ensureProjectDetailModalExists() {
     <div class="project-detail-dialog">
       <div class="project-detail-topbar">
         <div class="project-detail-topbar-left">
-          <span class="project-detail-code" id="pmodal-code">PRJ // ARCHIVE</span>
+          <span class="project-detail-code" id="pmodal-code">PRJ · ARCHIVE</span>
           <span class="project-detail-counter" id="pmodal-counter">1 / 1</span>
         </div>
         <button type="button" class="mini-action-btn lightbox-exit-btn" id="pmodal-close-btn">&#10005; CLOSE</button>
@@ -556,7 +556,7 @@ function openProjectDetailModal(proj) {
   const prevProj = totalCount > 1 ? navList[(currentIdx - 1 + totalCount) % totalCount] : null;
   const nextProj = totalCount > 1 ? navList[(currentIdx + 1) % totalCount] : null;
 
-  codeEl.textContent = proj.code || "PRJ // ARCHIVE";
+  codeEl.textContent = (proj.code || "PRJ · ARCHIVE").replace(/\s*\/\/\s*/g, " · ");
   if (counterEl) {
     counterEl.textContent = totalCount > 0 ? `${currentIdx + 1} / ${totalCount}` : "";
     counterEl.style.display = totalCount > 1 ? "inline-block" : "none";
@@ -651,11 +651,11 @@ function openProjectDetailModal(proj) {
           <p class="project-desc">${formattedDesc}</p>
 
           <div class="project-detail-attr-group">
-            <div class="skill-group-title">// CATEGORY &amp; SKILLS</div>
+            <div class="skill-group-title">CATEGORY &amp; SKILLS</div>
             <div class="project-tags" id="pmodal-attr-tags">
               ${
                 proj.subName
-                  ? `<button type="button" class="skill-tag subname-tag-pill" data-category="${proj.subName}" title="Filter by ${proj.subName}">// ${proj.subName}</button>`
+                  ? `<button type="button" class="skill-tag subname-tag-pill" data-category="${proj.subName}" title="Filter by ${proj.subName}">${proj.subName}</button>`
                   : ""
               }
               ${proj.tags
@@ -669,7 +669,7 @@ function openProjectDetailModal(proj) {
 
     <div class="project-detail-gallery-section">
       <div class="panel-header" style="margin-bottom: 14px;">
-        <span class="panel-title">// PROJECT MEDIA &amp; INTERACTIVE ASSETS [${proj.verifiedAssets.length}]</span>
+        <span class="panel-title">PROJECT MEDIA &amp; INTERACTIVE ASSETS [${proj.verifiedAssets.length}]</span>
       </div>
       <div class="project-gallery-grid" id="pmodal-gallery-grid"></div>
     </div>
@@ -808,7 +808,7 @@ function applyCategoryFilter(rawCategory) {
   // Update mobile dropdown active readout label
   const activeReadout = document.getElementById("categories-active-readout");
   if (activeReadout) {
-    activeReadout.textContent = cleanCat ? `// ${rawCategory.trim().toUpperCase()}` : "// ALL";
+    activeReadout.textContent = cleanCat ? rawCategory.trim().toUpperCase() : "ALL";
   }
 
   let visibleCount = 0;
@@ -905,7 +905,7 @@ async function loadAndRenderProjects() {
     if (validProjects.length === 0) {
       container.innerHTML = `
         <div class="empty-state-box">
-          <div class="empty-state-title">// 0 PROJECT TEXT FILES DETECTED</div>
+          <div class="empty-state-title">0 PROJECT TEXT FILES DETECTED</div>
           <div class="empty-state-desc">
             No valid <code>project.txt</code> files with linked assets were found inside <code>${normBase}</code>.
           </div>
@@ -927,18 +927,18 @@ async function loadAndRenderProjects() {
     filterBar.className = "project-filter-bar";
     filterBar.innerHTML = `
       <div class="panel-header categories-dropdown-header" id="categories-dropdown-header" role="button" tabindex="0" aria-expanded="true">
-        <span class="panel-title">// CATEGORIES <span class="categories-dropdown-arrow" aria-hidden="true">&#9662;</span></span>
-        <span class="categories-active-readout" id="categories-active-readout">// ALL</span>
+        <span class="panel-title">CATEGORIES <span class="categories-dropdown-arrow" aria-hidden="true">&#9662;</span></span>
+        <span class="categories-active-readout" id="categories-active-readout">ALL</span>
       </div>
       <div class="filter-bar-inner" id="categories-dropdown-body">
         <div class="filter-group-row">
-          <span class="filter-group-label desktop-categories-label">// CATEGORIES:</span>
+          <span class="filter-group-label desktop-categories-label">CATEGORIES:</span>
           <div class="filter-pills" id="category-pills-container">
-            <button type="button" class="filter-pill subname-pill active" data-category="">// ALL</button>
+            <button type="button" class="filter-pill subname-pill active" data-category="">ALL</button>
             ${Array.from(categoriesSet)
               .map(
                 (cat) =>
-                  `<button type="button" class="filter-pill subname-pill" data-category="${cat}">// ${cat}</button>`
+                  `<button type="button" class="filter-pill subname-pill" data-category="${cat}">${cat}</button>`
               )
               .join("")}
           </div>
