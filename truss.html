@@ -1,0 +1,1472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Interactive 2D Truss Builder &amp; TI-84 Matrix Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #1e293b;
+      --panel-2: #162032;
+      --panel-3: #0b1220;
+      --border: #334155;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-dark: #082f49;
+      --tension: #3b82f6;
+      --compression: #ef4444;
+      --zero: #64748b;
+      --load: #f59e0b;
+      --ok: #22c55e;
+      --err: #fca5a5;
+      --radius: 10px;
+      --tap-min: 44px;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100dvh;
+      width: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      padding-top: env(safe-area-inset-top);
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+    }
+
+    /* ================= HEADER & TOOLBARS ================= */
+    header {
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px 14px;
+      flex-shrink: 0;
+      z-index: 20;
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .brand-badge {
+      background: var(--accent);
+      color: var(--accent-dark);
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .status-pill {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      white-space: nowrap;
+    }
+    .status-ok { color: var(--ok); border-color: #166534; background: #052e16; }
+    .status-err { color: var(--err); border-color: #991b1b; background: #450a0a; }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      overflow-x: auto;
+      white-space: nowrap;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 2px;
+    }
+    .header-controls::-webkit-scrollbar { display: none; }
+
+    .btn-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    button {
+      background: #273549;
+      color: var(--text);
+      border: 1px solid var(--border);
+      min-height: var(--tap-min);
+      padding: 0 14px;
+      border-radius: var(--radius);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background 0.15s, border-color 0.15s, transform 0.1s;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    button:active { transform: scale(0.97); }
+    button:hover { background: #334155; }
+
+    button.active {
+      background: var(--accent);
+      color: var(--accent-dark);
+      border-color: var(--accent);
+    }
+
+    button.danger {
+      color: #fecaca;
+      border-color: #7f1d1d;
+      background: rgba(127, 29, 29, 0.35);
+    }
+    button.danger:hover, button.danger.active {
+      background: #b91c1c;
+      color: #ffffff;
+      border-color: #ef4444;
+    }
+
+    /* ================= MAIN WORKSPACE ================= */
+    main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1.25fr 1fr;
+      min-height: 0;
+      position: relative;
+    }
+
+    .pane {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      min-width: 0;
+    }
+
+    .left-pane {
+      border-right: 1px solid var(--border);
+      background: var(--panel-3);
+      position: relative;
+    }
+
+    .right-pane {
+      background: var(--panel-2);
+    }
+
+    /* ================= CANVAS TOP BAR ================= */
+    .canvas-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 12px;
+      background: var(--panel-2);
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--muted);
+      overflow-x: auto;
+      white-space: nowrap;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      flex-shrink: 0;
+    }
+    .canvas-bar::-webkit-scrollbar { display: none; }
+
+    .canvas-bar label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    /* 16px font-size prevents iOS Safari auto-zoom on focus */
+    input[type="number"], input[type="text"], select {
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      min-height: 40px;
+    }
+
+    .canvas-bar input[type="number"] { width: 68px; min-height: 36px; padding: 4px 8px; }
+    .canvas-bar input[type="text"] { width: 64px; min-height: 36px; padding: 4px 8px; }
+    .canvas-bar input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .btn-compact {
+      min-height: 36px;
+      padding: 0 12px;
+      font-size: 12px;
+    }
+
+    .coord-readout {
+      margin-left: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--accent);
+      background: rgba(56, 189, 248, 0.1);
+      padding: 4px 8px;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+
+    /* ================= SVG CANVAS ================= */
+    .svg-wrap {
+      flex: 1;
+      position: relative;
+      background: var(--panel-3);
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      user-select: none;
+      touch-action: none; /* Prevent accidental scroll while tapping/drawing */
+    }
+
+    .legend {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(15, 23, 42, 0.86);
+      backdrop-filter: blur(6px);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 11px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      pointer-events: none;
+      max-width: calc(100% - 20px);
+    }
+
+    .dot {
+      display: inline-block;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+
+    /* ================= INSPECTOR CARD ================= */
+    .inspector-bar {
+      background: var(--panel);
+      border-top: 1px solid var(--border);
+      padding: 10px 14px;
+      flex-shrink: 0;
+      font-size: 13px;
+    }
+
+    .inspector-hint {
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      min-height: 28px;
+    }
+
+    .inspector-card {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .inspector-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .inspector-title {
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-close {
+      min-height: 36px;
+      min-width: 36px;
+      padding: 0 10px;
+      font-size: 14px;
+      border-radius: 8px;
+    }
+
+    .inspector-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 8px;
+      align-items: end;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .field label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .field input, .field select {
+      width: 100%;
+    }
+
+    .member-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    /* ================= RIGHT PANE (TI-84 TABS) ================= */
+    .tabs {
+      display: flex;
+      gap: 6px;
+      padding: 8px 12px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+      white-space: nowrap;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      flex-shrink: 0;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
+
+    .tab {
+      min-height: var(--tap-min);
+      padding: 0 14px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .tab:hover {
+      background: rgba(51, 65, 85, 0.5);
+      color: var(--text);
+    }
+    .tab.active {
+      background: rgba(56, 189, 248, 0.15);
+      color: var(--accent);
+      border-color: rgba(56, 189, 248, 0.4);
+    }
+
+    .tab-content {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 12px;
+      font-size: 13px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .card h3 {
+      margin: 0 0 8px;
+      font-size: 14px;
+      color: var(--accent);
+    }
+
+    .table-scroll {
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+    }
+
+    th, td {
+      border: 1px solid var(--border);
+      padding: 8px 8px;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    th {
+      background: #172235;
+      color: var(--accent);
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      font-weight: 600;
+    }
+
+    tr.hl-row td { background: rgba(56, 189, 248, 0.16); }
+    td.hl-col, th.hl-col { background: rgba(245, 158, 11, 0.18); }
+    td.nonzero { color: #f8fafc; font-weight: 700; cursor: pointer; background: rgba(56, 189, 248, 0.08); }
+    td.zero { color: #475569; }
+
+    .badge-T { color: #60a5fa; font-weight: 700; }
+    .badge-C { color: #f87171; font-weight: 700; }
+    .badge-0 { color: #94a3b8; }
+
+    code {
+      background: var(--bg);
+      border: 1px solid #1e293b;
+      padding: 3px 6px;
+      border-radius: 5px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: #fde68a;
+      display: inline-block;
+      margin: 2px 2px;
+    }
+
+    /* ================= MOBILE BOTTOM NAVIGATION ================= */
+    .mobile-nav {
+      display: none;
+    }
+
+    @media (max-width: 900px) {
+      header {
+        padding: 8px 10px;
+        gap: 6px;
+      }
+
+      header h1 {
+        font-size: 14px;
+      }
+
+      .status-pill {
+        font-size: 11px;
+        padding: 4px 9px;
+      }
+
+      main {
+        display: block;
+        flex: 1;
+        min-height: 0;
+      }
+
+      .pane {
+        display: none;
+        height: 100%;
+        border-right: none;
+      }
+
+      .pane.mobile-active {
+        display: flex;
+      }
+
+      /* Compact 2-column inspector grid on mobile */
+      .inspector-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .inspector-bar {
+        max-height: 44dvh;
+        overflow-y: auto;
+      }
+
+      .mobile-nav {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        background: var(--panel);
+        border-top: 1px solid var(--border);
+        padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+        flex-shrink: 0;
+        z-index: 30;
+      }
+
+      .mobile-nav button {
+        min-height: 48px;
+        border-radius: 10px;
+        font-size: 13px;
+        background: var(--panel-2);
+        color: var(--muted);
+        border: 1px solid var(--border);
+      }
+
+      .mobile-nav button.active {
+        background: var(--accent);
+        color: var(--accent-dark);
+        border-color: var(--accent);
+      }
+
+      .nav-badge {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 11px;
+        padding: 2px 6px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.4);
+        color: inherit;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header & Scrollable Toolbars -->
+  <header>
+    <div class="header-top">
+      <div class="brand">
+        <span class="brand-badge">TI-84</span>
+        <h1>2D Truss Builder &amp; Matrix Generator</h1>
+      </div>
+      <span id="statusPill" class="status-pill">Ready</span>
+    </div>
+
+    <div class="header-controls">
+      <div class="btn-group" id="modeBar" role="toolbar" aria-label="Drawing Modes">
+        <button data-mode="select" class="active">Select / Edit</button>
+        <button data-mode="joint">+ Joint</button>
+        <button data-mode="member">+ Member</button>
+        <button data-mode="support">Support</button>
+        <button data-mode="delete" class="danger">Delete</button>
+      </div>
+
+      <div class="btn-group" aria-label="Presets">
+        <button id="btnPreset524">Prob. 5–24</button>
+        <button id="btnPreset54">Prob. 5–4</button>
+        <button id="btnClear" class="danger">Clear</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace (Split on Desktop, Single-Pane on Mobile) -->
+  <main>
+    <!-- Pane 1: Truss Builder Canvas -->
+    <section class="pane left-pane mobile-active" id="paneBuilder">
+      <div class="canvas-bar">
+        <label>Step <input type="number" id="gridStep" value="1" min="0.5" step="0.5" /></label>
+        <label>Units <input type="text" id="unitLabel" value="kN" /></label>
+        <label><input type="checkbox" id="chkShowForces" checked /> Solved Forces</label>
+        <button id="btnFit" class="btn-compact">Auto-Fit</button>
+        <span id="coordReadout" class="coord-readout">x: 0, y: 0</span>
+      </div>
+
+      <div class="svg-wrap">
+        <svg id="trussSvg" role="img" aria-label="Interactive 2D Truss Canvas"></svg>
+        <div class="legend">
+          <span><i class="dot" style="background:var(--tension)"></i>Tension (T)</span>
+          <span><i class="dot" style="background:var(--compression)"></i>Compression (C)</span>
+          <span><i class="dot" style="background:var(--zero)"></i>Zero</span>
+          <span><i class="dot" style="background:var(--load)"></i>Load</span>
+        </div>
+      </div>
+
+      <div class="inspector-bar" id="inspector"></div>
+    </section>
+
+    <!-- Pane 2: TI-84 Matrices & Solution -->
+    <section class="pane right-pane" id="paneMatrix">
+      <div class="tabs" id="tabBar" role="tablist">
+        <button class="tab active" data-tab="sparse">Non-Zero [A]</button>
+        <button class="tab" data-tab="bc">[B] &amp; [C] Solution</button>
+        <button class="tab" data-tab="full">Full [A]</button>
+        <button class="tab" data-tab="keys">TI-84 Steps</button>
+      </div>
+      <div class="tab-content" id="tabContent"></div>
+    </section>
+  </main>
+
+  <!-- Sticky Mobile Bottom Navigation (<= 900px) -->
+  <nav class="mobile-nav" aria-label="Mobile View Switcher">
+    <button id="navBuilder" class="active" type="button">
+      <span>Truss Builder</span>
+    </button>
+    <button id="navMatrix" type="button">
+      <span>TI-84 Matrices</span>
+      <span id="navBadge" class="nav-badge">12×12</span>
+    </button>
+  </nav>
+
+  <script>
+    (function () {
+      'use strict';
+
+      /* =====================================================================
+       * 1. APPLICATION STATE
+       * ===================================================================== */
+      const state = {
+        nodes: [],          // { name, x, y, support: 'none'|'pin'|'rollerY'|'rollerX', px, py }
+        members: [],        // { a, b } (node indices)
+        mode: 'select',     // 'select' | 'joint' | 'member' | 'support' | 'delete'
+        selectedNode: null,
+        selectedMember: null,
+        memberStart: null,
+        hlRow: null,
+        hlCol: null,
+        activeTab: 'sparse',
+        mobileView: 'builder', // 'builder' | 'matrix'
+        gridStep: 1,
+        units: 'kN',
+        showForces: true,
+        view: { minX: -2, maxX: 11, minY: -2, maxY: 6 }
+      };
+
+      let solution = null;
+
+      // DOM Elements
+      const svg = document.getElementById('trussSvg');
+      const inspector = document.getElementById('inspector');
+      const tabContent = document.getElementById('tabContent');
+      const statusPill = document.getElementById('statusPill');
+      const coordReadout = document.getElementById('coordReadout');
+      const paneBuilder = document.getElementById('paneBuilder');
+      const paneMatrix = document.getElementById('paneMatrix');
+      const navBuilder = document.getElementById('navBuilder');
+      const navMatrix = document.getElementById('navMatrix');
+      const navBadge = document.getElementById('navBadge');
+
+      /* =====================================================================
+       * 2. PRESETS (Prob. 5-24 & Prob. 5-4)
+       * ===================================================================== */
+      function loadPreset524() {
+        state.units = 'kN';
+        document.getElementById('unitLabel').value = 'kN';
+        state.gridStep = 1;
+        document.getElementById('gridStep').value = '1';
+        state.nodes = [
+          { name: 'A', x: 0, y: 0, support: 'pin',     px: 0,  py: 0 },
+          { name: 'B', x: 3, y: 0, support: 'none',    px: 0,  py: -6 },
+          { name: 'C', x: 6, y: 0, support: 'none',    px: 0,  py: -9 },
+          { name: 'D', x: 9, y: 0, support: 'rollerY', px: 0,  py: 0 },
+          { name: 'E', x: 6, y: 3, support: 'none',    px: 0,  py: 0 },
+          { name: 'F', x: 3, y: 3, support: 'none',    px: 12, py: 0 }
+        ];
+        state.members = [
+          { a: 0, b: 1 }, { a: 1, b: 2 }, { a: 2, b: 3 }, { a: 4, b: 5 },
+          { a: 1, b: 5 }, { a: 2, b: 4 }, { a: 0, b: 5 }, { a: 1, b: 4 }, { a: 3, b: 4 }
+        ];
+        resetSelectionAndFit();
+      }
+
+      function loadPreset54() {
+        state.units = 'kip';
+        document.getElementById('unitLabel').value = 'kip';
+        state.gridStep = 2;
+        document.getElementById('gridStep').value = '2';
+        state.nodes = [
+          { name: 'A', x: 0,  y: 0,  support: 'rollerY', px: 0,   py: 0 },
+          { name: 'B', x: 10, y: 0,  support: 'none',    px: 0,   py: 0 },
+          { name: 'C', x: 20, y: 0,  support: 'none',    px: 0,   py: 0 },
+          { name: 'D', x: 30, y: 0,  support: 'none',    px: 0,   py: 0 },
+          { name: 'E', x: 40, y: 0,  support: 'pin',     px: 0,   py: 0 },
+          { name: 'F', x: 30, y: 4,  support: 'none',    px: 0,   py: -3 },
+          { name: 'G', x: 20, y: 8,  support: 'none',    px: 0,   py: -3 },
+          { name: 'H', x: 10, y: 12, support: 'none',    px: 2,   py: 0 },
+          { name: 'I', x: 10, y: 4,  support: 'none',    px: 1.5, py: 0 }
+        ];
+        state.members = [
+          { a: 0, b: 1 }, { a: 1, b: 2 }, { a: 2, b: 3 }, { a: 3, b: 4 },
+          { a: 7, b: 6 }, { a: 6, b: 5 }, { a: 5, b: 4 },
+          { a: 0, b: 8 }, { a: 8, b: 6 }, { a: 8, b: 2 }, { a: 2, b: 5 },
+          { a: 1, b: 8 }, { a: 8, b: 7 }, { a: 2, b: 6 }, { a: 3, b: 5 }
+        ];
+        resetSelectionAndFit();
+      }
+
+      function clearAll() {
+        state.nodes = [];
+        state.members = [];
+        state.view = { minX: -1, maxX: 12, minY: -1, maxY: 8 };
+        state.selectedNode = null;
+        state.selectedMember = null;
+        state.memberStart = null;
+        state.hlRow = null;
+        state.hlCol = null;
+        update();
+      }
+
+      function resetSelectionAndFit() {
+        state.selectedNode = null;
+        state.selectedMember = null;
+        state.memberStart = null;
+        state.hlRow = null;
+        state.hlCol = null;
+        autoFitView();
+        update();
+      }
+
+      function autoFitView() {
+        if (!state.nodes.length) {
+          state.view = { minX: -1, maxX: 12, minY: -1, maxY: 8 };
+          return;
+        }
+        const xs = state.nodes.map(n => n.x);
+        const ys = state.nodes.map(n => n.y);
+        const minX = Math.min(...xs), maxX = Math.max(...xs);
+        const minY = Math.min(...ys), maxY = Math.max(...ys);
+        const spanX = Math.max(maxX - minX, 4);
+        const spanY = Math.max(maxY - minY, 3);
+        const padX = spanX * 0.25;
+        const padY = spanY * 0.42;
+        state.view = {
+          minX: minX - padX,
+          maxX: maxX + padX,
+          minY: minY - padY,
+          maxY: maxY + padY
+        };
+      }
+
+      /* =====================================================================
+       * 3. LINEAR SOLVER (Gaussian Elimination with Partial Pivoting)
+       * ===================================================================== */
+      function solveLinearSystem(A, b) {
+        const n = A.length;
+        const M = A.map((row, i) => [...row, b[i]]);
+        for (let col = 0; col < n; col++) {
+          let pivot = col;
+          for (let r = col + 1; r < n; r++) {
+            if (Math.abs(M[r][col]) > Math.abs(M[pivot][col])) pivot = r;
+          }
+          if (Math.abs(M[pivot][col]) < 1e-10) return null;
+          [M[col], M[pivot]] = [M[pivot], M[col]];
+          for (let r = col + 1; r < n; r++) {
+            const f = M[r][col] / M[col][col];
+            for (let c = col; c <= n; c++) M[r][c] -= f * M[col][c];
+          }
+        }
+        const x = new Array(n).fill(0);
+        for (let i = n - 1; i >= 0; i--) {
+          let sum = M[i][n];
+          for (let j = i + 1; j < n; j++) sum -= M[i][j] * x[j];
+          x[i] = sum / M[i][i];
+        }
+        return x;
+      }
+
+      function buildAndSolve() {
+        const j = state.nodes.length;
+        const m = state.members.length;
+        const reactions = [];
+
+        state.nodes.forEach((n, idx) => {
+          if (n.support === 'pin') {
+            reactions.push({ nodeIdx: idx, axis: 'x', label: `${n.name}x` });
+            reactions.push({ nodeIdx: idx, axis: 'y', label: `${n.name}y` });
+          } else if (n.support === 'rollerY') {
+            reactions.push({ nodeIdx: idx, axis: 'y', label: `${n.name}y` });
+          } else if (n.support === 'rollerX') {
+            reactions.push({ nodeIdx: idx, axis: 'x', label: `${n.name}x` });
+          }
+        });
+
+        const nEq = 2 * j;
+        const nUnk = m + reactions.length;
+        const colLabels = [
+          ...state.members.map(mem => `${state.nodes[mem.a].name}${state.nodes[mem.b].name}`),
+          ...reactions.map(r => r.label)
+        ];
+        const rowLabels = [];
+        state.nodes.forEach(n => {
+          rowLabels.push(`${n.name}x`);
+          rowLabels.push(`${n.name}y`);
+        });
+
+        const A = Array.from({ length: nEq }, () => new Array(nUnk).fill(0));
+        const B = new Array(nEq).fill(0);
+
+        // Fill direction cosines (tension positive)
+        state.members.forEach((mem, col) => {
+          const na = state.nodes[mem.a];
+          const nb = state.nodes[mem.b];
+          const dx = nb.x - na.x;
+          const dy = nb.y - na.y;
+          const L = Math.hypot(dx, dy);
+          if (L < 1e-9) return;
+          const cx = dx / L;
+          const cy = dy / L;
+          A[2 * mem.a][col] = cx;
+          A[2 * mem.a + 1][col] = cy;
+          A[2 * mem.b][col] = -cx;
+          A[2 * mem.b + 1][col] = -cy;
+        });
+
+        // Fill support reactions
+        reactions.forEach((r, k) => {
+          const col = m + k;
+          A[2 * r.nodeIdx + (r.axis === 'x' ? 0 : 1)][col] = 1;
+        });
+
+        // Fill RHS (-P)
+        state.nodes.forEach((n, idx) => {
+          B[2 * idx] = -n.px;
+          B[2 * idx + 1] = -n.py;
+        });
+
+        let status = 'ok', msg = '', shortBadge = `${nEq}×${nUnk}`, C = null;
+        if (j === 0) {
+          status = 'empty';
+          msg = 'Add joints & members';
+          shortBadge = '0×0';
+        } else if (nUnk < nEq) {
+          status = 'err';
+          msg = `Unstable: m+r=${nUnk} < 2j=${nEq}`;
+          shortBadge = 'Unstable';
+        } else if (nUnk > nEq) {
+          status = 'err';
+          msg = `Indeterminate: m+r=${nUnk} > 2j=${nEq}`;
+          shortBadge = 'Indet.';
+        } else {
+          C = solveLinearSystem(A, B);
+          if (!C) {
+            status = 'err';
+            msg = `Singular (${nEq}×${nEq}) — check supports`;
+            shortBadge = 'Singular';
+          } else {
+            status = 'ok';
+            msg = `Determinate ${nEq}×${nEq} — Solved`;
+            shortBadge = `${nEq}×${nEq} ✓`;
+          }
+        }
+
+        return { A, B, C, rowLabels, colLabels, reactions, nEq, nUnk, status, msg, shortBadge };
+      }
+
+      /* =====================================================================
+       * 4. COORDINATE TRANSFORM & SVG RENDERER
+       * ===================================================================== */
+      function getTransform() {
+        const rect = svg.getBoundingClientRect();
+        const w = Math.max(rect.width, 280);
+        const h = Math.max(rect.height, 220);
+        const { minX, maxX, minY, maxY } = state.view;
+        const scale = Math.min(w / (maxX - minX), h / (maxY - minY));
+        const usedW = (maxX - minX) * scale;
+        const usedH = (maxY - minY) * scale;
+        const offX = (w - usedW) / 2;
+        const offY = (h - usedH) / 2;
+        return {
+          w, h, scale,
+          toScreen: (x, y) => [offX + (x - minX) * scale, h - offY - (y - minY) * scale],
+          toWorld: (sx, sy) => [minX + (sx - offX) / scale, minY + (h - offY - sy) / scale]
+        };
+      }
+
+      function renderSVG() {
+        const tf = getTransform();
+        let html = '';
+
+        // Grid lines
+        const step = Math.max(state.gridStep, 0.5);
+        const gxStart = Math.floor(state.view.minX / step) * step;
+        const gyStart = Math.floor(state.view.minY / step) * step;
+
+        for (let x = gxStart; x <= state.view.maxX; x += step) {
+          const [sx] = tf.toScreen(x, 0);
+          const major = Math.abs(x) < 1e-6;
+          html += `<line x1="${sx}" y1="0" x2="${sx}" y2="${tf.h}" stroke="${major ? '#334155' : '#162032'}" stroke-width="${major ? 1.5 : 1}" />`;
+        }
+        for (let y = gyStart; y <= state.view.maxY; y += step) {
+          const [, sy] = tf.toScreen(0, y);
+          const major = Math.abs(y) < 1e-6;
+          html += `<line x1="0" y1="${sy}" x2="${tf.w}" y2="${sy}" stroke="${major ? '#334155' : '#162032'}" stroke-width="${major ? 1.5 : 1}" />`;
+        }
+
+        // Members (with generous 28px touch hit targets)
+        state.members.forEach((mem, idx) => {
+          const na = state.nodes[mem.a];
+          const nb = state.nodes[mem.b];
+          const [x1, y1] = tf.toScreen(na.x, na.y);
+          const [x2, y2] = tf.toScreen(nb.x, nb.y);
+
+          let color = '#94a3b8';
+          let dash = '';
+          let label = `${na.name}${nb.name}`;
+
+          if (state.showForces && solution && solution.C) {
+            const f = solution.C[idx];
+            if (Math.abs(f) < 1e-5) {
+              color = '#64748b';
+              dash = '6,4';
+              label = '0';
+            } else if (f > 0) {
+              color = '#3b82f6';
+              label = `${f.toFixed(2)} T`;
+            } else {
+              color = '#ef4444';
+              label = `${Math.abs(f).toFixed(2)} C`;
+            }
+          }
+
+          const isSel = state.selectedMember === idx || state.hlCol === idx;
+          html += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="transparent" stroke-width="28" class="mem-hit" data-idx="${idx}" style="cursor:pointer" />`;
+          html += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${isSel ? '#facc15' : color}" stroke-width="${isSel ? 7 : 4.5}" stroke-dasharray="${dash}" stroke-linecap="round" pointer-events="none" />`;
+
+          // Midpoint badge
+          const mx = (x1 + x2) / 2;
+          const my = (y1 + y2) / 2;
+          const pillW = Math.max(46, label.length * 7 + 14);
+          html += `<g pointer-events="none">
+            <rect x="${mx - pillW / 2}" y="${my - 10}" width="${pillW}" height="20" rx="5" fill="#0f172a" stroke="${isSel ? '#facc15' : '#334155'}" stroke-width="1.2" opacity="0.93" />
+            <text x="${mx}" y="${my + 4}" text-anchor="middle" fill="${isSel ? '#facc15' : '#e2e8f0'}" font-family="JetBrains Mono, monospace" font-size="10.5" font-weight="600">${label}</text>
+          </g>`;
+        });
+
+        // Supports, External Loads, and Joints (with generous r="24" touch hit targets)
+        state.nodes.forEach((n, idx) => {
+          const [sx, sy] = tf.toScreen(n.x, n.y);
+
+          // Support symbols
+          if (n.support === 'pin') {
+            html += `<polygon points="${sx},${sy + 8} ${sx - 12},${sy + 26} ${sx + 12},${sy + 26}" fill="#1e293b" stroke="#38bdf8" stroke-width="2" pointer-events="none" />`;
+            html += `<line x1="${sx - 16}" y1="${sy + 26}" x2="${sx + 16}" y2="${sy + 26}" stroke="#38bdf8" stroke-width="2" pointer-events="none" />`;
+          } else if (n.support === 'rollerY') {
+            html += `<circle cx="${sx}" cy="${sy + 15}" r="7" fill="#1e293b" stroke="#38bdf8" stroke-width="2" pointer-events="none" />`;
+            html += `<line x1="${sx - 14}" y1="${sy + 23}" x2="${sx + 14}" y2="${sy + 23}" stroke="#38bdf8" stroke-width="2" pointer-events="none" />`;
+          } else if (n.support === 'rollerX') {
+            html += `<circle cx="${sx - 15}" cy="${sy}" r="7" fill="#1e293b" stroke="#38bdf8" stroke-width="2" pointer-events="none" />`;
+            html += `<line x1="${sx - 23}" y1="${sy - 14}" x2="${sx - 23}" y2="${sy + 14}" stroke="#38bdf8" stroke-width="2" pointer-events="none" />`;
+          }
+
+          // External load arrows
+          const drawArrow = (x1, y1, x2, y2, text, tx, ty) => {
+            const dx = x2 - x1, dy = y2 - y1;
+            return `
+              <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#f59e0b" stroke-width="3" pointer-events="none" />
+              <polygon points="${x2},${y2} ${x2 - dx * 0.24 - dy * 0.13},${y2 - dy * 0.24 + dx * 0.13} ${x2 - dx * 0.24 + dy * 0.13},${y2 - dy * 0.24 - dx * 0.13}" fill="#f59e0b" pointer-events="none" />
+              <text x="${tx}" y="${ty}" text-anchor="middle" fill="#fbbf24" font-family="Inter, sans-serif" font-size="11.5" font-weight="700" pointer-events="none">${text}</text>
+            `;
+          };
+
+          if (Math.abs(n.px) > 1e-6) {
+            const dir = n.px > 0 ? 1 : -1;
+            html += drawArrow(sx - dir * 56, sy, sx - dir * 14, sy, `${Math.abs(n.px)} ${state.units}`, sx - dir * 36, sy - 10);
+          }
+          if (Math.abs(n.py) > 1e-6) {
+            const dir = n.py > 0 ? -1 : 1; // inverted screen Y
+            html += drawArrow(sx, sy - dir * 56, sx, sy - dir * 14, `${Math.abs(n.py)} ${state.units}`, sx, sy - dir * 63);
+          }
+
+          // Joint invisible touch target + visible pin
+          const isSel = state.selectedNode === idx || state.memberStart === idx || (state.hlRow !== null && Math.floor(state.hlRow / 2) === idx);
+          html += `<circle cx="${sx}" cy="${sy}" r="24" fill="transparent" class="node-hit" data-idx="${idx}" style="cursor:pointer" />`;
+          html += `<circle cx="${sx}" cy="${sy}" r="${isSel ? 12 : 10}" fill="${isSel ? '#facc15' : '#0f172a'}" stroke="#38bdf8" stroke-width="2.5" pointer-events="none" />`;
+          html += `<text x="${sx}" y="${sy + 4}" text-anchor="middle" fill="${isSel ? '#0f172a' : '#f8fafc'}" font-family="Inter, sans-serif" font-size="11.5" font-weight="700" pointer-events="none">${n.name}</text>`;
+        });
+
+        svg.innerHTML = html;
+      }
+
+      /* =====================================================================
+       * 5. INSPECTOR CARD (2-Column Mobile Grid + Close Button)
+       * ===================================================================== */
+      function renderInspector() {
+        if (state.selectedNode !== null && state.nodes[state.selectedNode]) {
+          const n = state.nodes[state.selectedNode];
+          inspector.innerHTML = `
+            <div class="inspector-card">
+              <div class="inspector-header">
+                <div class="inspector-title">Joint ${n.name}</div>
+                <div class="btn-group">
+                  <button class="danger btn-compact" id="btnDelNode" type="button">Delete</button>
+                  <button class="btn-close" id="btnCloseInsp" type="button" aria-label="Close Inspector">✕</button>
+                </div>
+              </div>
+              <div class="inspector-grid">
+                <div class="field">
+                  <label for="edX">X Coord</label>
+                  <input type="number" step="0.5" id="edX" value="${n.x}" />
+                </div>
+                <div class="field">
+                  <label for="edY">Y Coord</label>
+                  <input type="number" step="0.5" id="edY" value="${n.y}" />
+                </div>
+                <div class="field">
+                  <label for="edPx">Px (+right)</label>
+                  <input type="number" step="0.5" id="edPx" value="${n.px}" />
+                </div>
+                <div class="field">
+                  <label for="edPy">Py (+up)</label>
+                  <input type="number" step="0.5" id="edPy" value="${n.py}" />
+                </div>
+                <div class="field" style="grid-column: 1 / -1;">
+                  <label for="edSup">Support Type</label>
+                  <select id="edSup">
+                    <option value="none" ${n.support === 'none' ? 'selected' : ''}>None (Free Joint)</option>
+                    <option value="pin" ${n.support === 'pin' ? 'selected' : ''}>Pin Support (Rx, Ry)</option>
+                    <option value="rollerY" ${n.support === 'rollerY' ? 'selected' : ''}>Roller Y (Ry only)</option>
+                    <option value="rollerX" ${n.support === 'rollerX' ? 'selected' : ''}>Roller X (Rx only)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          `;
+
+          ['edX', 'edY', 'edPx', 'edPy'].forEach((id, k) => {
+            document.getElementById(id).oninput = (e) => {
+              const v = parseFloat(e.target.value);
+              const val = Number.isFinite(v) ? v : 0;
+              if (k === 0) n.x = val;
+              else if (k === 1) n.y = val;
+              else if (k === 2) n.px = val;
+              else n.py = val;
+              update(false); // skip re-rendering inspector to preserve input focus
+            };
+          });
+          document.getElementById('edSup').onchange = (e) => {
+            n.support = e.target.value;
+            update(false);
+          };
+          document.getElementById('btnDelNode').onclick = () => deleteNode(state.selectedNode);
+          document.getElementById('btnCloseInsp').onclick = () => {
+            state.selectedNode = null;
+            state.hlRow = null;
+            update();
+          };
+        } else if (state.selectedMember !== null && state.members[state.selectedMember]) {
+          const mem = state.members[state.selectedMember];
+          const na = state.nodes[mem.a];
+          const nb = state.nodes[mem.b];
+          const L = Math.hypot(nb.x - na.x, nb.y - na.y);
+          const f = solution && solution.C ? solution.C[state.selectedMember] : null;
+          const forceText = f === null
+            ? 'Unsolved'
+            : Math.abs(f) < 1e-5
+              ? '0 (Zero-force)'
+              : `${Math.abs(f).toFixed(3)} ${state.units} (${f > 0 ? 'T' : 'C'})`;
+
+          inspector.innerHTML = `
+            <div class="inspector-card">
+              <div class="inspector-header">
+                <div class="inspector-title">Member ${na.name}${nb.name}</div>
+                <div class="btn-group">
+                  <button class="danger btn-compact" id="btnDelMem" type="button">Delete</button>
+                  <button class="btn-close" id="btnCloseInsp" type="button" aria-label="Close Inspector">✕</button>
+                </div>
+              </div>
+              <div class="member-stats">
+                <span>Length: <code>${L.toFixed(3)}</code></span>
+                <span>cosθ: <code>${((nb.x - na.x) / L).toFixed(4)}</code></span>
+                <span>sinθ: <code>${((nb.y - na.y) / L).toFixed(4)}</code></span>
+                <span>Force: <code>${forceText}</code></span>
+              </div>
+            </div>
+          `;
+
+          document.getElementById('btnDelMem').onclick = () => {
+            state.members.splice(state.selectedMember, 1);
+            state.selectedMember = null;
+            state.hlCol = null;
+            update();
+          };
+          document.getElementById('btnCloseInsp').onclick = () => {
+            state.selectedMember = null;
+            state.hlCol = null;
+            update();
+          };
+        } else {
+          const hint = state.mode === 'joint'
+            ? 'Tap anywhere on the grid to place a new joint.'
+            : state.mode === 'member'
+              ? (state.memberStart === null
+                  ? 'Tap the first joint of the new member.'
+                  : `Selected Joint ${state.nodes[state.memberStart].name} — tap the second joint.`)
+              : state.mode === 'support'
+                ? 'Tap any joint to cycle: None → Pin → Roller Y → Roller X.'
+                : state.mode === 'delete'
+                  ? 'Tap any joint or member to delete it.'
+                  : 'Tap any joint or member to edit coordinates, loads, or supports.';
+          inspector.innerHTML = `<div class="inspector-hint">${hint}</div>`;
+        }
+      }
+
+      /* =====================================================================
+       * 6. TI-84 MATRIX OUTPUT TABS
+       * ===================================================================== */
+      function fmt(v) {
+        if (Math.abs(v) < 1e-9) return '0';
+        if (Math.abs(v - 1) < 1e-9) return '1';
+        if (Math.abs(v + 1) < 1e-9) return '-1';
+        return Number(v.toFixed(4)).toString();
+      }
+
+      function renderRightPane() {
+        if (!solution || solution.nEq === 0) {
+          tabContent.innerHTML = `<div class="card">Add joints and members in the <strong>Truss Builder</strong> to generate the TI-84 matrices.</div>`;
+          return;
+        }
+
+        const { A, B, C, rowLabels, colLabels, nEq, nUnk } = solution;
+
+        if (state.activeTab === 'sparse') {
+          let rowsHtml = '';
+          for (let r = 0; r < nEq; r++) {
+            const entries = [];
+            for (let c = 0; c < nUnk; c++) {
+              if (Math.abs(A[r][c]) > 1e-9) {
+                entries.push(`<code>(${r + 1},${c + 1}) = ${fmt(A[r][c])}</code>`);
+              }
+            }
+            rowsHtml += `<tr class="${state.hlRow === r ? 'hl-row' : ''}" data-r="${r}" style="cursor:pointer">
+              <td><strong>${r + 1}</strong> ${rowLabels[r]}</td>
+              <td style="text-align:left;white-space:normal;line-height:1.7;">${entries.join(' ') || '<span class="zero">all 0</span>'}</td>
+            </tr>`;
+          }
+          tabContent.innerHTML = `
+            <div class="card">
+              <h3>Matrix [A] (${nEq} × ${nUnk}) — Non-Zero Entries</h3>
+              <p style="color:var(--muted);margin:0 0 10px;font-size:12px;">Tap any row to highlight that joint on the truss. All unlisted cells stay <code>0</code>.</p>
+              <div class="table-scroll">
+                <table>
+                  <thead><tr><th style="width:82px">Row Eq</th><th>Enter on TI-84: (Row, Col) = Value</th></tr></thead>
+                  <tbody>${rowsHtml}</tbody>
+                </table>
+              </div>
+            </div>
+          `;
+        } else if (state.activeTab === 'bc') {
+          let rowsHtml = '';
+          const maxR = Math.max(nEq, nUnk);
+          for (let i = 0; i < maxR; i++) {
+            const bVal = i < nEq ? fmt(B[i]) : '—';
+            let cVal = '—';
+            let stateHtml = '—';
+            if (C && i < nUnk) {
+              const v = C[i];
+              cVal = Math.abs(v) < 1e-6 ? '0' : v.toFixed(3);
+              if (i < state.members.length) {
+                stateHtml = Math.abs(v) < 1e-6
+                  ? '<span class="badge-0">Zero</span>'
+                  : v > 0
+                    ? `<span class="badge-T">${v.toFixed(2)} ${state.units} (T)</span>`
+                    : `<span class="badge-C">${Math.abs(v).toFixed(2)} ${state.units} (C)</span>`;
+              } else {
+                stateHtml = `<span>${v.toFixed(2)} ${state.units}</span>`;
+              }
+            }
+            rowsHtml += `<tr data-c="${i}" style="cursor:pointer" class="${state.hlCol === i ? 'hl-row' : ''}">
+              <td><strong>${i + 1},1</strong></td>
+              <td>${i < nEq ? rowLabels[i] : '—'}</td>
+              <td><strong>${bVal}</strong></td>
+              <td>${i < nUnk ? colLabels[i] : '—'}</td>
+              <td><strong>${cVal}</strong></td>
+              <td>${stateHtml}</td>
+            </tr>`;
+          }
+          tabContent.innerHTML = `
+            <div class="card">
+              <h3>Input [B] (${nEq} × 1) &amp; Output [C] = [A]⁻¹[B]</h3>
+              <div class="table-scroll">
+                <table>
+                  <thead>
+                    <tr><th>Cell</th><th>Row Eq</th><th>[B] (-P)</th><th>Unknown</th><th>[C] Raw</th><th>Result</th></tr>
+                  </thead>
+                  <tbody>${rowsHtml}</tbody>
+                </table>
+              </div>
+            </div>
+          `;
+        } else if (state.activeTab === 'full') {
+          const head = `<tr><th>R\\C</th>${colLabels.map((l, c) => `<th data-c="${c}" class="${state.hlCol === c ? 'hl-col' : ''}" style="cursor:pointer">${c + 1}<br>${l}</th>`).join('')}</tr>`;
+          let body = '';
+          for (let r = 0; r < nEq; r++) {
+            body += `<tr class="${state.hlRow === r ? 'hl-row' : ''}"><th data-r="${r}" style="cursor:pointer">${r + 1} ${rowLabels[r]}</th>`;
+            for (let c = 0; c < nUnk; c++) {
+              const v = A[r][c];
+              const nz = Math.abs(v) > 1e-9;
+              body += `<td class="${nz ? 'nonzero' : 'zero'} ${state.hlCol === c ? 'hl-col' : ''}" data-r="${r}" data-c="${c}">${fmt(v)}</td>`;
+            }
+            body += '</tr>';
+          }
+          tabContent.innerHTML = `
+            <div class="card">
+              <h3>Full Matrix [A] (${nEq} × ${nUnk})</h3>
+              <div class="table-scroll">
+                <table><thead>${head}</thead><tbody>${body}</tbody></table>
+              </div>
+            </div>
+          `;
+        } else {
+          const bEntries = [];
+          for (let r = 0; r < nEq; r++) {
+            if (Math.abs(B[r]) > 1e-9) {
+              bEntries.push(`Row <code>${r + 1},1</code> (${rowLabels[r]}): <code>${fmt(B[r])}</code>`);
+            }
+          }
+          tabContent.innerHTML = `
+            <div class="card">
+              <h3>1. Enter Matrix [A] (${nEq} × ${nUnk})</h3>
+              <p>Press <code>2nd</code> <code>x⁻¹</code> (MATRIX) &rarr; <code>EDIT</code> &rarr; <code>1:[A]</code> &rarr; set size to <code>${nEq} × ${nUnk}</code>.</p>
+              <p>Enter only the non-zero cells from the <strong>Non-Zero [A]</strong> tab. Always use the white <code>(-)</code> key for negatives.</p>
+            </div>
+            <div class="card">
+              <h3>2. Enter Matrix [B] (${nEq} × 1)</h3>
+              <p>Press <code>2nd</code> <code>x⁻¹</code> &rarr; <code>EDIT</code> &rarr; <code>2:[B]</code> &rarr; set size to <code>${nEq} × 1</code>.</p>
+              <p>Enter only the loaded rows (signs flipped for <code>-{P}</code>):</p>
+              <p style="line-height:1.8">${bEntries.join('<br>') || 'No external loads entered yet.'}</p>
+            </div>
+            <div class="card">
+              <h3>3. Solve on Home Screen</h3>
+              <p>Press <code>2nd</code> <code>MODE</code> (QUIT), then type:</p>
+              <p style="font-size:15px;"><code>[A]⁻¹[B] → [C]</code></p>
+              <p>Open <code>MATRIX → EDIT → 3:[C]</code> to scroll cleanly through all ${nUnk} solved forces and reactions.</p>
+            </div>
+          `;
+        }
+      }
+
+      /* =====================================================================
+       * 7. HELPERS & INTERACTION HANDLERS
+       * ===================================================================== */
+      function deleteNode(idx) {
+        state.members = state.members
+          .filter(m => m.a !== idx && m.b !== idx)
+          .map(m => ({ a: m.a > idx ? m.a - 1 : m.a, b: m.b > idx ? m.b - 1 : m.b }));
+        state.nodes.splice(idx, 1);
+        state.selectedNode = null;
+        state.selectedMember = null;
+        state.memberStart = null;
+        state.hlRow = null;
+        state.hlCol = null;
+        update();
+      }
+
+      function nextNodeName() {
+        const used = new Set(state.nodes.map(n => n.name));
+        for (let i = 0; i < 26; i++) {
+          const ch = String.fromCharCode(65 + i);
+          if (!used.has(ch)) return ch;
+        }
+        return 'J' + (state.nodes.length + 1);
+      }
+
+      function update(redrawInspector = true) {
+        solution = buildAndSolve();
+        statusPill.textContent = solution.msg;
+        statusPill.className = 'status-pill ' + (solution.status === 'ok' ? 'status-ok' : solution.status === 'err' ? 'status-err' : '');
+        navBadge.textContent = solution.shortBadge;
+        renderSVG();
+        if (redrawInspector) renderInspector();
+        renderRightPane();
+      }
+
+      function setMobileView(view) {
+        state.mobileView = view;
+        const isBuilder = view === 'builder';
+        paneBuilder.classList.toggle('mobile-active', isBuilder);
+        paneMatrix.classList.toggle('mobile-active', !isBuilder);
+        navBuilder.classList.toggle('active', isBuilder);
+        navMatrix.classList.toggle('active', !isBuilder);
+        if (isBuilder) {
+          requestAnimationFrame(renderSVG);
+        }
+      }
+
+      // Mobile Bottom Nav
+      navBuilder.onclick = () => setMobileView('builder');
+      navMatrix.onclick = () => setMobileView('matrix');
+
+      // Mode Toolbar
+      document.getElementById('modeBar').onclick = (e) => {
+        const btn = e.target.closest('button');
+        if (!btn) return;
+        state.mode = btn.dataset.mode;
+        state.memberStart = null;
+        document.querySelectorAll('#modeBar button').forEach(b => b.classList.toggle('active', b === btn));
+        if (window.innerWidth <= 900) setMobileView('builder');
+        renderInspector();
+        renderSVG();
+      };
+
+      // TI-84 Tabs
+      document.getElementById('tabBar').onclick = (e) => {
+        const btn = e.target.closest('button');
+        if (!btn) return;
+        state.activeTab = btn.dataset.tab;
+        document.querySelectorAll('#tabBar button').forEach(b => b.classList.toggle('active', b === btn));
+        renderRightPane();
+      };
+
+      // Presets & Controls
+      document.getElementById('btnPreset524').onclick = loadPreset524;
+      document.getElementById('btnPreset54').onclick = loadPreset54;
+      document.getElementById('btnClear').onclick = clearAll;
+      document.getElementById('btnFit').onclick = () => { autoFitView(); renderSVG(); };
+      document.getElementById('gridStep').oninput = (e) => {
+        state.gridStep = Math.max(0.5, parseFloat(e.target.value) || 1);
+        renderSVG();
+      };
+      document.getElementById('unitLabel').oninput = (e) => {
+        state.units = e.target.value || 'kN';
+        update(false);
+      };
+      document.getElementById('chkShowForces').onchange = (e) => {
+        state.showForces = e.target.checked;
+        renderSVG();
+      };
+
+      // SVG Pointer/Touch Interaction
+      svg.addEventListener('pointermove', (e) => {
+        const rect = svg.getBoundingClientRect();
+        const tf = getTransform();
+        const [wx, wy] = tf.toWorld(e.clientX - rect.left, e.clientY - rect.top);
+        const step = state.gridStep;
+        const sx = Math.round(wx / step) * step;
+        const sy = Math.round(wy / step) * step;
+        coordReadout.textContent = `x: ${sx}, y: ${sy}`;
+      });
+
+      svg.addEventListener('click', (e) => {
+        const nodeEl = e.target.closest('.node-hit');
+        const memEl = e.target.closest('.mem-hit');
+
+        if (nodeEl) {
+          const idx = parseInt(nodeEl.dataset.idx, 10);
+          if (state.mode === 'delete') { deleteNode(idx); return; }
+          if (state.mode === 'support') {
+            const order = ['none', 'pin', 'rollerY', 'rollerX'];
+            const n = state.nodes[idx];
+            n.support = order[(order.indexOf(n.support) + 1) % order.length];
+            update();
+            return;
+          }
+          if (state.mode === 'member') {
+            if (state.memberStart === null) {
+              state.memberStart = idx;
+            } else if (state.memberStart !== idx) {
+              const exists = state.members.some(m => (m.a === state.memberStart && m.b === idx) || (m.a === idx && m.b === state.memberStart));
+              if (!exists) state.members.push({ a: state.memberStart, b: idx });
+              state.memberStart = null;
+            } else {
+              state.memberStart = null;
+            }
+            update();
+            return;
+          }
+          state.selectedNode = idx;
+          state.selectedMember = null;
+          state.hlRow = 2 * idx;
+          state.hlCol = null;
+          update();
+          return;
+        }
+
+        if (memEl) {
+          const idx = parseInt(memEl.dataset.idx, 10);
+          if (state.mode === 'delete') {
+            state.members.splice(idx, 1);
+            state.selectedMember = null;
+            update();
+            return;
+          }
+          state.selectedMember = idx;
+          state.selectedNode = null;
+          state.hlCol = idx;
+          state.hlRow = null;
+          update();
+          return;
+        }
+
+        if (state.mode === 'joint') {
+          const rect = svg.getBoundingClientRect();
+          const tf = getTransform();
+          const [wx, wy] = tf.toWorld(e.clientX - rect.left, e.clientY - rect.top);
+          const step = state.gridStep;
+          const x = Math.round(wx / step) * step;
+          const y = Math.round(wy / step) * step;
+          if (!state.nodes.some(n => Math.abs(n.x - x) < 1e-6 && Math.abs(n.y - y) < 1e-6)) {
+            state.nodes.push({ name: nextNodeName(), x, y, support: 'none', px: 0, py: 0 });
+            state.selectedNode = state.nodes.length - 1;
+            state.selectedMember = null;
+            update();
+          }
+        } else {
+          state.selectedNode = null;
+          state.selectedMember = null;
+          state.hlRow = null;
+          state.hlCol = null;
+          update();
+        }
+      });
+
+      // Matrix Row/Column Click Highlighting
+      tabContent.addEventListener('click', (e) => {
+        const el = e.target.closest('[data-r], [data-c]');
+        if (!el) return;
+        if (el.dataset.r !== undefined) state.hlRow = parseInt(el.dataset.r, 10);
+        if (el.dataset.c !== undefined) state.hlCol = parseInt(el.dataset.c, 10);
+        renderSVG();
+        renderRightPane();
+      });
+
+      window.addEventListener('resize', renderSVG);
+
+      // Initialize with Prob. 5-24
+      loadPreset524();
+    })();
+  </script>
+</body>
+</html>
